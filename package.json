@@ -1,0 +1,71 @@
+{
+  "name": "opendash-instance-example",
+  "private": true,
+  "scripts": {
+    "start": "opendash dev",
+    "build": "opendash build"
+  },
+  "dependencies": {
+    "@ant-design/pro-layout": "^7.17.19",
+    "@opendash/core": "nightly",
+    "@opendash/i18n": "nightly",
+    "@opendash/icons": "nightly",
+    "@opendash/plugin-bde": "nightly",
+    "@opendash/plugin-feedback": "nightly",
+    "@opendash/plugin-geo": "nightly",
+    "@opendash/plugin-geo-maplibre": "nightly",
+    "@opendash/plugin-highcharts": "nightly",
+    "@opendash/plugin-knowledge": "nightly",
+    "@opendash/plugin-monitoring": "nightly",
+    "@opendash/plugin-openservice": "nightly",
+    "@opendash/plugin-openware": "nightly",
+    "@opendash/plugin-parse": "nightly",
+    "@opendash/plugin-parse-monitoring": "nightly",
+    "@opendash/plugin-plotly": "nightly",
+    "@opendash/plugin-timeseries": "nightly",
+    "@opendash/router": "nightly",
+    "@opendash/state": "nightly",
+    "@opendash/ui": "nightly",
+    "@turf/turf": "^6.5.0",
+    "antd": "^5.14.2",
+    "dayjs": "^1.11.10",
+    "highcharts": "^9.3.3",
+    "highcharts-regression": "^2.2.0",
+    "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
+    "leaflet.markercluster": "^1.5.3",
+    "lodash.isequal": "^4.5.0",
+    "mobx": "^6.12.0",
+    "mobx-react-lite": "^3.4.3",
+    "papaparse": "^5.4.1",
+    "parse": "^3.5.1",
+    "parse-hooks": "^0.4.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-is": "^18.2.0",
+    "react-leaflet": "^3.2.5",
+    "react-resizable": "^3.0.5",
+    "react-window": "^1.8.10",
+    "styled-components": "^5.3.11",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "@opendash/cli": "nightly",
+    "@types/parse": "^2.18.18",
+    "@types/react": "^18.2.61",
+    "@types/styled-components": "^5.1.34",
+    "typescript": "^4.9.5"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "endOfLine": "lf",
+    "overrides": [
+      {
+        "files": "**/translations/**.json",
+        "options": {
+          "printWidth": 1000
+        }
+      }
+    ]
+  }
+}

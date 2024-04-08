@@ -1,0 +1,8 @@
+{
+  "widgets": {
+    "example": {
+      "title": "Example Widget",
+      "description": "This widget is just for demonstration."
+    }
+  }
+}
