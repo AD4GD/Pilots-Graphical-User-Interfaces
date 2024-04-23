@@ -14,6 +14,7 @@ import { ParsePlugin } from "@opendash/plugin-parse";
 import { ParseMonitoringPlugin } from "@opendash/plugin-parse-monitoring";
 import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
 import ExampleWidget from "./widgets/example";
+import MapWidget from "./widgets/map";
 
 init("opendash", async (factory) => {
   // Icons
@@ -82,9 +83,9 @@ init("opendash", async (factory) => {
     routeCondition: "**",
     activeCondition: "/",
   });
-  // Widgets
 
   $monitoring.registerWidget(ExampleWidget);
+  $monitoring.registerWidget(MapWidget);
 }).then((app) => {
   console.log("init open.DASH");
 });
