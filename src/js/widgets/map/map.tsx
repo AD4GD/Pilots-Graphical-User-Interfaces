@@ -104,7 +104,7 @@ export default createWidgetComponent<ConfigInterface>(
           <PropertyRow label={t("Umfang")} value={properties?.circumference} />
         </div>
 
-        <LabelIcon label="fadsfdasf" icon="noting" />
+        {/* <LabelIcon label="fadsfdasf" icon="noting" /> */}
       </div>
     );
   }
