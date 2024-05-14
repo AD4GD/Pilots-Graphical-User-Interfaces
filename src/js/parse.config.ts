@@ -1,4 +1,4 @@
 import Parse from "parse";
 
-Parse.initialize("openinc-demo");
+Parse.initialize("openinc");
 Parse.serverURL = "https://parse-demo.apps.openinc.dev/parse";
