@@ -3,6 +3,7 @@ import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useDataService } from "@opendash/plugin-timeseries";
 import { Typography, Row, Col } from "antd";
+// import { Icon } from "@ant-design/icons";
 
 import { ConfigInterface } from "./types";
 import { Carousel } from "../../components/carousel";
@@ -10,6 +11,11 @@ import { Carousel } from "../../components/carousel";
 interface PropertyRowProps {
   label: string;
   value: string;
+}
+
+interface LabelIconProps {
+  label: string;
+  icon: string;
 }
 
 const { Title, Text } = Typography;
@@ -20,6 +26,20 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ label, value }) => (
       {label}:
     </Text>
     <Text style={{ flex: 0.65, fontSize: "15px" }}>{value}</Text>
+  </Row>
+);
+
+const LabelIcon: React.FC<LabelIconProps> = ({ label, icon }) => (
+  <Row>
+    {/* <Icon
+      type={icon}
+      style={{ fontSize: "16px", color: "#08c" }}
+      theme="outlined"
+    /> */}
+
+    <Text style={{ flex: 0.35, fontSize: "15px", fontWeight: "600" }}>
+      {label}:
+    </Text>
   </Row>
 );
 
@@ -83,6 +103,8 @@ export default createWidgetComponent<ConfigInterface>(
           <PropertyRow label={t("Bezirk")} value={properties?.district} />
           <PropertyRow label={t("Umfang")} value={properties?.circumference} />
         </div>
+
+        <LabelIcon label="fadsfdasf" icon="noting" />
       </div>
     );
   }
