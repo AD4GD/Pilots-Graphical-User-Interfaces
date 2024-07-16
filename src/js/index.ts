@@ -87,6 +87,19 @@ init("opendash", async (factory) => {
     routeCondition: "**",
     activeCondition: "/",
   });
+  factory.registerStaticNavigationItem({
+    id: "admin/parse/item",
+    group: "admin/parse",
+    place: "frontpage",
+    order: 100,
+    label: "opendash:admin.label",
+    icon: "fa:cogs",
+    color: "#676767",
+    link: "/admin/parse/_Role",
+    routeCondition: "**",
+    activeCondition: "/",
+    permission: "parse-admin",
+  });
 
   $monitoring.registerWidget(ExampleWidget);
   $monitoring.registerWidget(MapWidget);
