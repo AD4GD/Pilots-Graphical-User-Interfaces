@@ -12,6 +12,7 @@ import { $monitoring, MonitoringPlugin } from "@opendash/plugin-monitoring";
 import { OpenwarePlugin } from "@opendash/plugin-openware";
 import { ParsePlugin } from "@opendash/plugin-parse";
 import { ParseMonitoringPlugin } from "@opendash/plugin-parse-monitoring";
+import { MobilityPlugin } from "@opendash/plugin-mobility";
 import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
 import ExampleWidget from "./widgets/example";
 import MapWidget from "./widgets/map";
@@ -60,9 +61,10 @@ init("opendash", async (factory) => {
   await factory.use(new MonitoringPlugin());
   await factory.use(new GeoPlugin());
   await factory.use(new GeoPluginMapLibre());
+  await factory.use(new MobilityPlugin());
   await factory.use(
     new OpenwarePlugin({
-      host: "openware.apps.openinc.dev",
+      host: "data.digitalzentrum-lr.de",
       secure: true,
     })
   );

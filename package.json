@@ -25,6 +25,7 @@
     "@opendash/plugin-parse-monitoring": "nightly",
     "@opendash/plugin-plotly": "nightly",
     "@opendash/plugin-timeseries": "nightly",
+    "@opendash/plugin-mobility": "nightly",
     "@opendash/router": "nightly",
     "@opendash/state": "nightly",
     "@opendash/ui": "nightly",
