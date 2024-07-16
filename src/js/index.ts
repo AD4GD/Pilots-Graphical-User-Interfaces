@@ -2,6 +2,7 @@ import "antd/dist/reset.css";
 
 import "./parse.config";
 import "./highcharts.config";
+import "./leaflet.config";
 
 import { init, StorageAdapterLS } from "@opendash/core";
 import { registerIconPack } from "@opendash/icons";
@@ -18,7 +19,7 @@ import ExampleWidget from "./widgets/example";
 import MapWidget from "./widgets/map";
 import HeaderWidget from "./widgets/header";
 import lakeOverviewWidget from "./widgets/lakeOverview";
-
+import { Carousel } from "./components/carousel";
 init("opendash", async (factory) => {
   // Icons
   // @ts-ignore
@@ -29,6 +30,12 @@ init("opendash", async (factory) => {
   factory.registerLanguage("en", "English");
   factory.registerLanguage("de", "Deutsch", "en", true);
   // ant design translations
+
+  factory.registerRoute({
+    path: "/lakeoverview",
+    componentSync: Carousel,
+    props: { images: [] },
+  });
 
   factory.registerAntDesignTranslation(
     "en",
