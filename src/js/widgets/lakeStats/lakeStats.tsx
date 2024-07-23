@@ -4,7 +4,10 @@ import { Col, Row, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
 import React, { useState } from "react";
 
-import { CustomDropdown } from "../../components/dropdown";
+import {
+  SingleSelectDropdown,
+  CustomDropdown,
+} from "../../components/dropdown";
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import { ConfigInterface } from "./types";
@@ -20,20 +23,34 @@ export default createWidgetComponent<ConfigInterface>(
     console.log("Data Services", DataService);
 
     const { Title, Text, Link } = Typography;
-    const [selectedValues, setSelectedValues] = useState<string[]>([
+    const [selectedProperties, setSelectedProperties] = useState<string[]>([
       "Wasserstand",
     ]);
 
-    const handleClick = (e: any) => {
+    const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+
+    const selectProperties = (e: any) => {
       const value = e.key;
-      setSelectedValues((prevValues) =>
+      setSelectedProperties((prevValues) =>
         prevValues.includes(value)
           ? prevValues.filter((v) => v !== value)
           : [...prevValues, value]
       );
     };
 
-    const items = [
+    const selectFilter = (key: string) => {
+      setSelectedFilter(key);
+    };
+
+    const timeFilter = [
+      { key: "day", label: "Tag" }, // Day
+      { key: "month", label: "Monat" }, // Month
+      { key: "week", label: "Woche" }, // Week
+      { key: "year", label: "Jahr" }, // Year
+      { key: "all", label: "Alles" }, // All
+    ];
+
+    const properties = [
       {
         key: "Wasserstand",
         label: "Wasserstand",
@@ -132,20 +149,20 @@ export default createWidgetComponent<ConfigInterface>(
           style={{ marginTop: "2%", justifyContent: "space-evenly" }}
         >
           <CustomDropdown
-            items={items}
-            selectedValues={selectedValues}
-            handleClick={handleClick}
+            items={properties}
+            selectedValues={selectedProperties}
+            handleClick={selectProperties}
           />
 
-          <CustomDropdown
-            items={items}
+          <SingleSelectDropdown
+            items={timeFilter}
             placeholder="Wähle weitere Daten"
-            selectedValues={selectedValues}
-            handleClick={handleClick}
+            selectedValue={selectedFilter}
+            handleClick={selectFilter}
           />
         </Row>
 
-        <CustomChart data={data} properties={selectedValues} />
+        <CustomChart data={data} properties={selectedProperties} />
 
         <Row gutter={[16, 16]} style={{ marginTop: "2%", padding: "2%" }}>
           <Link

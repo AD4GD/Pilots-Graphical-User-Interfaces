@@ -1,3 +1,4 @@
 import CustomDropdown from "./customDropdown";
+import SingleSelectDropdown from "./singleSelectDropdown";
 
-export { CustomDropdown };
+export { SingleSelectDropdown, CustomDropdown };
