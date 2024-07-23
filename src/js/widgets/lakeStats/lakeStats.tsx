@@ -20,7 +20,21 @@ export default createWidgetComponent<ConfigInterface>(
     context["setLoading"](false);
     const DataService = useDataService();
 
-    console.log("Data Services", DataService);
+    //Here you get the Values from the Settings!
+    const [[item, dimension]] = context.useItemDimensionConfig();
+
+    //Here you can fetch the data from the DataService
+    DataService.fetchDimensionValues(item, dimension, {
+      historyType: "relative",
+      unit: "year",
+      value: 2,
+    }).then((result) => {
+      //Array of Data Points
+      console.log("result", result);
+    });
+
+    //If you want to get all Items without the Settings, you can use this!
+    console.log(DataService._listOrThrowSync());
 
     const { Title, Text, Link } = Typography;
     const [selectedProperties, setSelectedProperties] = useState<string[]>([
