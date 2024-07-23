@@ -14,8 +14,9 @@ import { ParsePlugin } from "@opendash/plugin-parse";
 import { ParseMonitoringPlugin } from "@opendash/plugin-parse-monitoring";
 import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
 import ExampleWidget from "./widgets/example";
-import MapWidget from "./widgets/map";
 import HeaderWidget from "./widgets/header";
+import LakeDetails from "./widgets/lakeDetails";
+import LakeStats from "./widgets/lakeStats";
 import lakeOverviewWidget from "./widgets/lakeOverview";
 
 init("opendash", async (factory) => {
@@ -87,8 +88,9 @@ init("opendash", async (factory) => {
   });
 
   $monitoring.registerWidget(ExampleWidget);
-  $monitoring.registerWidget(MapWidget);
   $monitoring.registerWidget(HeaderWidget);
+  $monitoring.registerWidget(LakeDetails);
+  $monitoring.registerWidget(LakeStats);
   $monitoring.registerWidget(lakeOverviewWidget);
 }).then((app) => {
   console.log("init open.DASH");

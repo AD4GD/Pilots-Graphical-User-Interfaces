@@ -3,22 +3,23 @@ import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useDataService } from "@opendash/plugin-timeseries";
 import { Typography, Row, Col } from "antd";
-// import { Icon } from "@ant-design/icons";
+import { EditOutlined, StarFilled } from "@ant-design/icons";
+import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 
 import { ConfigInterface } from "./types";
 import { Carousel } from "../../components/carousel";
+
+const { Title, Text, Link } = Typography;
 
 interface PropertyRowProps {
   label: string;
   value: string;
 }
 
-interface LabelIconProps {
+interface IconLabelComponentProps {
+  icon: React.ComponentType<IconBaseProps>;
   label: string;
-  icon: string;
 }
-
-const { Title, Text } = Typography;
 
 const PropertyRow: React.FC<PropertyRowProps> = ({ label, value }) => (
   <Row>
@@ -29,19 +30,28 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ label, value }) => (
   </Row>
 );
 
-const LabelIcon: React.FC<LabelIconProps> = ({ label, icon }) => (
-  <Row>
-    {/* <Icon
-      type={icon}
-      style={{ fontSize: "16px", color: "#08c" }}
-      theme="outlined"
-    /> */}
-
-    <Text style={{ flex: 0.35, fontSize: "15px", fontWeight: "600" }}>
-      {label}:
-    </Text>
-  </Row>
-);
+const IconLabelComponent: React.FC<IconLabelComponentProps> = ({
+  icon: Icon,
+  label,
+}) => {
+  return (
+    <div style={{ display: "flex", alignItems: "center", marginTop: "4%" }}>
+      <div>
+        <Icon
+          style={{
+            fontSize: "20px",
+            padding: "6px",
+            backgroundColor: "#56ECAD",
+            borderRadius: "50%",
+          }}
+        />
+      </div>
+      <Text style={{ fontSize: "16px", fontWeight: "600", marginLeft: "5%" }}>
+        {label}
+      </Text>
+    </div>
+  );
+};
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
@@ -62,8 +72,25 @@ export default createWidgetComponent<ConfigInterface>(
     };
 
     return (
-      <div style={{ padding: "4%" }}>
-        <Title level={1} style={{ fontWeight: "bold", marginBottom: "2%" }}>
+      <div style={{ padding: "4%", flexGrow: 1 }}>
+        <Link
+          style={{
+            color: "#42A456",
+            fontSize: "16px",
+            display: "flex",
+            flex: 0.65,
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+          // href="javascript:history.back()"
+          underline
+        >
+          {"<"} Zurück zur Übersicht
+        </Link>
+        <Title
+          level={1}
+          style={{ fontWeight: "bold", marginBottom: "2%", marginTop: "2%" }}
+        >
           {properties?.name}
         </Title>
         <Row>
@@ -93,7 +120,7 @@ export default createWidgetComponent<ConfigInterface>(
           Bildbeschreibung zum obenstehenden Bild
         </Title>
 
-        <div style={{ marginTop: "6%" }}>
+        <div style={{ marginTop: "4%" }}>
           <PropertyRow label={t("Name")} value={properties?.name} />
           <PropertyRow label={t("Fläche")} value={properties?.area} />
           <PropertyRow
@@ -104,7 +131,7 @@ export default createWidgetComponent<ConfigInterface>(
           <PropertyRow label={t("Umfang")} value={properties?.circumference} />
         </div>
 
-        {/* <LabelIcon label="fadsfdasf" icon="noting" /> */}
+        <IconLabelComponent icon={StarFilled} label="Als Favorit hinzufügen" />
       </div>
     );
   }

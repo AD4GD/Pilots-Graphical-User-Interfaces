@@ -12,6 +12,8 @@ export default createWidgetComponent<ConfigInterface>(
 
     const DataService = useDataService();
 
+    DataService.fetchDimensionValues;
+
     context.setLoading(false);
     context.setName(t("app:widgets.example.title"));
 
