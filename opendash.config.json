@@ -2,7 +2,8 @@
   "app": {
     "name": "open.DASH",
     "description": "open.DASH | Data Analytics",
-    "primaryColor": "#96F5D0",
+    "primaryColor": "#4186c6",
+    "themeColor": "#96F5D0",
     "backgroundColor": "#ffffff"
   }
 }

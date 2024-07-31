@@ -11,14 +11,8 @@ export default createWidget<ConfigInterface>({
   dataItems: {
     select: "dimension",
     min: 1,
-    max: 1,
+    max: 10,
     types: ["Number", "Boolean", "String"],
-  },
-
-  dataFetching: {
-    live: true,
-    history: true,
-    historyRequired: true,
   },
 
   dataExplorer: {
