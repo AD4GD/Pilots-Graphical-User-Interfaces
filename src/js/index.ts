@@ -2,6 +2,7 @@ import "antd/dist/reset.css";
 
 import "./parse.config";
 import "./highcharts.config";
+import "./leaflet.config";
 
 import { init, StorageAdapterLS } from "@opendash/core";
 import { registerIconPack } from "@opendash/icons";
@@ -12,13 +13,14 @@ import { $monitoring, MonitoringPlugin } from "@opendash/plugin-monitoring";
 import { OpenwarePlugin } from "@opendash/plugin-openware";
 import { ParsePlugin } from "@opendash/plugin-parse";
 import { ParseMonitoringPlugin } from "@opendash/plugin-parse-monitoring";
+import { MobilityPlugin } from "@opendash/plugin-mobility";
 import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
 import ExampleWidget from "./widgets/example";
 import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStats from "./widgets/lakeStats";
 import lakeOverviewWidget from "./widgets/lakeOverview";
-
+import { Carousel } from "./components/carousel";
 init("opendash", async (factory) => {
   // Icons
   // @ts-ignore
@@ -29,6 +31,12 @@ init("opendash", async (factory) => {
   factory.registerLanguage("en", "English");
   factory.registerLanguage("de", "Deutsch", "en", true);
   // ant design translations
+
+  factory.registerRoute({
+    path: "/lakeoverview",
+    componentSync: Carousel,
+    props: { images: [] },
+  });
 
   factory.registerAntDesignTranslation(
     "en",
@@ -61,9 +69,10 @@ init("opendash", async (factory) => {
   await factory.use(new MonitoringPlugin());
   await factory.use(new GeoPlugin());
   await factory.use(new GeoPluginMapLibre());
+  await factory.use(new MobilityPlugin());
   await factory.use(
     new OpenwarePlugin({
-      host: "openware.apps.openinc.dev",
+      host: "data.digitalzentrum-lr.de",
       secure: true,
     })
   );
@@ -85,6 +94,19 @@ init("opendash", async (factory) => {
     link: "/monitoring/dashboards",
     routeCondition: "**",
     activeCondition: "/",
+  });
+  factory.registerStaticNavigationItem({
+    id: "admin/parse/item",
+    group: "admin/parse",
+    place: "frontpage",
+    order: 100,
+    label: "opendash:admin.label",
+    icon: "fa:cogs",
+    color: "#676767",
+    link: "/admin/parse/_Role",
+    routeCondition: "**",
+    activeCondition: "/",
+    permission: "parse-admin",
   });
 
   $monitoring.registerWidget(ExampleWidget);
