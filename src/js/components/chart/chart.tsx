@@ -2,17 +2,35 @@ import React, { useEffect } from "react";
 import Highcharts from "highcharts";
 
 interface ChartProps {
-  data: { timestamp: number; [key: string]: number }[];
-  properties: string[];
+  data: {
+    id: string;
+    name: string;
+    valueTypeName: string;
+    unit: string;
+    data: { date: string; value: number }[];
+  }[];
   filter: "day" | "week" | "month" | "year";
 }
 
-const ChartComponent: React.FC<ChartProps> = ({ data, properties, filter }) => {
+const ChartComponent: React.FC<ChartProps> = ({ data, filter }) => {
   const generateChartConfig = (
-    data: { timestamp: number; [key: string]: number }[],
-    properties: string[],
-    filter: "day" | "week" | "month" | "year"
+    data: {
+      id: string;
+      name: string;
+      valueTypeName: string;
+      unit: string;
+      data: { date: string; value: number }[];
+    }[],
+    filter: string
   ) => {
+    const seriesData = data.map((item) => ({
+      name: item.valueTypeName,
+      data: item.data.map((point) => [
+        new Date(point.date).getTime(),
+        point.value,
+      ]),
+    }));
+
     return {
       title: {
         text: null,
@@ -47,19 +65,13 @@ const ChartComponent: React.FC<ChartProps> = ({ data, properties, filter }) => {
           text: "Value",
         },
       },
-      series: properties.map((property) => ({
-        name: property,
-        data: data.map((item) => [item.timestamp, item[property]]),
-      })),
+      series: seriesData,
     };
   };
 
   useEffect(() => {
-    Highcharts.chart(
-      "container",
-      generateChartConfig(data, properties, filter)
-    );
-  }, [data, properties, filter]);
+    Highcharts.chart("container", generateChartConfig(data, filter));
+  }, [data, filter]);
 
   return (
     <div id="container" style={{ height: "400px", marginTop: "50px" }}></div>
