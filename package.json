@@ -18,7 +18,6 @@
     "@opendash/plugin-gtfs": "nightly",
     "@opendash/plugin-highcharts": "nightly",
     "@opendash/plugin-knowledge": "nightly",
-    "@opendash/plugin-miaas": "nightly",
     "@opendash/plugin-mobility": "nightly",
     "@opendash/plugin-monitoring": "nightly",
     "@opendash/plugin-openservice": "nightly",

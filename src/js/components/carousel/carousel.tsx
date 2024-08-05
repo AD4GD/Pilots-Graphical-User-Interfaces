@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Carousel, Image, Select } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
+import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
 interface CustomCarouselProps {
   images: string[];
@@ -22,26 +23,38 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
       })
     );
   };
-  console.log(zones);
+
+  //Query Lake Meta Data
+  const lakeQuery = React.useMemo(() => {
+    return new Parse.Query("AD4GD_LakeMetaData");
+  }, []);
+  const { result: lakes, reload, error, loading } = useParseQuery(lakeQuery);
+  console.log({ lakes });
   const config = React.useMemo(() => {
     return {
       markers: [],
       zones: {
         type: "zones",
-        districtsFromZones: [cZone],
+        districtsFromZones: zones.map((zone) => zone.value),
         districts: null,
         districtFromDimension: null,
       },
       _history: {
         aggregation: false,
       },
+      onEvent: (type: string, event: any) => {
+        console.log({ type, event });
+        console.log(
+          "ID of clicked Features",
+          event.features.map((f: any) => f.properties.objectId)
+        );
+      },
     };
-  }, [cZone]);
+  }, [zones]);
   console.log({ config });
   return (
     <>
-      {/* <h1>hallo</h1>
-      <Select
+      {/* <Select
         style={{ width: "100%" }}
         options={zones}
         value={cZone}
@@ -51,13 +64,13 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
             setCZone(zone);
           }
         }}
-      ></Select>
+      ></Select> */}
       <WidgetStatic
         style={{ height: "100vh" }}
         type="kpi-map"
         config={config}
-      ></WidgetStatic> */}
-      <Carousel arrows>
+      ></WidgetStatic>
+      {/* <Carousel arrows>
         {images.map((image, index) => (
           <div key={index}>
             <Image
@@ -67,7 +80,7 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
             />
           </div>
         ))}
-      </Carousel>
+      </Carousel> */}
     </>
   );
 };

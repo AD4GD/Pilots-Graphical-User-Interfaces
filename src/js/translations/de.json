@@ -1,0 +1,14 @@
+{
+  "classes": {
+    "AD4GD_LakeMetaData": {
+      "fields": {
+        "description": "Beschreibung",
+        "image": "Bild",
+        "label": "Bezeichnung",
+        "lakeId": "Gewässer ID"
+      },
+      "label": "Gewässer",
+      "label_plural": "Gewässer"
+    }
+  }
+}

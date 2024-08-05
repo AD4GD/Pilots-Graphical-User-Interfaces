@@ -11,7 +11,7 @@ import { GeoPlugin } from "@opendash/plugin-geo";
 import { GeoPluginMapLibre } from "@opendash/plugin-geo-maplibre";
 import { $monitoring, MonitoringPlugin } from "@opendash/plugin-monitoring";
 import { OpenwarePlugin } from "@opendash/plugin-openware";
-import { ParsePlugin } from "@opendash/plugin-parse";
+import { $parse, ParsePlugin } from "@opendash/plugin-parse";
 import { ParseMonitoringPlugin } from "@opendash/plugin-parse-monitoring";
 import { MobilityPlugin } from "@opendash/plugin-mobility";
 import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
@@ -52,8 +52,14 @@ init("opendash", async (factory) => {
 
   factory.registerTranslationResolver(
     "en",
-    "app",
-    async () => await import("./translations/app/en.json")
+    "ad4gd",
+    async () => await import("./translations/en.json")
+  );
+
+  factory.registerTranslationResolver(
+    "de",
+    "ad4gd",
+    async () => await import("./translations/de.json")
   );
 
   // Adapter + Plugins
@@ -108,6 +114,40 @@ init("opendash", async (factory) => {
     activeCondition: "/",
     permission: "parse-admin",
   });
+  //.------------------- Example Admin Interface Config-------------------
+
+  factory.registerStaticNavigationGroup({
+    id: "admin/ad4gd",
+    order: 100,
+    label: "AD4GD",
+    icon: "fa:cogs",
+  });
+  factory.registerStaticNavigationItem({
+    id: "admin/ad4gd/lakes",
+    group: "admin/ad4gd",
+    place: "sidebar",
+    order: 100,
+    label: "ad4gd:classes.AD4GD_LakeMetaData.label_plural",
+    icon: "fa:water",
+    color: "#676767",
+    link: "/admin/parse/AD4GD_LakeMetaData",
+    routeCondition: "**",
+    activeCondition: "/",
+    permission: "parse-admin",
+  });
+
+  $parse.ui.setClassConfig({
+    className: "AD4GD_LakeMetaData",
+    createFields: ["label", "description", "lakeId", "image"],
+    editFields: ["label", "description", "lakeId", "image"],
+    displayFields: ["label", "description", "lakeId", "image"],
+    titleFields: ["label"],
+    // Tranlation for fields in /src/translations/[language].json
+    translationPrefix: "ad4gd:classes.",
+  });
+
+  $parse.ui.setDefaultView("AD4GD_LakeMetaData", { type: "table" });
+  //.------------------- Example Admin Interface Config-------------------
 
   $monitoring.registerWidget(ExampleWidget);
   $monitoring.registerWidget(HeaderWidget);

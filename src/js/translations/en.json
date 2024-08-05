@@ -1,0 +1,20 @@
+{
+  "classes": {
+    "AD4GD_LakeMetaData": {
+      "fields": {
+        "description": "Description",
+        "image": "Image",
+        "label": "Label",
+        "lakeId": "Lake ID"
+      },
+      "label": "Lake",
+      "label_plural": "Lakes"
+    }
+  },
+  "widgets": {
+    "example": {
+      "description": "This widget is just for demonstration.",
+      "title": "Example Widget"
+    }
+  }
+}
