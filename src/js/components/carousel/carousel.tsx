@@ -1,20 +1,25 @@
 import React, { useState } from "react";
-import { Carousel, Image, Select } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
+import { useUrlParam } from "@opendash/core";
+import { Button } from "antd";
+
 interface CustomCarouselProps {
   images: string[];
 }
 
 const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
-  const [zones, setZones] = React.useState(
-    [] as { label: string; value: string }[]
+  const [zones, setZones] = useState([] as { label: string; value: string }[]);
+  const [lakeId, setLakeId] = useUrlParam(
+    "lakeid",
+    null as string | null,
+    "string"
   );
-  const [cZone, setCZone] = React.useState<string[]>([]);
   React.useEffect(() => {
     init();
   }, []);
+
   const init = async () => {
     const zones = await new Parse.Query("MIAAS_Geographies").find();
     setZones(
@@ -28,8 +33,11 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
   const lakeQuery = React.useMemo(() => {
     return new Parse.Query("AD4GD_LakeMetaData");
   }, []);
+
   const { result: lakes, reload, error, loading } = useParseQuery(lakeQuery);
+
   console.log({ lakes });
+
   const config = React.useMemo(() => {
     return {
       markers: [],
@@ -51,7 +59,9 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
       },
     };
   }, [zones]);
+
   console.log({ config });
+
   return (
     <>
       {/* <Select
@@ -65,11 +75,24 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
           }
         }}
       ></Select> */}
-      <WidgetStatic
-        style={{ height: "100vh" }}
-        type="kpi-map"
-        config={config}
-      ></WidgetStatic>
+      {!lakeId && (
+        <>
+          <WidgetStatic
+            style={{ height: "100vh" }}
+            type="kpi-map"
+            config={config}
+          ></WidgetStatic>
+          <Button
+            onClick={() => {
+              setLakeId("adljbngoqe");
+            }}
+          >
+            {" "}
+          </Button>
+        </>
+      )}
+      {lakeId && <h1>Details of lake with id {lakeId}</h1>}
+
       {/* <Carousel arrows>
         {images.map((image, index) => (
           <div key={index}>

@@ -2,61 +2,87 @@ import { useTranslation } from "@opendash/core";
 
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 
-import { useDataService } from "@opendash/plugin-timeseries";
 import React from "react";
 import { ConfigInterface } from "./types";
-import { Row, Col, Image, Button, Flex, Space, ConfigProvider } from "antd";
+import { Row, Col, Image, Button, Flex, ConfigProvider } from "antd";
+import { UserOutlined } from "@ant-design/icons";
+import { useNavigate } from "@opendash/router";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
     const t = useTranslation();
 
-    //const DataService = useDataService();
-    //context.setName(t("app:widgets.example.title"));
-
     context.setLoading(false);
 
+    const navigate = useNavigate();
+
     return (
-      <div
-        style={{ width: "100%", height: "100%", backgroundColor: "#D2FBEB" }}
+      <Row
+        style={{ width: "100%", height: "80px", backgroundColor: "#D2FBEB" }}
       >
-        <Row style={{ width: "100%" }}>
-          <Col span={16}>
-            <Image preview={false} src={require("./logo.svg")}></Image>
-          </Col>
-          <Col span={8}>
-            <ConfigProvider
-              wave={{ disabled: true }}
-              theme={{
-                token: {
-                  colorPrimary: "#96F5D0",
-                  colorTextLightSolid: "fff",
-                  borderRadius: 6,
-                  fontSize: 16,
-                },
-              }}
+        <Col
+          span={16}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            paddingLeft: "1%",
+          }}
+        >
+          <Image
+            preview={false}
+            src={require("./logo.png")}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "80px",
+              width: "auto",
+              height: "auto",
+              margin: "auto",
+            }}
+          ></Image>
+        </Col>
+
+        <Col span={8}>
+          <ConfigProvider
+            wave={{ disabled: true }}
+            theme={{
+              token: {
+                colorPrimary: "#96F5D0",
+                colorTextLightSolid: "fff",
+                borderRadius: 6,
+                fontSize: 16,
+              },
+            }}
+          >
+            <Flex
+              justify="center"
+              gap="large"
+              align="center"
+              style={{ height: "100%" }}
             >
-              <Flex
-                justify={"flex-end"}
-                gap={"large"}
-                style={{ padding: "3.5vh" }}
-                align={"baseline"}
+              <Button type="primary" size="large">
+                Übersicht Seen
+              </Button>
+              <Button type="primary" size="large">
+                Favoriten
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => {
+                  navigate("/info");
+                }}
               >
-                <Button type={"primary"} size={"large"}>
-                  Übersicht Seen
-                </Button>
-                <Button type={"primary"} size={"large"}>
-                  Favoriten
-                </Button>
-                <Button type={"primary"} size={"large"}>
-                  Info
-                </Button>
-                <Image preview={false} src={require("./user.svg")}></Image>
-              </Flex>
-            </ConfigProvider>
-          </Col>
-        </Row>
-      </div>
+                Info
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<UserOutlined />}
+              ></Button>
+            </Flex>
+          </ConfigProvider>
+        </Col>
+      </Row>
     );
   }
 );

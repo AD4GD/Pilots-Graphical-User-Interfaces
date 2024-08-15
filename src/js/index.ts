@@ -20,7 +20,11 @@ import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStats from "./widgets/lakeStats";
 import lakeOverviewWidget from "./widgets/lakeOverview";
+import HomePage from "./widgets/lakeOverview";
 import { Carousel } from "./components/carousel";
+import { LakeOverview } from "./components/lakeOverviewPage";
+import { Information } from "./components/InformationPage";
+
 init("opendash", async (factory) => {
   // Icons
   // @ts-ignore
@@ -32,10 +36,22 @@ init("opendash", async (factory) => {
   factory.registerLanguage("de", "Deutsch", "en", true);
   // ant design translations
 
+  // factory.registerRoute({
+  //   path: "/",
+  //   componentSync: HomePage,
+  //   props: { images: [] },
+  // });
+
   factory.registerRoute({
-    path: "/lakeoverview",
-    componentSync: Carousel,
-    props: { images: [] },
+    path: "/home",
+    componentSync: LakeOverview,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/info",
+    componentSync: Information,
+    props: {},
   });
 
   factory.registerAntDesignTranslation(
@@ -82,11 +98,13 @@ init("opendash", async (factory) => {
       secure: true,
     })
   );
+
   await factory.use(
     new ParseMonitoringPlugin({
       liveQueries: false,
     })
   );
+
   await factory.use(new HighchartsPlugin());
 
   factory.registerStaticNavigationItem({
