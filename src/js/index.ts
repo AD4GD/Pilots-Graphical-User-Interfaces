@@ -18,12 +18,13 @@ import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
 import ExampleWidget from "./widgets/example";
 import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
-import LakeStats from "./widgets/lakeStats";
+import LakeStatss from "./widgets/lakeStats";
 import lakeOverviewWidget from "./widgets/lakeOverview";
 import HomePage from "./widgets/lakeOverview";
 import { Carousel } from "./components/carousel";
 import { LakeOverview } from "./components/lakeOverviewPage";
 import { Information } from "./components/InformationPage";
+import { LakeStats } from "./components/lakeStats";
 
 init("opendash", async (factory) => {
   // Icons
@@ -51,6 +52,12 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/info",
     componentSync: Information,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/lake",
+    componentSync: LakeStats,
     props: {},
   });
 
@@ -170,7 +177,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(ExampleWidget);
   $monitoring.registerWidget(HeaderWidget);
   $monitoring.registerWidget(LakeDetails);
-  $monitoring.registerWidget(LakeStats);
+  $monitoring.registerWidget(LakeStatss);
   $monitoring.registerWidget(lakeOverviewWidget);
 }).then((app) => {
   console.log("init open.DASH");

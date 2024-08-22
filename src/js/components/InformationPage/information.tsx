@@ -10,6 +10,7 @@ import {
   Typography,
 } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
+import { useDataService } from "@opendash/plugin-timeseries";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { genInputSmallStyle } from "antd/es/input/style";
 import { useNavigate } from "@opendash/router";
@@ -18,8 +19,22 @@ const { Search } = Input;
 
 const { Title, Text } = Typography;
 
-const Information = () => {
+const Information = ({ ...data }) => {
   const navigate = useNavigate();
+  const DataService = useDataService();
+  console.log("data", data);
+
+  DataService.fetchDimensionValuesMultiItem([], {
+    historyType: "relative",
+    unit: "year",
+    value: 2,
+  }).then((result) => {
+    //Array of Data Points
+    console.log("transformed data", result);
+    // const transformedData = transformData(result);
+    // setData(transformedData);
+  });
+
   return (
     <>
       <Row style={{ width: "100%", height: "80px" }}>

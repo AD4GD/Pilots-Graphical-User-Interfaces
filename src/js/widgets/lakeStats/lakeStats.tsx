@@ -22,6 +22,7 @@ export default createWidgetComponent<ConfigInterface>(
 
     //Here you get the Values from the Settings!
     const items = context.useItemDimensionConfig();
+    console.log("items", items);
     const [data, setData] = useState([]);
 
     const fetchProperties = (items: any[]) => {
@@ -62,9 +63,9 @@ export default createWidgetComponent<ConfigInterface>(
       value: 2,
     }).then((result) => {
       //Array of Data Points
-      console.log("result", result);
+      console.log("transformed data", result);
       const transformedData = transformData(result);
-      // setData(transformedData);
+      setData(transformedData);
     });
 
     //If you want to get all Items without the Settings, you can use this!
@@ -74,10 +75,10 @@ export default createWidgetComponent<ConfigInterface>(
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
 
     const timeFilter = [
-      { key: "day", label: "Tag" }, // Day
-      { key: "month", label: "Monat" }, // Month
-      { key: "week", label: "Woche" }, // Week
-      { key: "year", label: "Jahr" }, // Year
+      { key: "day", label: "Daily" }, // Day
+      { key: "month", label: "Monthly" }, // Month
+      { key: "week", label: "Weekly" }, // Week
+      { key: "year", label: "Yearly" }, // Year
     ];
 
     const [selectedFilter, setSelectedFilter] = useState<string | null>("");
@@ -159,7 +160,7 @@ export default createWidgetComponent<ConfigInterface>(
     // ];
 
     return (
-      <div style={{ flex: 0.7, padding: "2%" }}>
+      <div style={{ flex: 0.7, margin: "5%" }}>
         <Title
           level={4}
           style={{
@@ -216,7 +217,7 @@ export default createWidgetComponent<ConfigInterface>(
           </Link>
           <Row
             style={{
-              flex: 0.4,
+              flex: 0.33,
               justifyContent: "space-between",
             }}
           >

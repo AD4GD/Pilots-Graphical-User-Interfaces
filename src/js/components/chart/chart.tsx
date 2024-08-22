@@ -1,77 +1,83 @@
 import React, { useEffect } from "react";
-import Highcharts from "highcharts";
+import Highcharts, { Options } from "highcharts";
 
 interface ChartProps {
   data: {
     id: string;
     name: string;
-    valueTypeName: string;
+    propertyName: string;
     unit: string;
     data: { date: string; value: number }[];
   }[];
-  filter: "day" | "week" | "month" | "year";
+  filter: string | null;
+  properties: string[];
 }
 
-const ChartComponent: React.FC<ChartProps> = ({ data, filter }) => {
+const ChartComponent: React.FC<ChartProps> = ({ data, properties, filter }) => {
+  const formatXAxisLabel = (value: number): string => {
+    const date = new Date(value);
+    switch (filter) {
+      case "day":
+        return Highcharts.dateFormat("%e. %b", date.getTime());
+      case "week":
+        return `${Highcharts.dateFormat(
+          "%e. %b",
+          date.getTime()
+        )} - ${Highcharts.dateFormat(
+          "%e. %b",
+          date.getTime() + 6 * 24 * 3600 * 1000
+        )}`;
+      case "month":
+        return Highcharts.dateFormat("%b '%y", date.getTime());
+      case "year":
+        return Highcharts.dateFormat("%Y", date.getTime());
+      default:
+        return Highcharts.dateFormat("%e. %b", date.getTime());
+    }
+  };
+
   const generateChartConfig = (
-    data: {
-      id: string;
-      name: string;
-      valueTypeName: string;
-      unit: string;
-      data: { date: string; value: number }[];
-    }[],
-    filter: string
-  ) => {
-    const seriesData = data.map((item) => ({
-      name: item.valueTypeName,
-      data: item.data.map((point) => [
-        new Date(point.date).getTime(),
-        point.value,
-      ]),
+    filteredData: ChartProps["data"],
+    filter: string | null
+  ): Options => {
+    const seriesData = filteredData.map(({ propertyName, data }) => ({
+      type: "line", // Specify the type explicitly
+      name: propertyName,
+      data: data.map(
+        ({ date, value }) =>
+          [new Date(date).getTime(), value] as [number, number]
+      ),
     }));
 
     return {
-      title: {
-        text: null,
-      },
+      title: { text: undefined },
       xAxis: {
         type: "datetime",
         labels: {
           formatter: function () {
-            if (filter === "day") {
-              return Highcharts.dateFormat("%e. %b", this.value);
-            } else if (filter === "week") {
-              return (
-                Highcharts.dateFormat("%e. %b", this.value) +
-                " - " +
-                Highcharts.dateFormat(
-                  "%e. %b",
-                  this.value + 6 * 24 * 3600 * 1000
-                )
-              );
-            } else if (filter === "month") {
-              return Highcharts.dateFormat("%b '%y", this.value);
-            } else if (filter === "year") {
-              return Highcharts.dateFormat("%Y", this.value);
-            } else {
-              return Highcharts.dateFormat("%e. %b", this.value);
+            // Handle the case where `this.value` is not a number
+            if (typeof this.value === "number") {
+              return formatXAxisLabel(this.value);
             }
+            return this.value as string;
           },
         },
       },
       yAxis: {
         title: {
-          text: "Value",
+          text: filteredData.length > 0 ? filteredData[0].unit : "Value",
         },
       },
-      series: seriesData,
+      series: seriesData as Highcharts.SeriesOptionsType[], // Cast to the correct type
     };
   };
 
   useEffect(() => {
-    Highcharts.chart("container", generateChartConfig(data, filter));
-  }, [data, filter]);
+    const filteredData = data.filter((item) =>
+      properties.includes(item.propertyName)
+    );
+    Highcharts.chart("container", generateChartConfig(filteredData, filter));
+  }, [data, properties, filter]);
 
   return (
     <div id="container" style={{ height: "400px", marginTop: "50px" }}></div>

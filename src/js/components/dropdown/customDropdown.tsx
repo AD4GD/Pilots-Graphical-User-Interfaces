@@ -16,7 +16,7 @@ interface CustomDropdownProps {
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
   items,
-  placeholder = "Select",
+  placeholder = "Select Sensor",
   selectedValues = [],
   handleClick,
 }) => {
