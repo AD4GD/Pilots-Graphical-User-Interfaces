@@ -1,6 +1,6 @@
 import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
-import { Col, Row, Typography } from "antd";
+import { Row, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
 import React, { useState } from "react";
 
@@ -11,7 +11,6 @@ import {
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import { ConfigInterface } from "./types";
-import { Flex } from "antd/es";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
@@ -20,9 +19,10 @@ export default createWidgetComponent<ConfigInterface>(
     context["setLoading"](false);
     const DataService = useDataService();
 
+    // console.log("dataservice", DataService);
     //Here you get the Values from the Settings!
     const items = context.useItemDimensionConfig();
-    console.log("items", items);
+    // console.log("items", items);
     const [data, setData] = useState([]);
 
     const fetchProperties = (items: any[]) => {
@@ -63,13 +63,13 @@ export default createWidgetComponent<ConfigInterface>(
       value: 2,
     }).then((result) => {
       //Array of Data Points
-      console.log("transformed data", result);
+      // console.log("transformed data", result);
       const transformedData = transformData(result);
       setData(transformedData);
     });
 
     //If you want to get all Items without the Settings, you can use this!
-    console.log("result without settings", DataService._listOrThrowSync());
+    // console.log("result without settings", DataService._listOrThrowSync());
 
     const { Title, Link } = Typography;
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
@@ -95,69 +95,6 @@ export default createWidgetComponent<ConfigInterface>(
     const selectFilter = (key: string) => {
       setSelectedFilter(key);
     };
-
-    // const data = [
-    //   {
-    //     timestamp: 1634059200000,
-    //     Wasserstand: 75,
-    //     Temperatur: 20,
-    //     Luftfeuchtigkeit: 40,
-    //   },
-    //   {
-    //     timestamp: 1634145600000,
-    //     Wasserstand: 60,
-    //     Temperatur: 25,
-    //     Luftfeuchtigkeit: 45,
-    //   },
-    //   {
-    //     timestamp: 1634232000000,
-    //     Wasserstand: 80,
-    //     Temperatur: 22,
-    //     Luftfeuchtigkeit: 50,
-    //   },
-    //   {
-    //     timestamp: 1634318400000,
-    //     Wasserstand: 70,
-    //     Temperatur: 23,
-    //     Luftfeuchtigkeit: 55,
-    //   },
-    //   {
-    //     timestamp: 1634404800000,
-    //     Wasserstand: 85,
-    //     Temperatur: 21,
-    //     Luftfeuchtigkeit: 60,
-    //   },
-    //   {
-    //     timestamp: 1634491200000,
-    //     Wasserstand: 65,
-    //     Temperatur: 24,
-    //     Luftfeuchtigkeit: 55,
-    //   },
-    //   {
-    //     timestamp: 1634577600000,
-    //     Wasserstand: 90,
-    //     Temperatur: 26,
-    //     Luftfeuchtigkeit: 65,
-    //   },
-    //   {
-    //     timestamp: 1634664000000,
-    //     Wasserstand: 55,
-    //     Temperatur: 28,
-    //     Luftfeuchtigkeit: 70,
-    //   },
-    //   {
-    //     timestamp: 1634750400000,
-    //     Wasserstand: 95,
-    //     Temperatur: 27,
-    //     Luftfeuchtigkeit: 75,
-    //   },
-    //   {
-    //     timestamp: 1634836800000,
-    //     Wasserstand: 50,
-    //     Temperatur: 30,
-    //     Luftfeuchtigkeit: 80,
-    //   },
-    // ];
 
     return (
       <div style={{ flex: 0.7, margin: "5%" }}>

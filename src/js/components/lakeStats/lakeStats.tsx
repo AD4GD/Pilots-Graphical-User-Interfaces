@@ -3,15 +3,26 @@ import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { Col, Row, Typography } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useDataService } from "@opendash/plugin-timeseries";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { SingleSelectDropdown, CustomDropdown } from "..//dropdown";
 import { CustomButton } from "../button";
 import { CustomChart } from "..//chart";
+import { useLocation, useParams } from "@opendash/router";
 
-const LakeStats = ({}) => {
+const LakeStats: React.FC = ({}) => {
+  // const lakeId = useParams();
+  // console.log("lake id: ", lakeId);
+
+  const location = useLocation();
+  const {
+    item: { sensors },
+  } = location.state || {};
+
+  console.log("test:", sensors);
+
   useEffect(() => {
-    fetchData(items);
+    // fetchData(items);
   }, []);
 
   const t = useTranslation();
@@ -30,108 +41,108 @@ const LakeStats = ({}) => {
     { key: "week", label: "Weekly" }, // Week
     { key: "year", label: "Yearly" }, // Year
   ];
-  const items = [
-    [
-      {
-        id: "sensor_ploetzensee_waterlevel",
-        name: "Plötzensee Water Level",
-        source: "ad4gd_lakes",
-        valueTypes: [
-          {
-            type: "Number",
-            name: "Water Level",
-            unit: "cm",
-          },
-        ],
-        meta: {
-          visible: true,
-          referenceChange: false,
-          onChange: false,
-          source_source: "ad4gd_lakes",
-          id_source: "sensor_ploetzensee_waterlevel",
-          active: true,
-          persist: true,
-          BaseDataRevision: false,
-          configuration_id: "66c33b8e183386126fe055c3",
-          vTypeHash: "mNumber",
-        },
-      },
-      0,
-    ],
-    [
-      {
-        id: "sensor_ploetzensee_watertemperature",
-        name: "Plötzensee Water Temperature",
-        source: "ad4gd_lakes",
-        valueTypes: [
-          {
-            type: "Number",
-            name: "Water Temperature",
-            unit: "°C",
-          },
-        ],
-        meta: {
-          referenceChange: false,
-          persist: true,
-          BaseDataRevision: false,
-          vTypeHash: "°CNumber",
-        },
-      },
-      0,
-    ],
-  ];
+  // const items = [
+  //   [
+  //     {
+  //       id: "sensor_ploetzensee_waterlevel",
+  //       name: "Plötzensee Water Level",
+  //       source: "ad4gd_lakes",
+  //       valueTypes: [
+  //         {
+  //           type: "Number",
+  //           name: "Water Level",
+  //           unit: "cm",
+  //         },
+  //       ],
+  //       meta: {
+  //         visible: true,
+  //         referenceChange: false,
+  //         onChange: false,
+  //         source_source: "ad4gd_lakes",
+  //         id_source: "sensor_ploetzensee_waterlevel",
+  //         active: true,
+  //         persist: true,
+  //         BaseDataRevision: false,
+  //         configuration_id: "66c33b8e183386126fe055c3",
+  //         vTypeHash: "mNumber",
+  //       },
+  //     },
+  //     0,
+  //   ],
+  //   [
+  //     {
+  //       id: "sensor_ploetzensee_watertemperature",
+  //       name: "Plötzensee Water Temperature",
+  //       source: "ad4gd_lakes",
+  //       valueTypes: [
+  //         {
+  //           type: "Number",
+  //           name: "Water Temperature",
+  //           unit: "°C",
+  //         },
+  //       ],
+  //       meta: {
+  //         referenceChange: false,
+  //         persist: true,
+  //         BaseDataRevision: false,
+  //         vTypeHash: "°CNumber",
+  //       },
+  //     },
+  //     0,
+  //   ],
+  // ];
 
   //Here you get the Values from the Settings!
   //   const items = context.useItemDimensionConfig();
   //   console.log("items", items);
 
-  const fetchProperties = (items: any[]) => {
-    return items.map((item: any[]) => {
-      const { valueTypes } = item[0];
-      const key = valueTypes[0].name;
-      const label = valueTypes[0].name;
+  // const fetchProperties = (items: any[]) => {
+  //   return items.map((item: any[]) => {
+  //     const { valueTypes } = item[0];
+  //     const key = valueTypes[0].name;
+  //     const label = valueTypes[0].name;
 
-      return {
-        key,
-        label,
-      };
-    });
-  };
+  //     return {
+  //       key,
+  //       label,
+  //     };
+  //   });
+  // };
 
-  const properties = fetchProperties(items);
+  // const properties = fetchProperties(items);
 
-  const transformData = (data: any[]) => {
-    return data.map((item: any[]) => {
-      const { id, name: lake, valueTypes } = item[0];
-      const propertyName = valueTypes[0].name;
-      const unit = valueTypes[0].unit;
-      const data = item[2];
+  // const transformData = (data: any[]) => {
+  //   return data.map((item: any[]) => {
+  //     const { id, name: lake, valueTypes } = item[0];
+  //     const propertyName = valueTypes[0].name;
+  //     const unit = valueTypes[0].unit;
+  //     const data = item[2];
 
-      return {
-        id,
-        lake,
-        propertyName,
-        unit,
-        data,
-      };
-    });
-  };
+  //     return {
+  //       id,
+  //       lake,
+  //       propertyName,
+  //       unit,
+  //       data,
+  //     };
+  //   });
+  // };
 
-  const fetchData = (items) => {
-    DataService.fetchDimensionValuesMultiItem(items, {
-      historyType: "relative",
-      unit: "year",
-      value: 2,
-    }).then((result) => {
-      //Array of Data Points
-      console.log("transformed data", result);
-      const transformedData = transformData(result);
-      setData(transformedData);
-    });
-  };
+  // const fetchData = (items) => {
+  //   DataService.fetchDimensionValuesMultiItem(items, {
+  //     historyType: "relative",
+  //     unit: "year",
+  //     value: 2,
+  //   }).then((result) => {
+  //     //Array of Data Points
+  //     // console.log("transformed data", result);
+  //     const transformedData = transformData(result);
+  //     setData(transformedData);
+  //   });
+  // };
 
   //If you want to get all Items without the Settings, you can use this!
-  console.log("result without settings", DataService._listOrThrowSync());
+  // console.log("result without settings", DataService._listOrThrowSync());
 
   const selectProperties = (e: any) => {
     const value = e.key;
@@ -146,68 +157,33 @@ const LakeStats = ({}) => {
     setSelectedFilter(key);
   };
 
-  //   const data = [
-  //     {
-  //       timestamp: 1634059200000,
-  //       Wasserstand: 75,
-  //       Temperatur: 20,
-  //       Luftfeuchtigkeit: 40,
-  //     },
-  //     {
-  //       timestamp: 1634145600000,
-  //       Wasserstand: 60,
-  //       Temperatur: 25,
-  //       Luftfeuchtigkeit: 45,
-  //     },
-  //     {
-  //       timestamp: 1634232000000,
-  //       Wasserstand: 80,
-  //       Temperatur: 22,
-  //       Luftfeuchtigkeit: 50,
-  //     },
-  //     {
-  //       timestamp: 1634318400000,
-  //       Wasserstand: 70,
-  //       Temperatur: 23,
-  //       Luftfeuchtigkeit: 55,
-  //     },
-  //     {
-  //       timestamp: 1634404800000,
-  //       Wasserstand: 85,
-  //       Temperatur: 21,
-  //       Luftfeuchtigkeit: 60,
-  //     },
-  //     {
-  //       timestamp: 1634491200000,
-  //       Wasserstand: 65,
-  //       Temperatur: 24,
-  //       Luftfeuchtigkeit: 55,
-  //     },
-  //     {
-  //       timestamp: 1634577600000,
-  //       Wasserstand: 90,
-  //       Temperatur: 26,
-  //       Luftfeuchtigkeit: 65,
-  //     },
-  //     {
-  //       timestamp: 1634664000000,
-  //       Wasserstand: 55,
-  //       Temperatur: 28,
-  //       Luftfeuchtigkeit: 70,
-  //     },
-  //     {
-  //       timestamp: 1634750400000,
-  //       Wasserstand: 95,
-  //       Temperatur: 27,
-  //       Luftfeuchtigkeit: 75,
-  //     },
-  //     {
-  //       timestamp: 1634836800000,
-  //       Wasserstand: 50,
-  //       Temperatur: 30,
-  //       Luftfeuchtigkeit: 80,
-  //     },
-  //   ];
+  const myConfig1 = useMemo(() => {
+    const config = {
+      _sources: [],
+      _items: [],
+      _dimensions: [
+        ["ad4gd_lakes", "sensor_flughafensee_waterlevel", 0],
+        ["ad4gd_lakes", "sensor_flughafensee_watertemperature", 0],
+      ],
+      _history: {},
+    };
+
+    return config;
+  }, [sensors]);
+
+  const myConfig2 = useMemo(() => {
+    const config = {
+      _sources: [],
+      _items: [],
+      _dimensions: sensors,
+      _history: {},
+    };
+
+    return config;
+  }, [sensors]);
+
+  console.log("myConfig1: ", myConfig1);
+  console.log("myConfig2: ", myConfig2);
 
   return (
     <>
@@ -222,7 +198,7 @@ const LakeStats = ({}) => {
         <div
           style={{
             width: "30%",
-            backgroundColor: "white",
+            backgroundColor: "red",
           }}
         ></div>
 
@@ -239,7 +215,7 @@ const LakeStats = ({}) => {
             backgroundColor: "white",
           }}
         >
-          <Title
+          {/* <Title
             level={4}
             style={{
               fontWeight: "bold",
@@ -247,10 +223,10 @@ const LakeStats = ({}) => {
             }}
           >
             Verfügbare Daten zu diesem See
-          </Title>
+          </Title> */}
 
           {/* Add gutter for spacing */}
-          <Row
+          {/* <Row
             gutter={[16, 16]}
             style={{ marginTop: "2%", justifyContent: "space-evenly" }}
           >
@@ -266,15 +242,20 @@ const LakeStats = ({}) => {
               selectedValue={selectedFilter}
               handleClick={selectFilter}
             />
-          </Row>
+          </Row> */}
 
-          <CustomChart
+          {/* <CustomChart
             data={data}
             properties={selectedProperties}
             filter={selectedFilter}
-          />
+          /> */}
 
-          <Row style={{ marginTop: "2%" }}>
+          <WidgetStatic
+            type="lakeStats-widget"
+            config={myConfig1}
+          ></WidgetStatic>
+
+          {/* <Row style={{ marginTop: "2%" }}>
             <Link
               style={{
                 color: "#42A456",
@@ -300,7 +281,7 @@ const LakeStats = ({}) => {
 
               <CustomButton text="Download Rohdaten" />
             </Row>
-          </Row>
+          </Row> */}
         </div>
         <div
           style={{

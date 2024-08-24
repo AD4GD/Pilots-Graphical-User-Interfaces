@@ -3,7 +3,7 @@ import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
 import { useUrlParam } from "@opendash/core";
-import { Button } from "antd";
+import { Button, Carousel } from "antd";
 
 interface CustomCarouselProps {
   images: string[];
@@ -16,6 +16,7 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
     null as string | null,
     "string"
   );
+
   React.useEffect(() => {
     init();
   }, []);
@@ -64,35 +65,6 @@ const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
 
   return (
     <>
-      {/* <Select
-        style={{ width: "100%" }}
-        options={zones}
-        value={cZone}
-        onChange={(zone) => {
-          console.log({ zone });
-          if (zone) {
-            setCZone(zone);
-          }
-        }}
-      ></Select> */}
-      {!lakeId && (
-        <>
-          <WidgetStatic
-            style={{ height: "100vh" }}
-            type="kpi-map"
-            config={config}
-          ></WidgetStatic>
-          <Button
-            onClick={() => {
-              setLakeId("adljbngoqe");
-            }}
-          >
-            {" "}
-          </Button>
-        </>
-      )}
-      {lakeId && <h1>Details of lake with id {lakeId}</h1>}
-
       {/* <Carousel arrows>
         {images.map((image, index) => (
           <div key={index}>

@@ -20,17 +20,16 @@ import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStatss from "./widgets/lakeStats";
 import lakeOverviewWidget from "./widgets/lakeOverview";
-import HomePage from "./widgets/lakeOverview";
 import { Carousel } from "./components/carousel";
-import { LakeOverview } from "./components/lakeOverviewPage";
+import { LakeOverview } from "./components/LakeOverviewPage";
 import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
+import { NotFound } from "./components/NotFoundPage";
 
 init("opendash", async (factory) => {
   // Icons
   // @ts-ignore
   registerIconPack(await import("@opendash/icons/dist/fa-regular.json"));
-
   // Translations:
 
   factory.registerLanguage("en", "English");
@@ -58,6 +57,18 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/lake",
     componentSync: LakeStats,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/lake/:lakeId",
+    componentSync: LakeStats,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "*",
+    componentSync: NotFound,
     props: {},
   });
 

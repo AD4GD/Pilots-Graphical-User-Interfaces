@@ -19,7 +19,7 @@ const { Search } = Input;
 
 const { Title, Text } = Typography;
 
-const Information = ({ ...data }) => {
+const Information: React.FC = ({ ...data }) => {
   const navigate = useNavigate();
   const DataService = useDataService();
   console.log("data", data);

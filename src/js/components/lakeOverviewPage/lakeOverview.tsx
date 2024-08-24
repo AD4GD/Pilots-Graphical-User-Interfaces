@@ -2,15 +2,25 @@ import React, { useEffect, useMemo, useState } from "react";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
-import { useNavigation, useUrlParam } from "@opendash/core";
-import { Avatar, Button, Flex, Input, List, Row, Typography } from "antd";
+import { useUrlParam } from "@opendash/core";
+import {
+  Avatar,
+  Button,
+  Flex,
+  Input,
+  List,
+  Row,
+  Typography,
+  AutoComplete,
+} from "antd";
 import { useNavigate } from "@opendash/router";
+import { SearchOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
 
 const { Title, Text } = Typography;
 
-const LakeOverview = () => {
+const LakeOverview: React.FC = () => {
   // const [lakeId, setLakeId] = useUrlParam(
   //   "lakeid",
   //   null as string | null,
@@ -26,6 +36,9 @@ const LakeOverview = () => {
     }[]
   );
 
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [options, setOptions] = useState<{ value: string }[]>([]);
+
   useEffect(() => {
     init();
   }, []);
@@ -38,6 +51,7 @@ const LakeOverview = () => {
           label: zone.get("label"),
           id: zone.id,
           type: zone.get("description"),
+          sensors: zone.get("sensors"),
         };
       })
     );
@@ -51,6 +65,45 @@ const LakeOverview = () => {
   // const { result: lakes, reload, error, loading } = useParseQuery(lakeQuery);
 
   // console.log({ lakes });
+
+  const handleClick = (item: { type: string; label: string; id: string }) => {
+    navigate("/lake", { state: { item } });
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    const filteredOptions = zones
+      .filter(
+        (zone) =>
+          zone.type === "lake" &&
+          zone.label.toLowerCase().includes(value.toLowerCase())
+      )
+      .map((zone) => ({ value: zone.label }));
+
+    setOptions(filteredOptions);
+  };
+
+  const handleSelect = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  const filteredZones = useMemo(() => {
+    const selectedZone = zones.find(
+      (zone) =>
+        zone.type === "lake" &&
+        zone.label.toLowerCase() === searchQuery.toLowerCase()
+    );
+
+    if (selectedZone) {
+      return [selectedZone];
+    }
+
+    return zones.filter(
+      (zone) =>
+        zone.type === "lake" &&
+        zone.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [zones, searchQuery]);
 
   const mapConfig = useMemo(() => {
     const config = {
@@ -66,18 +119,51 @@ const LakeOverview = () => {
       },
       onEvent: (type: string, event: any) => {
         console.log({ type, event });
-        console.log(
-          "ID of clicked Features",
-          // event.features.map((f: any) => f.properties.objectId)
-          event.features.filter(
-            (f: any) => f.properties.description === "lake"
-          )[0].properties.objectId
+        // console.log(
+        //   "ID of clicked Features",
+        //   // event.features.map((f: any) => f.properties.objectId)
+        //   event.features.filter(
+        //     (f: any) => f.properties.description === "lake"
+        //   )[0].properties.objectId
+        // );
+        navigate(
+          `/lake/${
+            event.features.filter(
+              (f: any) => f.properties.description === "lake"
+            )[0].properties.objectId
+          }`
         );
       },
     };
 
     return config;
   }, [zones]);
+
+  // const mapConfig = useMemo(() => {
+  //   const config = {
+  //     markers: [],
+  //     zones: {
+  //       type: "zones",
+  //       districtsFromZones: filteredZones.map((zone) => zone.id),
+  //       districts: null,
+  //       districtFromDimension: null,
+  //     },
+  //     _history: {
+  //       aggregation: false,
+  //     },
+  //     onEvent: (type: string, event: any) => {
+  //       console.log({ type, event });
+  //       console.log(
+  //         "ID of clicked Features",
+  //         event.features.filter(
+  //           (f: any) => f.properties.description === "lake"
+  //         )[0].properties.objectId
+  //       );
+  //     },
+  //   };
+
+  //   return config;
+  // }, [filteredZones]);
 
   return (
     <>
@@ -129,17 +215,27 @@ const LakeOverview = () => {
               style={{
                 fontWeight: "bold",
                 marginBottom: "1%",
-                fontFamily: "Josefin Sans",
+                width: "100%",
+                letterSpacing: "0.25rem",
               }}
             >
               Kleine Seen in Berlin
             </Title>
 
-            <Search
-              placeholder="See suchen..."
-              onSearch={() => console.log("hi")}
-              style={{ width: 250, marginBottom: "1rem" }}
-            />
+            <Input.Group compact>
+              <AutoComplete
+                options={options}
+                style={{ width: 220 }}
+                onSearch={handleSearch}
+                onSelect={handleSelect}
+                placeholder="See suchen..."
+                value={searchQuery}
+              />
+              <Button
+                icon={<SearchOutlined />}
+                onClick={() => handleSearch(searchQuery)}
+              />
+            </Input.Group>
 
             <WidgetStatic
               style={{ width: "100%", height: "100%" }}
@@ -199,7 +295,7 @@ const LakeOverview = () => {
               <List
                 style={{ width: "100%", height: "100%" }}
                 itemLayout="horizontal"
-                dataSource={zones.filter((z) => z.type === "lake")}
+                dataSource={filteredZones}
                 size="small"
                 split={false}
                 renderItem={(item, index) => (
@@ -214,8 +310,19 @@ const LakeOverview = () => {
                           }
                         />
                       }
-                      title={<a href="">{item.label}</a>}
-                      description={"lake"}
+                      // title={<a href={`/lake/${item.id}`}>{item.label}</a>}
+                      title={
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault(); // Prevent default anchor behavior
+                            handleClick(item); // Handle the click to navigate and pass props
+                          }}
+                        >
+                          {item.label}
+                        </a>
+                      }
+                      description={item.id}
                     />
                   </List.Item>
                 )}

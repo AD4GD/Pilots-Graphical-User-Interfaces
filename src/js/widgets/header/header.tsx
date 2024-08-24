@@ -54,12 +54,18 @@ export default createWidgetComponent<ConfigInterface>(
             }}
           >
             <Flex
-              justify="center"
+              justify="flex-end"
               gap="large"
               align="center"
-              style={{ height: "100%" }}
+              style={{ height: "100%", marginRight: "3rem" }}
             >
-              <Button type="primary" size="large">
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => {
+                  navigate("/home");
+                }}
+              >
                 Übersicht Seen
               </Button>
               <Button type="primary" size="large">
@@ -78,6 +84,9 @@ export default createWidgetComponent<ConfigInterface>(
                 type="primary"
                 size="large"
                 icon={<UserOutlined />}
+                onClick={() => {
+                  console.log("hi");
+                }}
               ></Button>
             </Flex>
           </ConfigProvider>
