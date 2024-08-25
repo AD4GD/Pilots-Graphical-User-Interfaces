@@ -2,7 +2,7 @@ import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { Row, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 import {
   SingleSelectDropdown,
@@ -12,33 +12,40 @@ import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import { ConfigInterface } from "./types";
 
+interface Data {
+  id: any;
+  lake: any;
+  propertyName: any;
+  unit: any;
+  data: {
+    unit: string;
+    date: string;
+    value: number;
+  }[];
+}
+
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
     const t = useTranslation();
-
     context["setLoading"](false);
     const DataService = useDataService();
-
-    // console.log("dataservice", DataService);
-    //Here you get the Values from the Settings!
     const items = context.useItemDimensionConfig();
-    // console.log("items", items);
-    const [data, setData] = useState([]);
 
+    // State variables
+    const [data, setData] = useState<Data[]>([]);
+    const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+    const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+
+    // Fetch properties and transform data
     const fetchProperties = (items: any[]) => {
       return items.map((item: any[]) => {
         const { valueTypes } = item[0];
         const key = valueTypes[0].name;
         const label = valueTypes[0].name;
 
-        return {
-          key,
-          label,
-        };
+        return { key, label };
       });
     };
-
-    const properties = fetchProperties(items);
 
     const transformData = (data: any[]) => {
       return data.map((item: any[]) => {
@@ -47,41 +54,85 @@ export default createWidgetComponent<ConfigInterface>(
         const unit = valueTypes[0].unit;
         const data = item[2];
 
-        return {
-          id,
-          lake,
-          propertyName,
-          unit,
-          data,
-        };
+        return { id, lake, propertyName, unit, data };
       });
     };
 
-    DataService.fetchDimensionValuesMultiItem(items, {
-      historyType: "relative",
-      unit: "year",
-      value: 2,
-    }).then((result) => {
-      //Array of Data Points
-      // console.log("transformed data", result);
-      const transformedData = transformData(result);
-      setData(transformedData);
-    });
+    const aggregateData = (
+      data: { date: string; value: number }[],
+      filter: string | null
+    ) => {
+      const aggregated: Record<string, number> = {};
 
-    //If you want to get all Items without the Settings, you can use this!
-    // console.log("result without settings", DataService._listOrThrowSync());
+      data.forEach(({ date, value }) => {
+        const dateObj = new Date(date);
+        let key: string;
 
-    const { Title, Link } = Typography;
-    const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+        switch (filter) {
+          case "week":
+            const startOfWeek = new Date(dateObj);
+            startOfWeek.setDate(dateObj.getDate() - dateObj.getDay());
+            key = startOfWeek.toISOString().split("T")[0];
+            break;
+          case "month":
+            key = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}`;
+            break;
+          case "year":
+            key = dateObj.getFullYear().toString();
+            break;
+          case "day":
+          default:
+            key = dateObj.toISOString().split("T")[0];
+        }
+
+        aggregated[key] = (aggregated[key] || 0) + value;
+      });
+
+      return Object.entries(aggregated).map(([key, value]) => ({
+        date: key,
+        value,
+      }));
+    };
+
+    const aggregateAllData = useMemo(() => {
+      const filteredData = data.filter((item) =>
+        selectedProperties.includes(item.propertyName)
+      );
+
+      return filteredData.map(({ propertyName, data }) => {
+        const aggregated = aggregateData(data, selectedFilter);
+        return {
+          type: "line",
+          name: propertyName,
+          unit: data[0]?.unit || "Value",
+          data: aggregated.map(({ date, value }) => [
+            new Date(date).getTime(), // X value: timestamp
+            value, // Y value: number
+          ]) as [number, number][], // Cast to ensure type correctness
+        };
+      });
+    }, [data, selectedProperties, selectedFilter, aggregateData]);
+
+    // Fetch data on mount and when items change
+    useEffect(() => {
+      DataService.fetchDimensionValuesMultiItem(items, {
+        historyType: "relative",
+        unit: "year",
+        value: 2,
+      }).then((result) => {
+        const transformedData = transformData(result);
+        setData(transformedData);
+      });
+    }, [DataService, items]);
+
+    const properties = useMemo(() => fetchProperties(items), [items]);
 
     const timeFilter = [
-      { key: "day", label: "Daily" }, // Day
-      { key: "month", label: "Monthly" }, // Month
-      { key: "week", label: "Weekly" }, // Week
-      { key: "year", label: "Yearly" }, // Year
+      { key: "day", label: "Daily" },
+      { key: "month", label: "Monthly" },
+      { key: "week", label: "Weekly" },
+      { key: "year", label: "Yearly" },
     ];
-
-    const [selectedFilter, setSelectedFilter] = useState<string | null>("");
 
     const selectProperties = (e: any) => {
       const value = e.key;
@@ -90,6 +141,9 @@ export default createWidgetComponent<ConfigInterface>(
           ? prevValues.filter((v) => v !== value)
           : [...prevValues, value]
       );
+      if (selectedFilter == null) {
+        selectFilter("day");
+      }
     };
 
     const selectFilter = (key: string) => {
@@ -97,21 +151,14 @@ export default createWidgetComponent<ConfigInterface>(
     };
 
     return (
-      <div style={{ flex: 0.7, margin: "5%" }}>
-        <Title
+      <>
+        <Typography.Title
           level={4}
-          style={{
-            fontWeight: "bold",
-            paddingBottom: "2%",
-            // backgroundColor: window?.document?.documentElement?.style.cssText
-            //   .split(";")[0]
-            //   .split(": ")[1],
-          }}
+          style={{ fontWeight: "bold", paddingBottom: "2%" }}
         >
           Verfügbare Daten zu diesem See
-        </Title>
+        </Typography.Title>
 
-        {/* Add gutter for spacing */}
         <Row
           gutter={[16, 16]}
           style={{ marginTop: "2%", justifyContent: "space-evenly" }}
@@ -124,20 +171,20 @@ export default createWidgetComponent<ConfigInterface>(
 
           <SingleSelectDropdown
             items={timeFilter}
-            placeholder="Wähle weitere Daten"
+            placeholder="Select Frequency"
             selectedValue={selectedFilter}
             handleClick={selectFilter}
           />
         </Row>
 
         <CustomChart
-          data={data}
-          properties={selectedProperties}
+          data={aggregateAllData} // Pass the aggregated data to CustomChart
           filter={selectedFilter}
+          properties={selectedProperties}
         />
 
-        <Row gutter={[16, 16]} style={{ marginTop: "2%", padding: "2%" }}>
-          <Link
+        <Row style={{ marginTop: "2%" }}>
+          <Typography.Link
             style={{
               color: "#42A456",
               fontSize: "16px",
@@ -151,19 +198,18 @@ export default createWidgetComponent<ConfigInterface>(
             underline
           >
             Wie wurden die dargestellten Daten erhoben?
-          </Link>
+          </Typography.Link>
           <Row
             style={{
-              flex: 0.33,
+              flex: 0.35,
               justifyContent: "space-between",
             }}
           >
             <CustomButton text="Download Graph" />
-
             <CustomButton text="Download Rohdaten" />
           </Row>
         </Row>
-      </div>
+      </>
     );
   }
 );
