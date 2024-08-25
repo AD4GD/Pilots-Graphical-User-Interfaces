@@ -1,0 +1,26 @@
+/* ChartComponent.css */
+
+.chart-placeholder-container {
+  height: 400px;
+  margin-top: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f2f5; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  padding: 20px; /* Padding around the content */
+  border: 1px solid #d9d9d9; /* Border to give it a subtle outline */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Subtle shadow for depth */
+}
+
+.chart-placeholder-text {
+  font-size: 16px;
+  color: #595959; /* Slightly darker gray for the text */
+  margin: 0;
+  text-align: center; /* Center the text */
+}
+
+.chart-container {
+  height: 400px;
+  margin-top: 50px;
+}

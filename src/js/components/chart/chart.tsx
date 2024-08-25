@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from "react";
 import Highcharts, { Options } from "highcharts";
+import "./chartComponent.css"; // Import the CSS file
 
 interface ChartProps {
   data: {
@@ -47,7 +48,9 @@ const ChartComponent: React.FC<ChartProps> = ({ data, filter }) => {
               ? formatXAxisLabel(this.value)
               : this.value;
           },
+          rotation: -45, // Optional: Rotates the labels for better readability
         },
+        tickPixelInterval: 50, // Decrease this value to show more ticks
       },
       yAxis: {
         title: {
@@ -59,18 +62,28 @@ const ChartComponent: React.FC<ChartProps> = ({ data, filter }) => {
   }, [data, formatXAxisLabel]);
 
   useEffect(() => {
-    const chart = Highcharts.chart("container", generateChartConfig());
+    if (filter) {
+      const chart = Highcharts.chart("container", generateChartConfig());
 
-    return () => {
-      if (chart) {
-        chart.destroy();
-      }
-    };
-  }, [generateChartConfig]);
+      return () => {
+        if (chart) {
+          chart.destroy();
+        }
+      };
+    }
+  }, [generateChartConfig, filter]);
 
-  return (
-    <div id="container" style={{ height: "400px", marginTop: "50px" }}></div>
-  );
+  if (!filter) {
+    return (
+      <div className="chart-placeholder-container">
+        <p className="chart-placeholder-text">
+          Please select a time filter to display the chart.
+        </p>
+      </div>
+    );
+  }
+
+  return <div id="container" className="chart-container"></div>;
 };
 
 export default ChartComponent;

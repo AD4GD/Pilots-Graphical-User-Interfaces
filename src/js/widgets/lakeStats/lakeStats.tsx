@@ -178,7 +178,7 @@ export default createWidgetComponent<ConfigInterface>(
         </Row>
 
         <CustomChart
-          data={aggregateAllData} // Pass the aggregated data to CustomChart
+          data={aggregateAllData}
           filter={selectedFilter}
           properties={selectedProperties}
         />
