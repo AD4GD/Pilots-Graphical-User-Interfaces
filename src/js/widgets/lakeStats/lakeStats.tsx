@@ -134,8 +134,8 @@ export default createWidgetComponent<ConfigInterface>(
 
     const timeFilter = [
       { key: "day", label: "Daily" },
-      { key: "month", label: "Monthly" },
       { key: "week", label: "Weekly" },
+      { key: "month", label: "Monthly" },
       { key: "year", label: "Yearly" },
     ];
 
