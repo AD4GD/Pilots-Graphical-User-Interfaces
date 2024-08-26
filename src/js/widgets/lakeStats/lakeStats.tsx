@@ -62,7 +62,7 @@ export default createWidgetComponent<ConfigInterface>(
       data: { date: string; value: number }[],
       filter: string | null
     ) => {
-      const aggregated: Record<string, number> = {};
+      const aggregated: Record<string, { sum: number; count: number }> = {};
 
       data.forEach(({ date, value }) => {
         const dateObj = new Date(date);
@@ -85,12 +85,17 @@ export default createWidgetComponent<ConfigInterface>(
             key = dateObj.toISOString().split("T")[0];
         }
 
-        aggregated[key] = (aggregated[key] || 0) + value;
+        if (!aggregated[key]) {
+          aggregated[key] = { sum: 0, count: 0 };
+        }
+
+        aggregated[key].sum += value;
+        aggregated[key].count += 1;
       });
 
-      return Object.entries(aggregated).map(([key, value]) => ({
+      return Object.entries(aggregated).map(([key, { sum, count }]) => ({
         date: key,
-        value,
+        value: sum / count,
       }));
     };
 
