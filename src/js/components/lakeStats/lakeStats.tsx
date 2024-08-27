@@ -1,22 +1,37 @@
 import { useTranslation } from "@opendash/core";
-import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { Col, Row, Typography } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
-import { useDataService } from "@opendash/plugin-timeseries";
-import React, { useEffect, useMemo, useState } from "react";
-
-import { SingleSelectDropdown, CustomDropdown } from "..//dropdown";
-import { CustomButton } from "../button";
-import { CustomChart } from "..//chart";
+import React, { useMemo } from "react";
 import { useLocation, useParams } from "@opendash/router";
+import { Carousel } from "../carousel";
+
+interface PropertyRowProps {
+  label: string;
+  value: string | undefined;
+}
+
+interface LabelIconProps {
+  label: string;
+  icon: string;
+}
+
+const { Title, Text } = Typography;
+
+const PropertyRow: React.FC<PropertyRowProps> = ({ label, value }) => (
+  <Row>
+    <Text style={{ flex: 0.35, fontSize: "15px", fontWeight: "600" }}>
+      {label}:
+    </Text>
+    <Text style={{ flex: 0.65, fontSize: "15px" }}>{value}</Text>
+  </Row>
+);
 
 const LakeStats: React.FC = ({}) => {
+  const { lakeId } = useParams();
   const location = useLocation();
   const {
     item: { sensors },
   } = location.state || {};
-
-  console.log("test:", ...sensors);
 
   const t = useTranslation();
 
@@ -29,7 +44,44 @@ const LakeStats: React.FC = ({}) => {
     };
   }, [sensors]);
 
-  console.log("config: ", config);
+  const properties = [
+    {
+      id: "N9vhwQrU8x",
+      name: "Plötzensee",
+      area: "76800 m2",
+      swimmingUsage: "Ja",
+      district: "Mitte",
+      circumference: "1645,102 m",
+      images: ["1", "2", "3"],
+    },
+    {
+      id: "H7wRivfzrC",
+      name: "Flughafensee",
+      area: "30.6 ha",
+      swimmingUsage: "tbd",
+      district: "Reinickendorf",
+      circumference: "3.545 km",
+      images: ["1", "2", "3"],
+    },
+    {
+      id: "DNuO9mBwVq",
+      name: "Buckower Dorfteich",
+      area: "tbd",
+      swimmingUsage: "tbd",
+      district: "Neukölln",
+      circumference: "tbd",
+      images: ["1", "2", "3"],
+    },
+    {
+      id: "eiqVOoiri9",
+      name: "Britzer Kirchteich",
+      area: "tbd",
+      swimmingUsage: "tbd",
+      district: "Neukölln",
+      circumference: "tbd",
+      images: ["1", "2", "3"],
+    },
+  ];
 
   return (
     <>
@@ -44,9 +96,69 @@ const LakeStats: React.FC = ({}) => {
         <div
           style={{
             width: "30%",
-            backgroundColor: "red",
+            backgroundColor: "white",
           }}
-        ></div>
+        >
+          <Title level={1} style={{ fontWeight: "bold", marginBottom: "2%" }}>
+            {properties.find((item) => item.id === lakeId)?.name}
+          </Title>
+          <Row>
+            <Col
+              style={{
+                alignSelf: "center",
+              }}
+            >
+              <svg width="12" height="12">
+                <circle cx="6" cy="6" r="6" fill="#55b169" />
+              </svg>
+              <Text
+                strong
+                style={{
+                  lineHeight: 0,
+                  fontSize: "15px",
+                  marginLeft: "5px",
+                }}
+              >
+                {properties.find((item) => item.id === lakeId)?.name} I ggf.
+                Zusatzinfos wie Zahl?
+              </Text>
+            </Col>
+          </Row>
+
+          <Carousel
+            images={properties.find((item) => item.id === lakeId)?.images}
+          />
+          <Title level={5} style={{ fontWeight: "bold" }}>
+            Bildbeschreibung zum obenstehenden Bild
+          </Title>
+
+          <div style={{ marginTop: "6%" }}>
+            <PropertyRow
+              label={t("Name")}
+              value={properties.find((item) => item.id === lakeId)?.name}
+            />
+            <PropertyRow
+              label={t("Fläche")}
+              value={properties.find((item) => item.id === lakeId)?.area}
+            />
+            <PropertyRow
+              label={t("Badenutzung")}
+              value={
+                properties.find((item) => item.id === lakeId)?.swimmingUsage
+              }
+            />
+            <PropertyRow
+              label={t("Bezirk")}
+              value={properties.find((item) => item.id === lakeId)?.district}
+            />
+            <PropertyRow
+              label={t("Umfang")}
+              value={
+                properties.find((item) => item.id === lakeId)?.circumference
+              }
+            />
+          </div>
+        </div>
 
         <div
           style={{
@@ -63,7 +175,8 @@ const LakeStats: React.FC = ({}) => {
         >
           <WidgetStatic type="lakeStats-widget" config={config}></WidgetStatic>
         </div>
-        <div
+
+        {/* <div
           style={{
             width: "64%",
             marginLeft: "2%",
@@ -75,7 +188,7 @@ const LakeStats: React.FC = ({}) => {
             height: "calc(30vh)",
             backgroundColor: "white",
           }}
-        ></div>
+        ></div> */}
       </Row>
     </>
   );

@@ -66,8 +66,48 @@ const LakeOverview: React.FC = () => {
 
   // console.log({ lakes });
 
-  const handleClick = (item: { type: string; label: string; id: string }) => {
-    navigate("/lake", { state: { item } });
+  const handleNavigateToStats = (item: {
+    type: string;
+    label: string;
+    id: string;
+  }) => {
+    console.log(item);
+    navigate(`/lake/${item.id}`, { state: { item } });
+  };
+
+  const handleMapClick = async (id: string) => {
+    try {
+      const lakeQuery = new Parse.Query("MIAAS_Geographies").equalTo(
+        "objectId",
+        id
+      );
+
+      const results = await lakeQuery.find();
+
+      if (results.length > 0) {
+        const lake = results[0];
+
+        console.log({
+          type: lake.get("description"),
+          label: lake.get("label"),
+          sensors: lake.get("sensors"),
+          id: id,
+        });
+
+        return {
+          type: lake.get("description"),
+          label: lake.get("label"),
+          sensors: lake.get("sensors"),
+          id: id,
+        };
+      } else {
+        console.log("No lake found with the given id");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error querying the lake:", error);
+      return null;
+    }
   };
 
   const handleSearch = (value: string) => {
@@ -117,74 +157,32 @@ const LakeOverview: React.FC = () => {
       _history: {
         aggregation: false,
       },
-      onEvent: (type: string, event: any) => {
-        console.log({ type, event });
-        // console.log(
-        //   "ID of clicked Features",
-        //   // event.features.map((f: any) => f.properties.objectId)
-        //   event.features.filter(
-        //     (f: any) => f.properties.description === "lake"
-        //   )[0].properties.objectId
-        // );
-        navigate(
-          `/lake/${
-            event.features.filter(
-              (f: any) => f.properties.description === "lake"
-            )[0].properties.objectId
-          }`
-        );
+      onEvent: async (type: string, event: any) => {
+        const objectId = event.features.filter(
+          (f: any) => f.properties.description === "lake"
+        )[0].properties.objectId;
+
+        try {
+          // Await the result from handleMapClick
+          const lakeDetails = await handleMapClick(objectId);
+
+          if (lakeDetails) {
+            // Pass the lake details directly to handleNavigateToStats
+            handleNavigateToStats(lakeDetails);
+          } else {
+            console.log("No lake details found.");
+          }
+        } catch (error) {
+          console.error("An error occurred:", error);
+        }
       },
     };
 
     return config;
   }, [zones]);
 
-  // const mapConfig = useMemo(() => {
-  //   const config = {
-  //     markers: [],
-  //     zones: {
-  //       type: "zones",
-  //       districtsFromZones: filteredZones.map((zone) => zone.id),
-  //       districts: null,
-  //       districtFromDimension: null,
-  //     },
-  //     _history: {
-  //       aggregation: false,
-  //     },
-  //     onEvent: (type: string, event: any) => {
-  //       console.log({ type, event });
-  //       console.log(
-  //         "ID of clicked Features",
-  //         event.features.filter(
-  //           (f: any) => f.properties.description === "lake"
-  //         )[0].properties.objectId
-  //       );
-  //     },
-  //   };
-
-  //   return config;
-  // }, [filteredZones]);
-
   return (
     <>
-      {/* {!lakeId && (
-        <>
-          <WidgetStatic
-            style={{ height: "100vh" }}
-            type="kpi-map"
-            config={config}
-          ></WidgetStatic>
-          <Button
-            onClick={() => {
-              setLakeId("adljbngoqe");
-            }}
-          >
-            {" "}
-          </Button>
-        </>
-      )}
-      {lakeId && <h1>Details of lake with id {lakeId}</h1>} */}
-
       <Row style={{ width: "100%", height: "80px" }}>
         <WidgetStatic
           style={{ width: "100%", height: "100%" }}
@@ -310,13 +308,12 @@ const LakeOverview: React.FC = () => {
                           }
                         />
                       }
-                      // title={<a href={`/lake/${item.id}`}>{item.label}</a>}
                       title={
                         <a
                           href="#"
                           onClick={(e) => {
-                            e.preventDefault(); // Prevent default anchor behavior
-                            handleClick(item); // Handle the click to navigate and pass props
+                            e.preventDefault();
+                            handleNavigateToStats(item);
                           }}
                         >
                           {item.label}
