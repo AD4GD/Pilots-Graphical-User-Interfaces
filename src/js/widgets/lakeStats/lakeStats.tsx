@@ -75,7 +75,9 @@ export default createWidgetComponent<ConfigInterface>(
             key = startOfWeek.toISOString().split("T")[0];
             break;
           case "month":
-            key = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}`;
+            key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1)
+              .toString()
+              .padStart(2, "0")}`;
             break;
           case "year":
             key = dateObj.getFullYear().toString();
