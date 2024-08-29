@@ -319,7 +319,8 @@ const LakeOverview: React.FC = () => {
                           {item.label}
                         </a>
                       }
-                      description={item.id}
+                      // description={item.id}
+                      description={"See"}
                     />
                   </List.Item>
                 )}

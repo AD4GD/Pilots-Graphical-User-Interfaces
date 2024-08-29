@@ -4,16 +4,41 @@ import { WidgetStatic } from "@opendash/plugin-monitoring";
 import React, { useMemo } from "react";
 import { useLocation, useParams } from "@opendash/router";
 import { Carousel } from "../carousel";
+import { StarFilled } from "@ant-design/icons";
+import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 
 interface PropertyRowProps {
   label: string;
   value: string | undefined;
 }
 
-interface LabelIconProps {
+interface IconLabelComponentProps {
+  icon: React.ComponentType<IconBaseProps>;
   label: string;
-  icon: string;
 }
+
+const IconLabelComponent: React.FC<IconLabelComponentProps> = ({
+  icon: Icon,
+  label,
+}) => {
+  return (
+    <div style={{ display: "flex", alignItems: "center", marginTop: "4%" }}>
+      <div>
+        <Icon
+          style={{
+            fontSize: "20px",
+            padding: "6px",
+            backgroundColor: "#56ECAD",
+            borderRadius: "50%",
+          }}
+        />
+      </div>
+      <Text style={{ fontSize: "16px", fontWeight: "600", marginLeft: "5%" }}>
+        {label}
+      </Text>
+    </div>
+  );
+};
 
 const { Title, Text } = Typography;
 
@@ -158,6 +183,11 @@ const LakeStats: React.FC = ({}) => {
               }
             />
           </div>
+
+          <IconLabelComponent
+            icon={StarFilled}
+            label="Als Favorit hinzufügen"
+          />
         </div>
 
         <div
