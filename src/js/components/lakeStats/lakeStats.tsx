@@ -6,6 +6,15 @@ import { useLocation, useParams } from "@opendash/router";
 import { Carousel } from "../carousel";
 import { StarFilled } from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
+import { useLakeImages, useLakeMetaData } from "../../hooks/useLakeMetaData";
+type LakeStats = {
+  id: string;
+  name: string;
+  area: number;
+  swimmingUsage: boolean;
+  district: string;
+  circumference: number;
+};
 
 interface PropertyRowProps {
   label: string;
@@ -69,45 +78,58 @@ const LakeStats: React.FC = ({}) => {
     };
   }, [sensors]);
 
-  const properties = [
-    {
-      id: "N9vhwQrU8x",
-      name: "Plötzensee",
-      area: "76800 m2",
-      swimmingUsage: "Ja",
-      district: "Mitte",
-      circumference: "1645,102 m",
-      images: ["1", "2", "3"],
-    },
-    {
-      id: "H7wRivfzrC",
-      name: "Flughafensee",
-      area: "30.6 ha",
-      swimmingUsage: "tbd",
-      district: "Reinickendorf",
-      circumference: "3.545 km",
-      images: ["1", "2", "3"],
-    },
-    {
-      id: "DNuO9mBwVq",
-      name: "Buckower Dorfteich",
-      area: "tbd",
-      swimmingUsage: "tbd",
-      district: "Neukölln",
-      circumference: "tbd",
-      images: ["1", "2", "3"],
-    },
-    {
-      id: "eiqVOoiri9",
-      name: "Britzer Kirchteich",
-      area: "tbd",
-      swimmingUsage: "tbd",
-      district: "Neukölln",
-      circumference: "tbd",
-      images: ["1", "2", "3"],
-    },
-  ];
+  // const properties = [
+  //   {
+  //     id: "N9vhwQrU8x",
+  //     name: "Plötzensee",
+  //     area: "76800 m2",
+  //     swimmingUsage: "Ja",
+  //     district: "Mitte",
+  //     circumference: "1645,102 m",
+  //     images: ["1", "2", "3"],
+  //   },
+  //   {
+  //     id: "H7wRivfzrC",
+  //     name: "Flughafensee",
+  //     area: "30.6 ha",
+  //     swimmingUsage: "tbd",
+  //     district: "Reinickendorf",
+  //     circumference: "3.545 km",
+  //     images: ["1", "2", "3"],
+  //   },
+  //   {
+  //     id: "DNuO9mBwVq",
+  //     name: "Buckower Dorfteich",
+  //     area: "tbd",
+  //     swimmingUsage: "tbd",
+  //     district: "Neukölln",
+  //     circumference: "tbd",
+  //     images: ["1", "2", "3"],
+  //   },
+  //   {
+  //     id: "eiqVOoiri9",
+  //     name: "Britzer Kirchteich",
+  //     area: "tbd",
+  //     swimmingUsage: "tbd",
+  //     district: "Neukölln",
+  //     circumference: "tbd",
+  //     images: ["1", "2", "3"],
+  //   },
+  // ];
 
+  const { result: properties } = useLakeMetaData();
+  const currentLake = properties.find(
+    (item) => item.geography?.id === lakeId
+  ) || {
+    id: undefined,
+    name: "",
+    area: 0,
+    swimmingUsage: false,
+    district: "",
+    circumference: 0,
+  };
+  const { result: images } = useLakeImages(currentLake?.id);
+  console.log({ currentLake, images, properties });
   return (
     <>
       <Row style={{ width: "100%", height: "80px" }}>
@@ -125,7 +147,7 @@ const LakeStats: React.FC = ({}) => {
           }}
         >
           <Title level={1} style={{ fontWeight: "bold", marginBottom: "2%" }}>
-            {properties.find((item) => item.id === lakeId)?.name}
+            {currentLake.name}
           </Title>
           <Row>
             <Col
@@ -144,43 +166,29 @@ const LakeStats: React.FC = ({}) => {
                   marginLeft: "5px",
                 }}
               >
-                {properties.find((item) => item.id === lakeId)?.name} I ggf.
-                Zusatzinfos wie Zahl?
+                {currentLake.name}
               </Text>
             </Col>
           </Row>
 
           <Carousel
-            images={properties.find((item) => item.id === lakeId)?.images}
+            images={images.map((image) => [
+              image.image._url,
+              image.description,
+            ])}
           />
-          <Title level={5} style={{ fontWeight: "bold" }}>
-            Bildbeschreibung zum obenstehenden Bild
-          </Title>
 
           <div style={{ marginTop: "6%" }}>
-            <PropertyRow
-              label={t("Name")}
-              value={properties.find((item) => item.id === lakeId)?.name}
-            />
-            <PropertyRow
-              label={t("Fläche")}
-              value={properties.find((item) => item.id === lakeId)?.area}
-            />
+            <PropertyRow label={t("Name")} value={currentLake.name} />
+            <PropertyRow label={t("Fläche")} value={currentLake.area + " m²"} />
             <PropertyRow
               label={t("Badenutzung")}
-              value={
-                properties.find((item) => item.id === lakeId)?.swimmingUsage
-              }
+              value={currentLake.swimmingUsage ? "Ja" : "Nein"}
             />
-            <PropertyRow
-              label={t("Bezirk")}
-              value={properties.find((item) => item.id === lakeId)?.district}
-            />
+            <PropertyRow label={t("Bezirk")} value={currentLake.district} />
             <PropertyRow
               label={t("Umfang")}
-              value={
-                properties.find((item) => item.id === lakeId)?.circumference
-              }
+              value={currentLake.circumference + " m"}
             />
           </div>
 

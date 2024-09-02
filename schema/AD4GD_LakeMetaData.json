@@ -1,0 +1,55 @@
+{
+  "fields": {
+    "area": {
+      "type": "Number",
+      "required": false
+    },
+    "circumference": {
+      "type": "Number",
+      "required": false
+    },
+    "district": {
+      "type": "String",
+      "required": false
+    },
+    "geography": {
+      "type": "Pointer",
+      "targetClass": "MIAAS_Geographies",
+      "required": false
+    },
+    "name": {
+      "type": "String",
+      "required": true
+    },
+    "swimmingUsage": {
+      "type": "Boolean",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

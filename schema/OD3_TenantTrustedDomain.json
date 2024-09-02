@@ -1,0 +1,40 @@
+{
+  "fields": {
+    "host": {
+      "type": "String",
+      "required": true
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "role:od-admin": true,
+      "role:od-tenant-admin": true
+    },
+    "update": {
+      "role:od-admin": true,
+      "role:od-tenant-admin": true
+    },
+    "delete": {
+      "role:od-admin": true,
+      "role:od-tenant-admin": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

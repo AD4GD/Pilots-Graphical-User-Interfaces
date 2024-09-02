@@ -1,0 +1,80 @@
+{
+  "fields": {
+    "extra": {
+      "type": "Object",
+      "required": true,
+      "defaultValue": {}
+    },
+    "formFields": {
+      "type": "Array",
+      "required": false,
+      "defaultValue": []
+    },
+    "label": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "Action"
+    },
+    "payload": {
+      "type": "String",
+      "required": true
+    },
+    "supportedTypes": {
+      "type": "Array",
+      "required": false,
+      "defaultValue": [
+        "Number",
+        "String",
+        "Boolean",
+        "Geo",
+        "Object"
+      ]
+    },
+    "target": {
+      "type": "String",
+      "required": false
+    },
+    "templateType": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "jp"
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    },
+    "topic": {
+      "type": "String",
+      "required": true
+    },
+    "type": {
+      "type": "String",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "fields": {
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    },
+    "ticket": {
+      "type": "Pointer",
+      "targetClass": "OD3_Maintenance_Ticket",
+      "required": true
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": false
+    },
+    "value": {
+      "type": "Number",
+      "required": true,
+      "defaultValue": 0
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

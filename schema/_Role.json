@@ -1,0 +1,44 @@
+{
+  "fields": {
+    "label": {
+      "type": "String"
+    },
+    "name": {
+      "type": "String"
+    },
+    "roles": {
+      "type": "Relation",
+      "targetClass": "_Role"
+    },
+    "users": {
+      "type": "Relation",
+      "targetClass": "_User"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

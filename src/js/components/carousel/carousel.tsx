@@ -83,23 +83,27 @@
 // export default CustomCarousel;
 
 import React from "react";
-import { Carousel, Image } from "antd";
+import { Carousel, Empty, Image, Typography } from "antd";
 interface CustomCarouselProps {
-  images: string[] | undefined;
+  images: [string, string][] | undefined;
 }
 const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => (
   <Carousel arrows>
-    {" "}
-    {images.map((image, index) => (
-      <div key={index}>
-        {" "}
-        <Image
-          src={require("./map.png")}
-          alt={`Image ${index + 1}`}
-          style={{ maxWidth: "100%", marginBottom: "5%", marginTop: "5%" }}
-        />{" "}
-      </div>
-    ))}{" "}
+    {!images && <Empty />}
+    {images &&
+      images.map((image, index) => (
+        <div key={index}>
+          {" "}
+          <Image
+            src={image[0]}
+            alt={image[1]}
+            style={{ maxWidth: "100%", marginBottom: "5%", marginTop: "5%" }}
+          />{" "}
+          <Typography.Title level={5} style={{ fontWeight: "bold" }}>
+            {image[1]}
+          </Typography.Title>
+        </div>
+      ))}
   </Carousel>
 );
 export default CustomCarousel;

@@ -1,0 +1,75 @@
+{
+  "fields": {
+    "content1": {
+      "type": "String",
+      "required": false
+    },
+    "content2": {
+      "type": "String",
+      "required": false
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": true
+    },
+    "headline": {
+      "type": "String",
+      "required": false
+    },
+    "imgSrc": {
+      "type": "String"
+    },
+    "nextSlide": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "empty"
+    },
+    "picture1": {
+      "type": "String",
+      "required": false
+    },
+    "picture2": {
+      "type": "String",
+      "required": false
+    },
+    "subheadline": {
+      "type": "String",
+      "required": false
+    },
+    "template": {
+      "type": "Number",
+      "required": true,
+      "defaultValue": 1
+    },
+    "title": {
+      "type": "String"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

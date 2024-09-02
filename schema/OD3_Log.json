@@ -1,0 +1,37 @@
+{
+  "fields": {
+    "references": {
+      "type": "Object",
+      "required": false,
+      "defaultValue": {}
+    },
+    "type": {
+      "type": "String",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

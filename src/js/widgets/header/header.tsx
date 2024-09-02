@@ -7,6 +7,7 @@ import { ConfigInterface } from "./types";
 import { Row, Col, Image, Button, Flex, ConfigProvider } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useNavigate } from "@opendash/router";
+import { Icon } from "@opendash/icons";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
@@ -83,6 +84,16 @@ export default createWidgetComponent<ConfigInterface>(
               <Button
                 type="primary"
                 size="large"
+                style={{ minWidth: "50px" }}
+                icon={<Icon icon="fa:cogs" />}
+                onClick={() => {
+                  navigate("/admin/parse/AD4GD_LakeMetaData");
+                }}
+              ></Button>
+              <Button
+                type="primary"
+                size="large"
+                style={{ minWidth: "50px" }}
                 icon={<UserOutlined />}
                 onClick={() => {
                   console.log("hi");

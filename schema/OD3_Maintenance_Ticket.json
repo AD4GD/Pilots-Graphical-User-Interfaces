@@ -1,0 +1,57 @@
+{
+  "fields": {
+    "assignedgroups": {
+      "type": "Relation",
+      "targetClass": "OD3_Group",
+      "required": false
+    },
+    "assignedusers": {
+      "type": "Relation",
+      "targetClass": "_User",
+      "required": false
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": true
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    },
+    "title": {
+      "type": "String",
+      "required": false
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

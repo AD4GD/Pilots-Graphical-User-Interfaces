@@ -1,5 +1,14 @@
 {
   "classes": {
+    "AD4GD_LakeImages": {
+      "fields": {
+        "description": "Beschreibung",
+        "image": "Aufnahme",
+        "lake": "See"
+      },
+      "label": "Gewässeraufnahme",
+      "label_plural": "Gewässeraufnahmen"
+    },
     "AD4GD_LakeMetaData": {
       "fields": {
         "description": "Beschreibung",
@@ -9,6 +18,14 @@
       },
       "label": "Gewässer",
       "label_plural": "Gewässer"
+    }
+  },
+  "home": {
+    "label": "Übersicht"
+  },
+  "menu": {
+    "areasAndObject": {
+      "label": "Gebiete und Objekte"
     }
   }
 }

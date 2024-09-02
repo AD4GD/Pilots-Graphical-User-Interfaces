@@ -1,0 +1,53 @@
+{
+  "fields": {
+    "description": {
+      "type": "String",
+      "required": false
+    },
+    "geo": {
+      "type": "Object",
+      "required": false,
+      "defaultValue": {}
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "sensors": {
+      "type": "Array",
+      "required": false,
+      "defaultValue": []
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

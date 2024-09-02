@@ -1,0 +1,59 @@
+{
+  "fields": {
+    "content": {
+      "type": "String",
+      "required": true,
+      "defaultValue": " <div className=\"reveal\">     <div className=\"slides\">       <section data-auto-animate>         <h3>Noch nichts zu sehen...</h3>       </section>            </div>   </div>"
+    },
+    "description": {
+      "type": "String",
+      "required": true
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": true,
+      "defaultValue": false
+    },
+    "firstSlide": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "empty"
+    },
+    "imgSrc": {
+      "type": "String",
+      "required": false
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "tOptions": {
+      "type": "Object",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

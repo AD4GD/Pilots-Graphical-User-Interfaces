@@ -154,6 +154,7 @@ const LakeOverview: React.FC = () => {
         districts: null,
         districtFromDimension: null,
       },
+      hideEditButton: true,
       _history: {
         aggregation: false,
       },
@@ -236,7 +237,7 @@ const LakeOverview: React.FC = () => {
             </Input.Group>
 
             <WidgetStatic
-              style={{ width: "100%", height: "100%" }}
+              style={{ width: "100%", height: "100%", position: "relative" }}
               type="kpi-map"
               config={mapConfig}
             ></WidgetStatic>

@@ -99,6 +99,7 @@ init("opendash", async (factory) => {
   // Adapter + Plugins
 
   factory.registerDeviceStorageAdapter(new StorageAdapterLS());
+  factory.ui.disableHeader();
 
   await factory.use(
     new ParsePlugin({
@@ -109,7 +110,18 @@ init("opendash", async (factory) => {
   await factory.use(new MonitoringPlugin());
   await factory.use(new GeoPlugin());
   await factory.use(new GeoPluginMapLibre());
-  await factory.use(new MobilityPlugin());
+  await factory.use(
+    new MobilityPlugin({
+      menuGroupLabel: "ad4gd:menu.areasAndObject.label",
+      menuGroupIcon: "fa:map",
+      disableMenuItems: {
+        mobilityadminproviders: true,
+        mobilityadminzones: false,
+        mobilityadmingbfs: true,
+        mobilityadminpricing: true,
+      },
+    })
+  );
   await factory.use(
     new OpenwarePlugin({
       host: "data.digitalzentrum-lr.de",
@@ -126,29 +138,16 @@ init("opendash", async (factory) => {
   await factory.use(new HighchartsPlugin());
 
   factory.registerStaticNavigationItem({
-    id: "monitoring/dashboard",
-    group: "monitoring",
+    id: "ad4gd/home",
+    group: "ad4gd",
     place: "frontpage",
-    order: 1,
-    label: "opendash:monitoring.label",
-    icon: "fa:chart-line",
+    order: 0,
+    label: "ad4gd:home.label",
+    icon: "fa:water",
     color: "#4385c2",
-    link: "/monitoring/dashboards",
+    link: "/home",
     routeCondition: "**",
     activeCondition: "/",
-  });
-  factory.registerStaticNavigationItem({
-    id: "admin/parse/item",
-    group: "admin/parse",
-    place: "frontpage",
-    order: 100,
-    label: "opendash:admin.label",
-    icon: "fa:cogs",
-    color: "#676767",
-    link: "/admin/parse/_Role",
-    routeCondition: "**",
-    activeCondition: "/",
-    permission: "parse-admin",
   });
   //.------------------- Example Admin Interface Config-------------------
 
@@ -171,18 +170,53 @@ init("opendash", async (factory) => {
     activeCondition: "/",
     permission: "parse-admin",
   });
+  factory.registerStaticNavigationItem({
+    id: "admin/ad4gd/lakeImages",
+    group: "admin/ad4gd",
+    place: "sidebar",
+    order: 100,
+    label: "ad4gd:classes.AD4GD_LakeImages.label_plural",
+    icon: "fa:image",
+    color: "#676767",
+    link: "/admin/parse/AD4GD_LakeImages",
+    routeCondition: "**",
+    activeCondition: "/",
+    permission: "parse-admin",
+  });
 
   $parse.ui.setClassConfig({
     className: "AD4GD_LakeMetaData",
-    createFields: ["label", "description", "lakeId", "image"],
-    editFields: ["label", "description", "lakeId", "image"],
-    displayFields: ["label", "description", "lakeId", "image"],
-    titleFields: ["label"],
+    createFields: [
+      "name",
+      "area",
+      "swimmingUsage",
+      "district",
+      "circumference",
+    ],
+    editFields: ["name", "area", "swimmingUsage", "district", "circumference"],
+    displayFields: [
+      "name",
+      "area",
+      "swimmingUsage",
+      "district",
+      "circumference",
+    ],
+    titleFields: ["name"],
+    // Tranlation for fields in /src/translations/[language].json
+    translationPrefix: "ad4gd:classes.",
+  });
+  $parse.ui.setDefaultView("AD4GD_LakeMetaData", { type: "table" });
+  $parse.ui.setClassConfig({
+    className: "AD4GD_LakeImages",
+    createFields: ["lake", "image", "description"],
+    editFields: ["lake", "image", "description"],
+    displayFields: ["lake", "image", "description"],
+    titleFields: ["lake"],
     // Tranlation for fields in /src/translations/[language].json
     translationPrefix: "ad4gd:classes.",
   });
 
-  $parse.ui.setDefaultView("AD4GD_LakeMetaData", { type: "table" });
+  $parse.ui.setDefaultView("AD4GD_LakeImages", { type: "table" });
   //.------------------- Example Admin Interface Config-------------------
 
   $monitoring.registerWidget(ExampleWidget);

@@ -1,0 +1,46 @@
+{
+  "fields": {
+    "createdWith": {
+      "type": "Object"
+    },
+    "expiresAt": {
+      "type": "Date"
+    },
+    "installationId": {
+      "type": "String"
+    },
+    "sessionToken": {
+      "type": "String"
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

@@ -1,5 +1,14 @@
 {
   "classes": {
+    "AD4GD_LakeImages": {
+      "fields": {
+        "description": "Description",
+        "image": "Image",
+        "lake": "Lake"
+      },
+      "label": "Lake Image",
+      "label_plural": "Lake Images"
+    },
     "AD4GD_LakeMetaData": {
       "fields": {
         "description": "Description",
@@ -9,6 +18,14 @@
       },
       "label": "Lake",
       "label_plural": "Lakes"
+    }
+  },
+  "home": {
+    "label": "Overview"
+  },
+  "menu": {
+    "areasAndObject": {
+      "label": "Areas and Objects"
     }
   },
   "widgets": {
