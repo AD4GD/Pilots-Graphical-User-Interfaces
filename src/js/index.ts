@@ -25,6 +25,8 @@ import { LakeOverview } from "./components/LakeOverviewPage";
 import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
 import { NotFound } from "./components/NotFoundPage";
+import { testWMS } from "./components/testPage";
+import { testFIS } from "./components/testFIS";
 
 init("opendash", async (factory) => {
   // Icons
@@ -63,6 +65,18 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/lake/:lakeId",
     componentSync: LakeStats,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/fcube",
+    componentSync: testWMS,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/fis",
+    componentSync: testFIS,
     props: {},
   });
 
