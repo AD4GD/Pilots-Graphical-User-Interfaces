@@ -163,7 +163,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         : [...prevValues, value]
     );
     if (selectedFilter == null) {
-      selectFilter("day");
+      selectFilter("daily");
     }
   };
 
@@ -176,8 +176,10 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       // Capture the chart using html2canvas
       html2canvas(chartRef.current).then((canvas) => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-"); // e.g. 2023-10-02T15-30-45
+        const lakeName =
+          data.length > 0 ? data[0].lake.split(" ")[0] : "sensor_data";
 
-        const fileName = `${selectedFilter} (${timestamp}).png`;
+        const fileName = `${lakeName}-${selectedFilter} (${timestamp}).png`;
 
         // Save the captured image
         const imgData = canvas.toDataURL("image/png");
