@@ -213,20 +213,6 @@ const LakeStats: React.FC = ({}) => {
         >
           <WidgetStatic type="lakeStats-widget" config={config}></WidgetStatic>
         </div>
-
-        {/* <div
-          style={{
-            width: "64%",
-            marginLeft: "2%",
-            marginTop: "2%",
-            marginRight: "2%",
-            paddingLeft: "1%",
-            paddingRight: "1%",
-            borderRadius: "20px",
-            height: "calc(30vh)",
-            backgroundColor: "white",
-          }}
-        ></div> */}
       </Row>
     </>
   );

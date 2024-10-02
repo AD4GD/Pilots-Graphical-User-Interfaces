@@ -1,8 +1,9 @@
+import React, { useEffect, useState, useMemo, useRef } from "react";
+import html2canvas from "html2canvas";
 import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { Row, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
-import React, { useState, useMemo, useEffect } from "react";
 
 import {
   SingleSelectDropdown,
@@ -30,6 +31,7 @@ export default createWidgetComponent<ConfigInterface>(
     context["setLoading"](false);
     const DataService = useDataService();
     const items = context.useItemDimensionConfig();
+    const chartRef = useRef(null);
 
     // State variables
     const [data, setData] = useState<Data[]>([]);
@@ -135,10 +137,10 @@ export default createWidgetComponent<ConfigInterface>(
     const properties = useMemo(() => fetchProperties(items), [items]);
 
     const timeFilter = [
-      { key: "day", label: "Daily" },
-      { key: "week", label: "Weekly" },
-      { key: "month", label: "Monthly" },
-      { key: "year", label: "Yearly" },
+      { key: "daily", label: "Daily" },
+      { key: "weekly", label: "Weekly" },
+      { key: "monthly", label: "Monthly" },
+      { key: "yearly", label: "Yearly" },
     ];
 
     const selectProperties = (e: any) => {
@@ -155,6 +157,64 @@ export default createWidgetComponent<ConfigInterface>(
 
     const selectFilter = (key: string) => {
       setSelectedFilter(key);
+    };
+
+    const downloadGraph = () => {
+      if (chartRef.current) {
+        // Capture the chart using html2canvas
+        html2canvas(chartRef.current).then((canvas) => {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, "-"); // e.g. 2023-10-02T15-30-45
+
+          const fileName = `${selectedFilter} (${timestamp}).png`;
+
+          // Save the captured image
+          const imgData = canvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          link.href = imgData;
+          link.download = fileName; // Use the generated file name
+          link.click();
+        });
+      }
+    };
+
+    const downloadData = () => {
+      console.log("data", data);
+      // Prepare CSV data
+      const csvRows = [];
+
+      // Add CSV headers
+      const headers = ["ID", "Lake", "Property Name", "Unit", "Data"];
+      csvRows.push(headers.join(","));
+
+      // Loop over each sensor object
+      data.forEach((sensor) => {
+        // For each data point in the sensor's data array, add a row
+        sensor.data.forEach((dataPoint) => {
+          const row = [
+            sensor.id,
+            sensor.lake,
+            sensor.propertyName,
+            sensor.unit,
+            dataPoint,
+          ];
+          csvRows.push(row.join(","));
+        });
+      });
+
+      // Create a blob for the CSV data
+      const csvData = new Blob([csvRows.join("\n")], { type: "text/csv" });
+
+      // Create a link element
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(csvData);
+      link.download = "sensor_data.csv";
+
+      // Programmatically click the link to trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Remove the link after download
+      document.body.removeChild(link);
     };
 
     return (
@@ -188,6 +248,7 @@ export default createWidgetComponent<ConfigInterface>(
           data={aggregateAllData}
           filter={selectedFilter}
           properties={selectedProperties}
+          ref={chartRef}
         />
 
         <Row style={{ marginTop: "2%" }}>
@@ -212,8 +273,12 @@ export default createWidgetComponent<ConfigInterface>(
               justifyContent: "space-between",
             }}
           >
-            <CustomButton text="Download Graph" />
-            <CustomButton text="Download Rohdaten" />
+            <CustomButton
+              text="Download Graph"
+              disabled={selectedProperties.length === 0}
+              onClick={downloadGraph}
+            />
+            <CustomButton onClick={downloadData} text="Download Rohdaten" />
           </Row>
         </Row>
       </>
