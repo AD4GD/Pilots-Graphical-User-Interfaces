@@ -12,7 +12,7 @@ dependencies:
     specifier: 2.16.0
     version: 2.16.0(leaflet@1.9.4)
   '@opendash/core':
-    specifier: nightly
+    specifier: 3.0.0-nightly.1725260592
     version: 3.0.0-nightly.1725260592(@types/react@18.3.5)(antd@5.20.4)(dayjs@1.11.13)(react-dom@18.3.1)(react@18.3.1)(styled-components@5.3.11)
   '@opendash/i18n':
     specifier: nightly
@@ -13848,7 +13848,7 @@ packages:
   /wide-align@1.1.5:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
     dependencies:
-      string-width: 1.0.2
+      string-width: 4.2.3
     dev: true
 
   /word-wrap@1.2.5:

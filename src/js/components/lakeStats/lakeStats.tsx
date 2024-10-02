@@ -7,13 +7,19 @@ import { Carousel } from "../carousel";
 import { StarFilled } from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 import { useLakeImages, useLakeMetaData } from "../../hooks/useLakeMetaData";
-type LakeStats = {
+
+interface Geography {
+  id: string;
+}
+
+type LakeStatsType = {
   id: string;
   name: string;
   area: number;
   swimmingUsage: boolean;
   district: string;
   circumference: number;
+  geography?: Geography;
 };
 
 interface PropertyRowProps {
@@ -78,46 +84,9 @@ const LakeStats: React.FC = ({}) => {
     };
   }, [sensors]);
 
-  // const properties = [
-  //   {
-  //     id: "N9vhwQrU8x",
-  //     name: "Plötzensee",
-  //     area: "76800 m2",
-  //     swimmingUsage: "Ja",
-  //     district: "Mitte",
-  //     circumference: "1645,102 m",
-  //     images: ["1", "2", "3"],
-  //   },
-  //   {
-  //     id: "H7wRivfzrC",
-  //     name: "Flughafensee",
-  //     area: "30.6 ha",
-  //     swimmingUsage: "tbd",
-  //     district: "Reinickendorf",
-  //     circumference: "3.545 km",
-  //     images: ["1", "2", "3"],
-  //   },
-  //   {
-  //     id: "DNuO9mBwVq",
-  //     name: "Buckower Dorfteich",
-  //     area: "tbd",
-  //     swimmingUsage: "tbd",
-  //     district: "Neukölln",
-  //     circumference: "tbd",
-  //     images: ["1", "2", "3"],
-  //   },
-  //   {
-  //     id: "eiqVOoiri9",
-  //     name: "Britzer Kirchteich",
-  //     area: "tbd",
-  //     swimmingUsage: "tbd",
-  //     district: "Neukölln",
-  //     circumference: "tbd",
-  //     images: ["1", "2", "3"],
-  //   },
-  // ];
-
   const { result: properties } = useLakeMetaData();
+
+  console.log({ properties });
   const currentLake = properties.find(
     (item) => item.geography?.id === lakeId
   ) || {

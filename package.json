@@ -10,7 +10,7 @@
   "dependencies": {
     "@ant-design/pro-layout": "^7.19.12",
     "@geoman-io/leaflet-geoman-free": "2.16.0",
-    "@opendash/core": "nightly",
+    "@opendash/core": "3.0.0-nightly.1725260592",
     "@opendash/i18n": "nightly",
     "@opendash/icons": "nightly",
     "@opendash/plugin-bde": "nightly",
