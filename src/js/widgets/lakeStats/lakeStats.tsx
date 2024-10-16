@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import html2canvas from "html2canvas";
 import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
-import { Row, Typography } from "antd";
+import { Row, Space, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
 
 import {
@@ -12,6 +12,9 @@ import {
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import { ConfigInterface } from "./types";
+import { DatePicker } from "../../components/datePicker";
+
+const { Title } = Typography; // Destructuring Typography to use 'Title' for headings
 
 interface Data {
   id: any;
@@ -254,6 +257,43 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     URL.revokeObjectURL(url);
   };
 
+  const [startDate, setStartDate] = useState<number | null>(null); // Store start date
+  const [endDate, setEndDate] = useState<number | null>(null); // Store end date
+
+  // Callback function to handle the selected start date in Unix timestamp
+  const handleStartDateChange = (timestamp: number | null) => {
+    setStartDate(timestamp); // Set the selected start date
+  };
+
+  // Callback function to handle the selected end date in Unix timestamp
+  const handleEndDateChange = (timestamp: number | null) => {
+    setEndDate(timestamp); // Set the selected end date
+  };
+
+  // Function to handle the data processing once both dates are selected
+  const handleData = () => {
+    if (startDate && endDate) {
+      console.log("Processing data between:", startDate, "and", endDate);
+      DataService.fetchDimensionValuesMultiItem(items, {
+        historyType: "absolute",
+        unit: "month",
+        start: startDate,
+        end: endDate,
+        value: 2,
+      }).then((result) => {
+        const transformedData = transformData(result);
+        setData(transformedData);
+      });
+    }
+  };
+
+  // Call handleData when both startDate and endDate are selected
+  useEffect(() => {
+    if (startDate && endDate) {
+      handleData(); // Call the data handler when both dates are selected
+    }
+  }, [startDate, endDate]); // Only call handleData when both dates are updated
+
   return (
     <>
       <Typography.Title
@@ -279,6 +319,14 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
           selectedValue={selectedFilter}
           handleClick={selectFilter}
         />
+        <DatePicker
+          onDateChange={handleStartDateChange}
+          placeholder="Start Date" // Placeholder for start date
+        />
+        <DatePicker
+          onDateChange={handleEndDateChange}
+          placeholder="End Date" // Placeholder for end date
+        />
       </Row>
 
       <CustomChart
@@ -294,7 +342,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
             color: "#42A456",
             fontSize: "16px",
             display: "flex",
-            flex: 0.65,
+            flex: 0.55,
             alignItems: "center",
             justifyContent: "space-between",
           }}
@@ -306,8 +354,8 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         </Typography.Link>
         <Row
           style={{
-            flex: 0.35,
-            justifyContent: "space-between",
+            flex: 0.45,
+            justifyContent: "flex-end",
           }}
         >
           <CustomButton
