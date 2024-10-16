@@ -14,6 +14,9 @@ export interface AD4GD_LakeMetaDataAttributes {
   geography?: MIAAS_Geographies;
   name: string;
   swimmingUsage?: boolean;
+  volume?: number;
+  averageDepth?: number;
+  maximumDepth?: number;
 }
 
 export class AD4GD_LakeMetaData extends Parse.Object<AD4GD_LakeMetaDataAttributes> {
@@ -58,6 +61,24 @@ export class AD4GD_LakeMetaData extends Parse.Object<AD4GD_LakeMetaDataAttribute
   }
   set swimmingUsage(value: boolean | undefined) {
     super.set("swimmingUsage", value);
+  }
+  get volume(): number | undefined {
+    return super.get("volume");
+  }
+  set volume(value: number | undefined) {
+    super.set("volume", value);
+  }
+  get averageDepth(): number | undefined {
+    return super.get("averageDepth");
+  }
+  set averageDepth(value: number | undefined) {
+    super.set("averageDepth", value);
+  }
+  get maximumDepth(): number | undefined {
+    return super.get("maximumDepth");
+  }
+  set maximumDepth(value: number | undefined) {
+    super.set("maximumDepth", value);
   }
 }
 

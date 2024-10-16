@@ -10,7 +10,7 @@
   "dependencies": {
     "@ant-design/pro-layout": "^7.19.12",
     "@geoman-io/leaflet-geoman-free": "2.16.0",
-    "@opendash/core": "nightly",
+    "@opendash/core": "3.0.0-nightly.1725260592",
     "@opendash/i18n": "nightly",
     "@opendash/icons": "nightly",
     "@opendash/plugin-bde": "nightly",
@@ -36,6 +36,7 @@
     "dayjs": "^1.11.13",
     "highcharts": "^9.3.3",
     "highcharts-regression": "^2.2.0",
+    "html-to-image": "^1.11.11",
     "leaflet": "^1.9.4",
     "leaflet-boundary-canvas": "^1.0.0",
     "leaflet-gesture-handling": "^1.2.2",

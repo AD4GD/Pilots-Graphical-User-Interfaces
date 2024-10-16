@@ -3,9 +3,9 @@ import React from "react";
 import { ConfigInterface } from "./types";
 
 export default createWidget<ConfigInterface>({
-  type: "lake-overview-widget",
+  type: "lake-map-widget",
   meta: {},
-  displayComponent: React.lazy(() => import("./lakeOverview")),
+  displayComponent: React.lazy(() => import("./lakeMap")),
   settingsComponent: React.lazy(() => import("./settings")),
 
   dataItems: {
@@ -22,16 +22,16 @@ export default createWidget<ConfigInterface>({
   },
 
   dataExplorer: {
-    title: "Lake overview Widget",
-    description: "Lake overview widget used to navigate all lakes",
+    title: "Lake Map Widget",
+    description: "Lake map widget used to navigate all lakes",
     icon: "fa:table",
     config: {},
   },
 
   presets: [
     {
-      label: "Lake overview Widget",
-      description: "Lake overview widget used to navigate all lakes ",
+      label: "Lake map Widget",
+      description: "Lake map widget used to navigate all lakes ",
       imageLink: require("./berlin-map.svg"),
       tags: [],
       widget: {

@@ -12,7 +12,7 @@ dependencies:
     specifier: 2.16.0
     version: 2.16.0(leaflet@1.9.4)
   '@opendash/core':
-    specifier: nightly
+    specifier: 3.0.0-nightly.1725260592
     version: 3.0.0-nightly.1725260592(@types/react@18.3.5)(antd@5.20.4)(dayjs@1.11.13)(react-dom@18.3.1)(react@18.3.1)(styled-components@5.3.11)
   '@opendash/i18n':
     specifier: nightly
@@ -89,6 +89,9 @@ dependencies:
   highcharts-regression:
     specifier: ^2.2.0
     version: 2.2.0
+  html-to-image:
+    specifier: ^1.11.11
+    version: 1.11.11
   leaflet:
     specifier: ^1.9.4
     version: 1.9.4
@@ -8169,6 +8172,10 @@ packages:
       relateurl: 0.2.7
       terser: 5.31.6
     dev: true
+
+  /html-to-image@1.11.11:
+    resolution: {integrity: sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==}
+    dev: false
 
   /html-webpack-plugin@5.6.0(webpack@5.94.0):
     resolution: {integrity: sha512-iwaY4wzbe48AfKLZ/Cc8k0L+FKG6oSNRaZ8x5A/T/IVDGyXcbHncM9TdDa93wn0FsSm82FhTKW7f3vS61thXAw==}
