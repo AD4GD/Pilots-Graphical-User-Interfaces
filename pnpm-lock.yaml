@@ -95,6 +95,9 @@ dependencies:
   leaflet:
     specifier: ^1.9.4
     version: 1.9.4
+  leaflet-boundary-canvas:
+    specifier: ^1.0.0
+    version: 1.0.0
   leaflet-gesture-handling:
     specifier: ^1.2.2
     version: 1.2.2
@@ -9016,6 +9019,10 @@ packages:
       picocolors: 1.1.0
       shell-quote: 1.8.1
     dev: true
+
+  /leaflet-boundary-canvas@1.0.0:
+    resolution: {integrity: sha512-+0kTmtqOBIKM5iOI8lywAAPHpKVHBSkyjdg/UvPW+M9moc8f1lBWaF7KEL6uc5cL3FAQf5J66bRFtJQ0bxPoLA==}
+    dev: false
 
   /leaflet-gesture-handling@1.2.2:
     resolution: {integrity: sha512-Blf5V4PoNphWkzL7Y1qge+Spkd4OCQ2atjwUNhMhLIcjKzPcBH++x/lwOinaR9jSqLWqJ6oKYO8d0XdTffy4hQ==}

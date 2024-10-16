@@ -4,7 +4,7 @@
   "scripts": {
     "start": "opendash dev",
     "build": "opendash build",
-    "schema-down": "parse-server-schema --configPath env.parse.js down schema",
+    "schema-down": "parse-server-schema down --configPath env.parse.js schema",
     "types": "parse-server-schema typescript .\\src\\js\\types --configPath env.parse.js"
   },
   "dependencies": {
@@ -38,6 +38,7 @@
     "highcharts-regression": "^2.2.0",
     "html-to-image": "^1.11.11",
     "leaflet": "^1.9.4",
+    "leaflet-boundary-canvas": "^1.0.0",
     "leaflet-gesture-handling": "^1.2.2",
     "leaflet.heat": "^0.2.0",
     "leaflet.markercluster": "^1.5.3",

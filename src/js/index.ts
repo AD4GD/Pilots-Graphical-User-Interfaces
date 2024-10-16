@@ -19,14 +19,15 @@ import ExampleWidget from "./widgets/example";
 import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStatss from "./widgets/lakeStats";
-import lakeOverviewWidget from "./widgets/lakeOverview";
-import { Carousel } from "./components/carousel";
-import { LakeOverview } from "./components/LakeOverviewPage";
+import lakeMapWidget from "./widgets/lakeMap";
+import { LakeOverview } from "./components/lakeOverviewPage";
 import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
 import { NotFound } from "./components/NotFoundPage";
 import { testWMS } from "./components/testPage";
 import { testFIS } from "./components/testFIS";
+import { malte } from "./components/malte";
+import MapComponent from "./components/testNewMap/testNewMap";
 
 init("opendash", async (factory) => {
   // Icons
@@ -37,12 +38,6 @@ init("opendash", async (factory) => {
   factory.registerLanguage("en", "English");
   factory.registerLanguage("de", "Deutsch", "en", true);
   // ant design translations
-
-  // factory.registerRoute({
-  //   path: "/",
-  //   componentSync: HomePage,
-  //   props: { images: [] },
-  // });
 
   factory.registerRoute({
     path: "/home",
@@ -75,8 +70,20 @@ init("opendash", async (factory) => {
   });
 
   factory.registerRoute({
-    path: "/fis",
+    path: "/odc",
     componentSync: testFIS,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/fis",
+    componentSync: malte,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/newmap",
+    componentSync: MapComponent,
     props: {},
   });
 
@@ -206,7 +213,9 @@ init("opendash", async (factory) => {
       "swimmingUsage",
       "district",
       "circumference",
-      "geography",
+      "volume",
+      "averageDepth",
+      "maximumDepth",
     ],
     editFields: [
       "name",
@@ -214,7 +223,9 @@ init("opendash", async (factory) => {
       "swimmingUsage",
       "district",
       "circumference",
-      "geography",
+      "volume",
+      "averageDepth",
+      "maximumDepth",
     ],
     displayFields: [
       "name",
@@ -222,7 +233,9 @@ init("opendash", async (factory) => {
       "swimmingUsage",
       "district",
       "circumference",
-      "geography",
+      "volume",
+      "averageDepth",
+      "maximumDepth",
     ],
     titleFields: ["name"],
     // Tranlation for fields in /src/translations/[language].json
@@ -246,7 +259,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(HeaderWidget);
   $monitoring.registerWidget(LakeDetails);
   $monitoring.registerWidget(LakeStatss);
-  $monitoring.registerWidget(lakeOverviewWidget);
+  $monitoring.registerWidget(lakeMapWidget);
 }).then((app) => {
   console.log("init open.DASH");
 });

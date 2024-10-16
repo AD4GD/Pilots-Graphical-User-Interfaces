@@ -4,6 +4,10 @@
       "type": "Number",
       "required": false
     },
+    "averageDepth": {
+      "type": "Number",
+      "required": false
+    },
     "circumference": {
       "type": "Number",
       "required": false
@@ -17,12 +21,20 @@
       "targetClass": "MIAAS_Geographies",
       "required": false
     },
+    "maximumDepth": {
+      "type": "Number",
+      "required": false
+    },
     "name": {
       "type": "String",
       "required": true
     },
     "swimmingUsage": {
       "type": "Boolean",
+      "required": false
+    },
+    "volume": {
+      "type": "Number",
       "required": false
     }
   },
