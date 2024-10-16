@@ -14,6 +14,9 @@ type LakeStats = {
   swimmingUsage: boolean;
   district: string;
   circumference: number;
+  volume: number;
+  averageDepth: number;
+  maximumDepth: number;
 };
 
 interface PropertyRowProps {
@@ -127,6 +130,9 @@ const LakeStats: React.FC = ({}) => {
     swimmingUsage: false,
     district: "",
     circumference: 0,
+    volume: 0,
+    averageDepth: 0,
+    maximumDepth: 0,
   };
   const { result: images } = useLakeImages(currentLake?.id);
   console.log({ currentLake, images, properties });
@@ -189,6 +195,18 @@ const LakeStats: React.FC = ({}) => {
             <PropertyRow
               label={t("Umfang")}
               value={currentLake.circumference + " m"}
+            />
+            <PropertyRow
+              label={t("Volumen")}
+              value={currentLake.volume + " m³"}
+            />
+            <PropertyRow
+              label={t("Durchnittliche Tiefe")}
+              value={currentLake.averageDepth + " m"}
+            />
+            <PropertyRow
+              label={t("Maximale Tiefe")}
+              value={currentLake.maximumDepth + " m"}
             />
           </div>
 
