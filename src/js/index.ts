@@ -26,8 +26,8 @@ import { LakeStats } from "./components/lakeStats";
 import { NotFound } from "./components/NotFoundPage";
 import { testWMS } from "./components/testPage";
 import { testFIS } from "./components/testFIS";
-import { malte } from "./components/malte";
-import MapComponent from "./components/testNewMap/testNewMap";
+// import { malte } from "./components/malte";
+// import MapComponent from "./components/testNewMap/testNewMap";
 
 init("opendash", async (factory) => {
   // Icons
@@ -75,17 +75,17 @@ init("opendash", async (factory) => {
     props: {},
   });
 
-  factory.registerRoute({
-    path: "/fis",
-    componentSync: malte,
-    props: {},
-  });
+  // factory.registerRoute({
+  //   path: "/fis",
+  //   componentSync: malte,
+  //   props: {},
+  // });
 
-  factory.registerRoute({
-    path: "/newmap",
-    componentSync: MapComponent,
-    props: {},
-  });
+  // factory.registerRoute({
+  //   path: "/newmap",
+  //   componentSync: MapComponent,
+  //   props: {},
+  // });
 
   factory.registerRoute({
     path: "*",

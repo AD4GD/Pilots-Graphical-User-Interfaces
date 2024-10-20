@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useCallback,
-  forwardRef,
-  // useImperativeHandle,
-} from "react";
+import React, { useEffect, useCallback, forwardRef } from "react";
 import Highcharts, { Options } from "highcharts";
 import "./chartComponent.css"; // Import the CSS file
 
@@ -58,14 +53,18 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
           },
           tickPixelInterval: 50, // Decrease this value to show more ticks
         },
-        yAxis: {
+        yAxis: properties.map((property, index) => ({
           title: {
-            text: data.length > 0 ? data[0].unit : "Value",
+            text: property,
           },
-        },
-        series: data as Highcharts.SeriesOptionsType[],
+          opposite: index % 2 === 1, // Alternate sides for better visibility
+        })),
+        series: data.map((item, index) => ({
+          ...item,
+          yAxis: index % properties.length, // Assign series to the corresponding Y-axis
+        })) as Highcharts.SeriesOptionsType[],
       };
-    }, [data, formatXAxisLabel]);
+    }, [data, formatXAxisLabel, properties]);
 
     useEffect(() => {
       if (filter && properties.length > 0) {
@@ -78,11 +77,6 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
         };
       }
     }, [generateChartConfig, filter]);
-
-    // This ensures ref points to the chart container div
-    // useImperativeHandle(ref, () => ({
-    //   // Custom functionality if needed
-    // }));
 
     if (!filter || properties.length === 0) {
       return (
