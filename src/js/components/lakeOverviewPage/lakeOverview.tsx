@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
-import { useUrlParam } from "@opendash/core";
 import {
   Avatar,
   Button,
@@ -71,43 +70,7 @@ const LakeOverview: React.FC = () => {
     label: string;
     id: string;
   }) => {
-    console.log(item);
     navigate(`/lake/${item.id}`, { state: { item } });
-  };
-
-  const handleMapClick = async (id: string) => {
-    try {
-      const lakeQuery = new Parse.Query("MIAAS_Geographies").equalTo(
-        "objectId",
-        id
-      );
-
-      const results = await lakeQuery.find();
-
-      if (results.length > 0) {
-        const lake = results[0];
-
-        console.log({
-          type: lake.get("description"),
-          label: lake.get("label"),
-          sensors: lake.get("sensors"),
-          id: id,
-        });
-
-        return {
-          type: lake.get("description"),
-          label: lake.get("label"),
-          sensors: lake.get("sensors"),
-          id: id,
-        };
-      } else {
-        console.log("No lake found with the given id");
-        return null;
-      }
-    } catch (error) {
-      console.error("Error querying the lake:", error);
-      return null;
-    }
   };
 
   const handleSearch = (value: string) => {
@@ -145,43 +108,6 @@ const LakeOverview: React.FC = () => {
     );
   }, [zones, searchQuery]);
 
-  const mapConfig = useMemo(() => {
-    const config = {
-      markers: [],
-      zones: {
-        type: "zones",
-        districtsFromZones: zones.map((zone) => zone.id),
-        districts: null,
-        districtFromDimension: null,
-      },
-      hideEditButton: true,
-      _history: {
-        aggregation: false,
-      },
-      onEvent: async (type: string, event: any) => {
-        const objectId = event.features.filter(
-          (f: any) => f.properties.description === "lake"
-        )[0].properties.objectId;
-
-        try {
-          // Await the result from handleMapClick
-          const lakeDetails = await handleMapClick(objectId);
-
-          if (lakeDetails) {
-            // Pass the lake details directly to handleNavigateToStats
-            handleNavigateToStats(lakeDetails);
-          } else {
-            console.log("No lake details found.");
-          }
-        } catch (error) {
-          console.error("An error occurred:", error);
-        }
-      },
-    };
-
-    return config;
-  }, [zones]);
-
   return (
     <>
       <Row style={{ width: "100%", height: "80px" }}>
@@ -216,6 +142,7 @@ const LakeOverview: React.FC = () => {
                 marginBottom: "1%",
                 width: "100%",
                 letterSpacing: "0.25rem",
+                paddingTop: "1.5rem",
               }}
             >
               Kleine Seen in Berlin
@@ -236,10 +163,16 @@ const LakeOverview: React.FC = () => {
               />
             </Input.Group>
 
-            <WidgetStatic
+            {/* <WidgetStatic
               style={{ width: "100%", height: "100%", position: "relative" }}
               type="kpi-map"
               config={mapConfig}
+            ></WidgetStatic> */}
+
+            <WidgetStatic
+              style={{ width: "100%", height: "100%", position: "relative" }}
+              type="lake-map-widget"
+              config={""}
             ></WidgetStatic>
           </Flex>
 
@@ -258,6 +191,7 @@ const LakeOverview: React.FC = () => {
                   fontWeight: "bold",
                   marginBottom: "2rem",
                   fontFamily: "Josefin Sans",
+                  paddingTop: "2rem",
                 }}
               >
                 Wasserqualitätindex

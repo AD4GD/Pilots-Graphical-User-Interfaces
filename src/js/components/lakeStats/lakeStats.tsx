@@ -1,23 +1,32 @@
 import { useTranslation } from "@opendash/core";
 import { Col, Row, Typography } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "@opendash/router";
 import { Carousel } from "../carousel";
-import { StarFilled } from "@ant-design/icons";
+import {
+  StarFilled,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+} from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 import { useLakeImages, useLakeMetaData } from "../../hooks/useLakeMetaData";
-type LakeStats = {
-  id: string;
-  name: string;
-  area: number;
-  swimmingUsage: boolean;
-  district: string;
-  circumference: number;
-  volume: number;
-  averageDepth: number;
-  maximumDepth: number;
-};
+import MultiColorProgressbar from "multi-color-progressbar-with-indicator";
+import "multi-color-progressbar-with-indicator/dist/index.css";
+import Parse from "parse";
+
+// interface Geography {
+//   id: string;
+// }
+
+// type LakeStatsType = {
+//   id: string;
+//   name: string;
+//   area: number;
+//   swimmingUsage: boolean;
+//   district: string;
+//   circumference: number;
+// };
 
 interface PropertyRowProps {
   label: string;
@@ -72,55 +81,8 @@ const LakeStats: React.FC = ({}) => {
 
   const t = useTranslation();
 
-  const config = useMemo(() => {
-    return {
-      _sources: [],
-      _items: [],
-      _dimensions: [...sensors],
-      _history: {},
-    };
-  }, [sensors]);
-
-  // const properties = [
-  //   {
-  //     id: "N9vhwQrU8x",
-  //     name: "Plötzensee",
-  //     area: "76800 m2",
-  //     swimmingUsage: "Ja",
-  //     district: "Mitte",
-  //     circumference: "1645,102 m",
-  //     images: ["1", "2", "3"],
-  //   },
-  //   {
-  //     id: "H7wRivfzrC",
-  //     name: "Flughafensee",
-  //     area: "30.6 ha",
-  //     swimmingUsage: "tbd",
-  //     district: "Reinickendorf",
-  //     circumference: "3.545 km",
-  //     images: ["1", "2", "3"],
-  //   },
-  //   {
-  //     id: "DNuO9mBwVq",
-  //     name: "Buckower Dorfteich",
-  //     area: "tbd",
-  //     swimmingUsage: "tbd",
-  //     district: "Neukölln",
-  //     circumference: "tbd",
-  //     images: ["1", "2", "3"],
-  //   },
-  //   {
-  //     id: "eiqVOoiri9",
-  //     name: "Britzer Kirchteich",
-  //     area: "tbd",
-  //     swimmingUsage: "tbd",
-  //     district: "Neukölln",
-  //     circumference: "tbd",
-  //     images: ["1", "2", "3"],
-  //   },
-  // ];
-
   const { result: properties } = useLakeMetaData();
+
   const currentLake = properties.find(
     (item) => item.geography?.id === lakeId
   ) || {
@@ -135,7 +97,98 @@ const LakeStats: React.FC = ({}) => {
     maximumDepth: 0,
   };
   const { result: images } = useLakeImages(currentLake?.id);
-  console.log({ currentLake, images, properties });
+
+  const wqiBars = [
+    { width: 30, color: "#dc3545" },
+    { width: 40, color: "#f2d261" },
+    { width: 30, color: "#6fa053" },
+  ];
+
+  const [wqiValues, setWqiValues] = useState({
+    minVal: 0,
+    maxVal: 1000,
+    value: 0,
+    trend: 0,
+  });
+
+  const getWQI = async () => {
+    if (lakeId) {
+      // Query to get the maximum value
+      const maxQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
+      const maxResults = await maxQuery
+        .select("WQI_status")
+        .ascending("WQI_status")
+        .limit(1)
+        .find();
+
+      const maxValue =
+        maxResults.length > 0 ? maxResults[0].get("WQI_status") : null;
+
+      // Query to get the minimum value
+      const minQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
+      const minResults = await minQuery
+        .select("WQI_status")
+        .descending("WQI_status")
+        .limit(1)
+        .find();
+
+      const minValue =
+        minResults.length > 0 ? minResults[0].get("WQI_status") : null;
+
+      // Query to get the value of current lake
+      const query = new Parse.Query("AD4GD_Lake_Quality_Index");
+      query.equalTo("lake", currentLake.name);
+      const results = await query.find();
+
+      if (results.length > 0) {
+        const lakeObject = results[0];
+        const wqiStatus = lakeObject.get("WQI_status");
+        const wqiTrend = lakeObject.get("WQI_trend");
+
+        // Set the state with the values
+        setWqiValues({
+          minVal: minValue || 0,
+          maxVal: maxValue || 1000,
+          value: wqiStatus || 0,
+          trend: wqiTrend || 0,
+        });
+      } else {
+        console.log(`No lake found with the name: ${currentLake.name}`);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (currentLake.name) {
+      getWQI();
+    }
+  }, [currentLake.name]);
+
+  const renderWQIArrow = () => {
+    if (wqiValues.trend > 0) {
+      return (
+        <ArrowUpOutlined
+          style={{ color: "green", fontSize: "20px", marginRight: "5px" }}
+        />
+      );
+    } else if (wqiValues.trend < 0) {
+      return (
+        <ArrowDownOutlined
+          style={{ color: "red", fontSize: "20px", marginRight: "5px" }}
+        />
+      );
+    }
+    return null;
+  };
+  const config = useMemo(() => {
+    return {
+      _sources: [],
+      _items: [],
+      _dimensions: [...sensors],
+      _history: {},
+    };
+  }, [sensors]);
+
   return (
     <>
       <Row style={{ width: "100%", height: "80px" }}>
@@ -152,13 +205,21 @@ const LakeStats: React.FC = ({}) => {
             backgroundColor: "white",
           }}
         >
-          <Title level={1} style={{ fontWeight: "bold", marginBottom: "2%" }}>
+          <Title
+            level={1}
+            style={{
+              fontWeight: "bold",
+              marginBottom: "2%",
+              paddingLeft: "1rem",
+            }}
+          >
             {currentLake.name}
           </Title>
           <Row>
             <Col
               style={{
                 alignSelf: "center",
+                paddingLeft: "1rem",
               }}
             >
               <svg width="12" height="12">
@@ -184,7 +245,7 @@ const LakeStats: React.FC = ({}) => {
             ])}
           />
 
-          <div style={{ marginTop: "6%" }}>
+          <div style={{ marginTop: "6%", paddingLeft: "1rem" }}>
             <PropertyRow label={t("Name")} value={currentLake.name} />
             <PropertyRow label={t("Fläche")} value={currentLake.area + " m²"} />
             <PropertyRow
@@ -218,33 +279,91 @@ const LakeStats: React.FC = ({}) => {
 
         <div
           style={{
-            width: "64%",
-            marginLeft: "2%",
-            marginTop: "2%",
-            marginRight: "2%",
-            paddingLeft: "1%",
-            paddingRight: "1%",
-            paddingBottom: "2%",
-            borderRadius: "20px",
-            backgroundColor: "white",
+            width: "68%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "2%",
+            marginLeft: "1%",
+            marginTop: "1%",
           }}
         >
-          <WidgetStatic type="lakeStats-widget" config={config}></WidgetStatic>
-        </div>
+          <div
+            style={{
+              width: "100%",
+              height: "40%",
+              marginBottom: "1%",
+              borderRadius: "20px",
+              backgroundColor: "white",
+            }}
+          >
+            <Typography.Title
+              level={4}
+              style={{
+                fontWeight: "bold",
+                paddingTop: "2%",
+                paddingLeft: "2%",
+              }}
+            >
+              Water Quality Index
+            </Typography.Title>
+            <div style={{ width: "50%", height: "100%", margin: "0 auto" }}>
+              <div
+                style={{
+                  padding: "5% 15% 15% 15%",
+                }}
+              >
+                {wqiValues.value !== 0 ? (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span style={{ fontSize: "20px", fontWeight: "bold" }}>
+                          WQI: {wqiValues.value}
+                        </span>
+                      </div>
 
-        {/* <div
-          style={{
-            width: "64%",
-            marginLeft: "2%",
-            marginTop: "2%",
-            marginRight: "2%",
-            paddingLeft: "1%",
-            paddingRight: "1%",
-            borderRadius: "20px",
-            height: "calc(30vh)",
-            backgroundColor: "white",
-          }}
-        ></div> */}
+                      <span style={{ fontSize: "16px", color: "#555" }}>
+                        Trend: {wqiValues.trend}
+                        {renderWQIArrow()}
+                      </span>
+                    </div>
+                    <MultiColorProgressbar
+                      height={30}
+                      bars={wqiBars}
+                      minVal={wqiValues.minVal}
+                      maxVal={wqiValues.maxVal}
+                      value={wqiValues.value}
+                    />
+                  </>
+                ) : (
+                  <p>Loading WQI data...</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              width: "100%",
+              borderRadius: "20px",
+              backgroundColor: "white",
+              padding: "1% 2%",
+            }}
+          >
+            <WidgetStatic
+              type="lakeStats-widget"
+              config={config}
+            ></WidgetStatic>
+          </div>
+        </div>
       </Row>
     </>
   );

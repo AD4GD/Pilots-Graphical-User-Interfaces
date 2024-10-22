@@ -20,6 +20,7 @@ import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStatss from "./widgets/lakeStats";
 import lakeMapWidget from "./widgets/lakeMap";
+// import wqiWidget from "./widgets/WQI";
 import { LakeOverview } from "./components/lakeOverviewPage";
 import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
@@ -260,6 +261,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(LakeDetails);
   $monitoring.registerWidget(LakeStatss);
   $monitoring.registerWidget(lakeMapWidget);
+  // $monitoring.registerWidget(wqiWidget);
 }).then((app) => {
   console.log("init open.DASH");
 });

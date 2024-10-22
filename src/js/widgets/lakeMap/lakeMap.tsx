@@ -1,20 +1,12 @@
 import { useTranslation } from "@opendash/core";
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  createWidgetComponent,
-  WidgetStatic,
-} from "@opendash/plugin-monitoring";
+import React, { useEffect, useState } from "react";
+import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { ConfigInterface } from "./types";
 import Parse from "parse";
 import L from "leaflet";
 import "leaflet-boundary-canvas";
 import "leaflet/dist/leaflet.css";
-
-import { Row, Col, Flex, Input, Typography, List, Avatar } from "antd";
-
-const { Search } = Input;
-
-const { Title, Text } = Typography;
+import { useNavigate } from "@opendash/router";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
@@ -24,6 +16,8 @@ export default createWidgetComponent<ConfigInterface>(
 
     const [map, setMap] = useState<L.Map | null>(null);
     const [geoData, setGeoData] = useState(null);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
       const berlinBoundary = {
@@ -269,7 +263,8 @@ export default createWidgetComponent<ConfigInterface>(
       // Initialize the map centered around Berlin with the boundary canvas plugin
       const initializedMap = L.map("map", {
         center: [52.5, 13.4],
-        zoom: 10,
+        zoom: 11,
+        minZoom: 10,
         maxBounds: L.latLngBounds(
           L.latLng(52.3246, 13.0512),
           L.latLng(52.6935, 13.7785)
@@ -293,22 +288,81 @@ export default createWidgetComponent<ConfigInterface>(
         iconAnchor: [20, 40],
         popupAnchor: [0, -40],
       });
+      const handleNavigateToStats = (item: {
+        type: string;
+        label: string;
+        id: string;
+      }) => {
+        console.log(item);
+        navigate(`/lake/${item.id}`, { state: { item } });
+      };
+
+      const handleMapClick = async (id: string) => {
+        try {
+          const lakeQuery = new Parse.Query("MIAAS_Geographies").equalTo(
+            "objectId",
+            id
+          );
+
+          const results = await lakeQuery.find();
+
+          if (results.length > 0) {
+            const lake = results[0];
+
+            return {
+              type: lake.get("description"),
+              label: lake.get("label"),
+              sensors: lake.get("sensors"),
+              id: id,
+            };
+          } else {
+            console.log("No lake found with the given id");
+            return null;
+          }
+        } catch (error) {
+          console.error("Error querying the lake:", error);
+          return null;
+        }
+      };
 
       // Function to handle feature click
-      const onFeatureClick = (e: any) => {
-        const layer = e.target;
-        alert("You clicked on: " + layer.feature.properties.name);
+      const onFeatureClick = async (e: any) => {
+        const lake = e.target;
+
+        try {
+          // Await the result from handleMapClick
+          const lakeDetails = await handleMapClick(
+            lake.feature.properties.objectId
+          );
+
+          if (lakeDetails) {
+            // Pass the lake details directly to handleNavigateToStats
+            handleNavigateToStats(lakeDetails);
+          } else {
+            console.log("No lake details found.");
+          }
+        } catch (error) {
+          console.error("An error occurred:", error);
+        }
       };
 
       const fetchZones = async () => {
         try {
           const zones = await new Parse.Query("MIAAS_Geographies").find();
 
-          // Add each zone's GeoJSON data to the map
           zones.forEach((zone) => {
-            const geoData = zone.get("geo"); // Access the geo field
-            console.log(zone.get("geo"));
+            const geoData = zone.get("geo");
+            const objectId = zone.id;
 
+            // Inject objectId into the GeoJSON properties
+            geoData.features.forEach((feature: any) => {
+              feature.properties = {
+                ...feature.properties,
+                objectId,
+              };
+            });
+
+            // Add the geoJSON layer to the map
             L.geoJSON(geoData, {
               pointToLayer: (feature: any, latlng: any) => {
                 return L.marker(latlng, { icon: customIcon });
@@ -338,7 +392,7 @@ export default createWidgetComponent<ConfigInterface>(
     }, []);
 
     return (
-      <div style={{ textAlign: "center" }}>
+      <div style={{ textAlign: "center", height: "100%", width: "100%" }}>
         <div id="map" style={{ height: "100%", width: "100%" }}></div>
       </div>
     );

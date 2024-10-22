@@ -46,6 +46,8 @@
     "mobx": "^6.13.1",
     "mobx-react-lite": "^3.4.3",
     "moment": "^2.30.1",
+    "multi-color-gradient-progressbar-with-indicator": "^1.0.2",
+    "multi-color-progressbar-with-indicator": "^1.0.0",
     "papaparse": "^5.4.1",
     "parse": "^3.5.1",
     "parse-hooks": "^0.4.2",
