@@ -14,8 +14,9 @@ import { CustomChart } from "../../components/chart";
 import { ConfigInterface } from "./types";
 import { DatePicker } from "../../components/datePicker";
 
-const { Title } = Typography; // Destructuring Typography to use 'Title' for headings
+const { Title } = Typography;
 
+// Define Data Interfaces
 interface Data {
   id: any;
   lake: any;
@@ -41,6 +42,7 @@ interface Sensor {
   data: DataPoint[];
 }
 
+// Main Component
 export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   const t = useTranslation();
   context["setLoading"](false);
@@ -48,12 +50,14 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   const items = context["useItemDimensionConfig"]();
   const chartRef = useRef(null);
 
-  // State variables
+  // State Variables
   const [data, setData] = useState<Data[]>([]);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<number | null>(null);
+  const [endDate, setEndDate] = useState<number | null>(null);
 
-  // Fetch properties and transform data
+  // Fetch Properties
   const fetchProperties = (items: any[]) => {
     return items.map((item: any[]) => {
       const { valueTypes } = item[0];
@@ -64,6 +68,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     });
   };
 
+  // Transform Data
   const transformData = (data: any[]) => {
     return data.map((item: any[]) => {
       const { id, name: lake, valueTypes } = item[0];
@@ -75,6 +80,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     });
   };
 
+  // Aggregate Data
   const aggregateData = (
     data: { date: string; value: number }[],
     filter: string | null
@@ -118,17 +124,18 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     }));
   };
 
+  // Memoized Aggregated Data
   const aggregateAllData = useMemo(() => {
     const filteredData = data.filter((item) =>
       selectedProperties.includes(item.propertyName)
     );
 
-    return filteredData.map(({ propertyName, data }) => {
+    return filteredData.map(({ propertyName, unit, data }) => {
       const aggregated = aggregateData(data, selectedFilter);
       return {
         type: "line",
         name: propertyName,
-        unit: data[0]?.unit || "Value",
+        unit: unit, // Use the proper unit
         data: aggregated.map(({ date, value }) => [
           new Date(date).getTime(), // X value: timestamp
           value, // Y value: number
@@ -137,7 +144,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     });
   }, [data, selectedProperties, selectedFilter, aggregateData]);
 
-  // Fetch data on mount and when items change
+  // Fetch Data on Mount and Items Change
   useEffect(() => {
     DataService.fetchDimensionValuesMultiItem(items, {
       historyType: "relative",
@@ -151,6 +158,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
 
   const properties = useMemo(() => fetchProperties(items), [items]);
 
+  // Time Filter Options
   const timeFilter = [
     { key: "daily", label: "Daily" },
     { key: "weekly", label: "Weekly" },
@@ -158,9 +166,10 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     { key: "yearly", label: "Yearly" },
   ];
 
+  // Select Properties Handler
   const selectProperties = (e: any) => {
     const value = e.key;
-    setSelectedProperties((prevValues: string[]) =>
+    setSelectedProperties((prevValues) =>
       prevValues.includes(value)
         ? prevValues.filter((v) => v !== value)
         : [...prevValues, value]
@@ -170,38 +179,35 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     }
   };
 
+  // Select Filter Handler
   const selectFilter = (key: string) => {
     setSelectedFilter(key);
   };
 
+  // Download Graph
   const downloadGraph = () => {
     if (chartRef.current) {
-      // Capture the chart using html2canvas
       html2canvas(chartRef.current).then((canvas) => {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-"); // e.g. 2023-10-02T15-30-45
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const lakeName =
           data.length > 0 ? data[0].lake.split(" ")[0] : "sensor_data";
-
         const fileName = `${lakeName}-${selectedFilter} (${timestamp}).png`;
 
-        // Save the captured image
         const imgData = canvas.toDataURL("image/png");
         const link = document.createElement("a");
         link.href = imgData;
-        link.download = fileName; // Use the generated file name
+        link.download = fileName;
         link.click();
       });
     }
   };
 
+  // Download Data as CSV
   const downloadData = () => {
-    console.log("data", data);
     const csvRows = [];
-
     const allTimestamps = new Set<string>();
     const sensorNames = new Set<string>();
 
-    // Collect unique timestamps and sensor names
     data.forEach((sensor) => {
       sensor.data.forEach((dataPoint) => {
         allTimestamps.add(dataPoint.date);
@@ -214,13 +220,10 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     csvRows.push(headers.join(","));
 
     const sensorDataMap: { [key: string]: { [key: string]: number } } = {};
-
-    // Initialize the map for each timestamp
     timestampsArray.forEach((timestamp) => {
       sensorDataMap[timestamp] = {};
     });
 
-    // Populate the map with sensor data
     data.forEach((sensor) => {
       sensor.data.forEach((dataPoint) => {
         const timestamp = dataPoint.date;
@@ -229,7 +232,6 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       });
     });
 
-    // Build rows for each timestamp
     timestampsArray.forEach((timestamp) => {
       const row: string[] = [new Date(timestamp).toISOString()];
       headers.slice(1).forEach((sensorKey) => {
@@ -244,7 +246,6 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       type: "text/csv;charset=utf-8;",
     });
 
-    // Dynamically create the filename based on lake name
     const lakeName =
       data.length > 0 ? data[0].lake.split(" ")[0] : "sensor_data";
     const filename = `${lakeName}_sensors_data.csv`;
@@ -257,26 +258,18 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     URL.revokeObjectURL(url);
   };
 
-  const [startDate, setStartDate] = useState<number | null>(null); // Store start date
-  const [endDate, setEndDate] = useState<number | null>(null); // Store end date
-
-  // Callback function to handle the selected start date in Unix timestamp
   const handleStartDateChange = (timestamp: number | null) => {
-    setStartDate(timestamp); // Set the selected start date
+    setStartDate(timestamp);
   };
 
-  // Callback function to handle the selected end date in Unix timestamp
   const handleEndDateChange = (timestamp: number | null) => {
-    setEndDate(timestamp); // Set the selected end date
+    setEndDate(timestamp);
   };
 
-  // Function to handle the data processing once both dates are selected
   const handleData = () => {
     if (startDate && endDate) {
-      console.log("Processing data between:", startDate, "and", endDate);
       DataService.fetchDimensionValuesMultiItem(items, {
         historyType: "absolute",
-        unit: "month",
         start: startDate,
         end: endDate,
         value: 2,
@@ -287,21 +280,17 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     }
   };
 
-  // Call handleData when both startDate and endDate are selected
   useEffect(() => {
     if (startDate && endDate) {
-      handleData(); // Call the data handler when both dates are selected
+      handleData();
     }
-  }, [startDate, endDate]); // Only call handleData when both dates are updated
+  }, [startDate, endDate]);
 
   return (
     <>
-      <Typography.Title
-        level={4}
-        style={{ fontWeight: "bold", paddingBottom: "2%" }}
-      >
+      <Title level={4} style={{ fontWeight: "bold", paddingBottom: "2%" }}>
         Verfügbare Daten zu diesem See
-      </Typography.Title>
+      </Title>
 
       <Row
         gutter={[16, 16]}
@@ -312,7 +301,6 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
           selectedValues={selectedProperties}
           handleClick={selectProperties}
         />
-
         <SingleSelectDropdown
           items={timeFilter}
           placeholder="Select Frequency"
@@ -321,12 +309,9 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         />
         <DatePicker
           onDateChange={handleStartDateChange}
-          placeholder="Start Date" // Placeholder for start date
+          placeholder="Start Date"
         />
-        <DatePicker
-          onDateChange={handleEndDateChange}
-          placeholder="End Date" // Placeholder for end date
-        />
+        <DatePicker onDateChange={handleEndDateChange} placeholder="End Date" />
       </Row>
 
       <CustomChart
@@ -352,12 +337,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         >
           Wie wurden die dargestellten Daten erhoben?
         </Typography.Link>
-        <Row
-          style={{
-            flex: 0.45,
-            justifyContent: "flex-end",
-          }}
-        >
+        <Row style={{ flex: 0.45, justifyContent: "flex-end" }}>
           <CustomButton
             text="Download Graph"
             disabled={selectedProperties.length === 0}

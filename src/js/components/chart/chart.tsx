@@ -1,13 +1,13 @@
 import React, { useEffect, useCallback, forwardRef } from "react";
 import Highcharts, { Options } from "highcharts";
-import "./chartComponent.css"; // Import the CSS file
+import "./chartComponent.css";
 
 interface ChartProps {
   data: {
     type: string;
     name: string;
     unit: string;
-    data: [number, number][]; // Array of tuples for data points
+    data: [number, number][];
   }[];
   filter: string | null;
   properties: string[];
@@ -49,19 +49,23 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
                 ? formatXAxisLabel(this.value)
                 : this.value;
             },
-            rotation: -45, // Optional: Rotates the labels for better readability
+            rotation: -45,
           },
-          tickPixelInterval: 50, // Decrease this value to show more ticks
+          tickPixelInterval: 50,
         },
-        yAxis: properties.map((property, index) => ({
-          title: {
-            text: property,
-          },
-          opposite: index % 2 === 1, // Alternate sides for better visibility
-        })),
+        yAxis: properties.map((property, index) => {
+          console.log("data of index", data[index]);
+          const unit = data[index]?.unit || "";
+          return {
+            title: {
+              text: `${property} (${unit})`,
+            },
+            opposite: index % 2 === 1,
+          };
+        }),
         series: data.map((item, index) => ({
           ...item,
-          yAxis: index % properties.length, // Assign series to the corresponding Y-axis
+          yAxis: index % properties.length,
         })) as Highcharts.SeriesOptionsType[],
       };
     }, [data, formatXAxisLabel, properties]);
@@ -69,7 +73,6 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
     useEffect(() => {
       if (filter && properties.length > 0) {
         const chart = Highcharts.chart("container", generateChartConfig());
-
         return () => {
           if (chart) {
             chart.destroy();
