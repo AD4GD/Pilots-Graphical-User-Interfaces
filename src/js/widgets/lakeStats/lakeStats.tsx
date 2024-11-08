@@ -57,6 +57,24 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
 
+  // Fetch Data on Mount and Items Change
+  useEffect(() => {
+    DataService.fetchDimensionValuesMultiItem(items, {
+      historyType: "relative",
+      unit: "year",
+      value: 2,
+    }).then((result) => {
+      const transformedData = transformData(result);
+      setData(transformedData);
+    });
+  }, [DataService, items]);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      handleData();
+    }
+  }, [startDate, endDate]);
+
   // Fetch Properties
   const fetchProperties = (items: any[]) => {
     return items.map((item: any[]) => {
@@ -143,18 +161,6 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       };
     });
   }, [data, selectedProperties, selectedFilter, aggregateData]);
-
-  // Fetch Data on Mount and Items Change
-  useEffect(() => {
-    DataService.fetchDimensionValuesMultiItem(items, {
-      historyType: "relative",
-      unit: "year",
-      value: 2,
-    }).then((result) => {
-      const transformedData = transformData(result);
-      setData(transformedData);
-    });
-  }, [DataService, items]);
 
   const properties = useMemo(() => fetchProperties(items), [items]);
 
@@ -279,12 +285,6 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       });
     }
   };
-
-  useEffect(() => {
-    if (startDate && endDate) {
-      handleData();
-    }
-  }, [startDate, endDate]);
 
   return (
     <>

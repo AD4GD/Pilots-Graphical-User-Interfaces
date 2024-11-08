@@ -38,6 +38,9 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
       [filter]
     );
 
+    // Define an array for bar properties
+    const barProperties = ["Precipitation", "Evaporation"];
+
     const generateChartConfig = useCallback((): Options => {
       return {
         title: { text: undefined },
@@ -54,7 +57,6 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
           tickPixelInterval: 50,
         },
         yAxis: properties.map((property, index) => {
-          console.log("data of index", data[index]);
           const unit = data[index]?.unit || "";
           return {
             title: {
@@ -63,10 +65,15 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
             opposite: index % 2 === 1,
           };
         }),
-        series: data.map((item, index) => ({
-          ...item,
-          yAxis: index % properties.length,
-        })) as Highcharts.SeriesOptionsType[],
+        series: data.map((item, index) => {
+          // Determine if the current item should be a bar or line series
+          const isBarChart = barProperties.includes(item.name);
+          return {
+            ...item,
+            type: isBarChart ? "column" : "line", // Use 'column' for bar chart and 'line' for line chart
+            yAxis: index % properties.length,
+          };
+        }) as Highcharts.SeriesOptionsType[],
       };
     }, [data, formatXAxisLabel, properties]);
 
