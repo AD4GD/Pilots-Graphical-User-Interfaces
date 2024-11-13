@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import html2canvas from "html2canvas";
 import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
-import { Row, Space, Typography } from "antd";
+import { Row, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
 
 import {
@@ -13,34 +13,15 @@ import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import { ConfigInterface } from "./types";
 import { DatePicker } from "../../components/datePicker";
+import {
+  FilterType,
+  SensorData,
+  ChartData,
+  FilterOption,
+  DataPoint,
+} from "./types";
 
 const { Title } = Typography;
-
-// Define Data Interfaces
-interface Data {
-  id: any;
-  lake: any;
-  propertyName: any;
-  unit: any;
-  data: {
-    unit: string;
-    date: string;
-    value: number;
-  }[];
-}
-
-interface DataPoint {
-  date: number;
-  value: number;
-}
-
-interface Sensor {
-  id: string;
-  lake: string;
-  propertyName: string;
-  unit: string;
-  data: DataPoint[];
-}
 
 // Main Component
 export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
@@ -48,35 +29,48 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   context["setLoading"](false);
   const DataService = useDataService();
   const items = context["useItemDimensionConfig"]();
-  const chartRef = useRef(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   // State Variables
-  const [data, setData] = useState<Data[]>([]);
+  const [data, setData] = useState<SensorData[]>([]);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>("daily"); // Restrict to valid filter types
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
 
-  // Fetch Data on Mount and Items Change
-  useEffect(() => {
+  // Fetch data based on selected filter and date range
+  const fetchData = (
+    filter: FilterType,
+    startDate?: number | null,
+    endDate?: number | null
+  ) => {
+    const filterUnitMap: Record<FilterType, "day" | "week" | "month" | "year"> =
+      {
+        daily: "day",
+        weekly: "week",
+        monthly: "month",
+        yearly: "year",
+      };
+
     DataService.fetchDimensionValuesMultiItem(items, {
-      historyType: "relative",
-      unit: "year",
-      value: 2,
+      historyType: startDate && endDate ? "absolute" : "relative",
+      unit: filterUnitMap[filter],
+      start: startDate ?? undefined, // Pass undefined when startDate is null
+      end: endDate ?? undefined, // Pass undefined when endDate is null
+      value: 1000, // Fetch a large range for relative history
     }).then((result) => {
       const transformedData = transformData(result);
       setData(transformedData);
     });
-  }, [DataService, items]);
+  };
 
+  // Initial data fetch and when filter or date range changes
   useEffect(() => {
-    if (startDate && endDate) {
-      handleData();
-    }
-  }, [startDate, endDate]);
+    fetchData(selectedFilter, startDate, endDate); // Passing startDate and endDate directly as they are of type number | null
+  }, [DataService, items, selectedFilter, startDate, endDate]);
 
-  // Fetch Properties
-  const fetchProperties = (items: any[]) => {
+  // Fetch Properties from item dimensions
+  const fetchProperties = (items: any[]): FilterOption[] => {
     return items.map((item: any[]) => {
       const { valueTypes } = item[0];
       const key = valueTypes[0].name;
@@ -86,93 +80,30 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     });
   };
 
-  // Transform Data
-  const transformData = (data: any[]) => {
+  // Transform raw data into usable format
+  const transformData = (data: any[]): SensorData[] => {
     return data.map((item: any[]) => {
       const { id, name: lake, valueTypes } = item[0];
       const propertyName = valueTypes[0].name;
       const unit = valueTypes[0].unit;
-      const data = item[2];
+      const dataPoints = item[2];
 
-      return { id, lake, propertyName, unit, data };
+      return { id, lake, propertyName, unit, data: dataPoints };
     });
   };
 
-  // Aggregate Data
-  const aggregateData = (
-    data: { date: string; value: number }[],
-    filter: string | null
-  ) => {
-    const aggregated: Record<string, { sum: number; count: number }> = {};
-
-    data.forEach(({ date, value }) => {
-      const dateObj = new Date(date);
-      let key: string;
-
-      switch (filter) {
-        case "week":
-          const startOfWeek = new Date(dateObj);
-          startOfWeek.setDate(dateObj.getDate() - dateObj.getDay());
-          key = startOfWeek.toISOString().split("T")[0];
-          break;
-        case "month":
-          key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1)
-            .toString()
-            .padStart(2, "0")}`;
-          break;
-        case "year":
-          key = dateObj.getFullYear().toString();
-          break;
-        case "day":
-        default:
-          key = dateObj.toISOString().split("T")[0];
-      }
-
-      if (!aggregated[key]) {
-        aggregated[key] = { sum: 0, count: 0 };
-      }
-
-      aggregated[key].sum += value;
-      aggregated[key].count += 1;
-    });
-
-    return Object.entries(aggregated).map(([key, { sum, count }]) => ({
-      date: key,
-      value: sum / count,
-    }));
-  };
-
-  // Memoized Aggregated Data
-  const aggregateAllData = useMemo(() => {
-    const filteredData = data.filter((item) =>
-      selectedProperties.includes(item.propertyName)
-    );
-
-    return filteredData.map(({ propertyName, unit, data }) => {
-      const aggregated = aggregateData(data, selectedFilter);
-      return {
-        type: "line",
-        name: propertyName,
-        unit: unit, // Use the proper unit
-        data: aggregated.map(({ date, value }) => [
-          new Date(date).getTime(), // X value: timestamp
-          value, // Y value: number
-        ]) as [number, number][], // Cast to ensure type correctness
-      };
-    });
-  }, [data, selectedProperties, selectedFilter, aggregateData]);
-
+  // Map properties for selection dropdown
   const properties = useMemo(() => fetchProperties(items), [items]);
 
-  // Time Filter Options
-  const timeFilter = [
+  // Time filter options
+  const timeFilter: FilterOption[] = [
     { key: "daily", label: "Daily" },
     { key: "weekly", label: "Weekly" },
     { key: "monthly", label: "Monthly" },
     { key: "yearly", label: "Yearly" },
   ];
 
-  // Select Properties Handler
+  // Select properties for chart
   const selectProperties = (e: any) => {
     const value = e.key;
     setSelectedProperties((prevValues) =>
@@ -180,17 +111,24 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         ? prevValues.filter((v) => v !== value)
         : [...prevValues, value]
     );
-    if (selectedFilter == null) {
-      selectFilter("daily");
-    }
   };
 
-  // Select Filter Handler
-  const selectFilter = (key: string) => {
+  // Select filter type
+  const selectFilter = (key: FilterType) => {
     setSelectedFilter(key);
   };
 
-  // Download Graph
+  // Handle start date change
+  const handleStartDateChange = (timestamp: number | null) => {
+    setStartDate(timestamp);
+  };
+
+  // Handle end date change
+  const handleEndDateChange = (timestamp: number | null) => {
+    setEndDate(timestamp);
+  };
+
+  // Download Graph as PNG
   const downloadGraph = () => {
     if (chartRef.current) {
       html2canvas(chartRef.current).then((canvas) => {
@@ -210,7 +148,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
 
   // Download Data as CSV
   const downloadData = () => {
-    const csvRows = [];
+    const csvRows: string[] = [];
     const allTimestamps = new Set<string>();
     const sensorNames = new Set<string>();
 
@@ -264,26 +202,21 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleStartDateChange = (timestamp: number | null) => {
-    setStartDate(timestamp);
-  };
-
-  const handleEndDateChange = (timestamp: number | null) => {
-    setEndDate(timestamp);
-  };
-
-  const handleData = () => {
-    if (startDate && endDate) {
-      DataService.fetchDimensionValuesMultiItem(items, {
-        historyType: "absolute",
-        start: startDate,
-        end: endDate,
-        value: 2,
-      }).then((result) => {
-        const transformedData = transformData(result);
-        setData(transformedData);
-      });
-    }
+  // Function to transform the data for the chart
+  const transformDataForChart = (): ChartData[] => {
+    return data
+      .filter((sensor) => selectedProperties.includes(sensor.propertyName))
+      .map(
+        (sensor): ChartData => ({
+          type: "line", // Default to line chart
+          name: sensor.propertyName,
+          unit: sensor.unit,
+          data: sensor.data.map((point: DataPoint) => [
+            new Date(point.date).getTime(), // Convert date string to UNIX timestamp
+            point.value,
+          ]),
+        })
+      );
   };
 
   return (
@@ -315,7 +248,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       </Row>
 
       <CustomChart
-        data={aggregateAllData}
+        data={transformDataForChart()}
         filter={selectedFilter}
         properties={selectedProperties}
         ref={chartRef}

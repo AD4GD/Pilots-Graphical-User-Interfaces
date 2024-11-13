@@ -3,6 +3,7 @@ import { Button, Dropdown, Menu, Typography } from "antd";
 import React, { useState } from "react";
 
 import "./customDropdown.css"; // Import the CSS file
+import { FilterType } from "../../types/Lake_Stats"; // Import the FilterType type
 
 interface SingleSelectDropdownProps {
   items: {
@@ -11,7 +12,7 @@ interface SingleSelectDropdownProps {
   }[]; // Define the type for the items prop
   placeholder?: string; // Define the type for the placeholder prop
   selectedValue: string | null;
-  handleClick: (key: string) => void;
+  handleClick: (key: FilterType) => void;
 }
 
 const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({

@@ -1,20 +1,11 @@
 import React, { useEffect, useCallback, forwardRef } from "react";
-import Highcharts, { Options } from "highcharts";
+import Highcharts, { Options, SeriesOptionsType } from "highcharts";
+import { ChartProps } from "../../types/Lake_Stats";
 import "./chartComponent.css";
-
-interface ChartProps {
-  data: {
-    type: string;
-    name: string;
-    unit: string;
-    data: [number, number][];
-  }[];
-  filter: string | null;
-  properties: string[];
-}
 
 const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
   ({ data, filter, properties }, ref) => {
+    // Function to format the x-axis labels based on the filter (daily, weekly, etc.)
     const formatXAxisLabel = useCallback(
       (value: number): string => {
         const date = new Date(value);
@@ -38,9 +29,10 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
       [filter]
     );
 
-    // Define an array for bar properties
+    // Define an array for bar properties (e.g., Precipitation, Evaporation)
     const barProperties = ["Precipitation", "Evaporation"];
 
+    // Generate chart configuration based on the passed data
     const generateChartConfig = useCallback((): Options => {
       return {
         title: { text: undefined },
@@ -57,10 +49,11 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
           tickPixelInterval: 50,
         },
         yAxis: properties.map((property, index) => {
-          const unit = data[index]?.unit || "";
+          const propertyData = data.find((item) => item.name === property);
+          const unit = propertyData?.unit || ""; // Get unit for the current property
           return {
             title: {
-              text: `${property} (${unit})`,
+              text: `${property} (${unit})`, // Use the correct unit for each property
             },
             opposite: index % 2 === 1,
           };
@@ -73,7 +66,7 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
             type: isBarChart ? "column" : "line", // Use 'column' for bar chart and 'line' for line chart
             yAxis: index % properties.length,
           };
-        }) as Highcharts.SeriesOptionsType[],
+        }) as SeriesOptionsType[],
       };
     }, [data, formatXAxisLabel, properties]);
 
@@ -88,6 +81,7 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
       }
     }, [generateChartConfig, filter]);
 
+    // If no filter or properties are selected, show a placeholder
     if (!filter || properties.length === 0) {
       return (
         <div className="chart-placeholder-container">
