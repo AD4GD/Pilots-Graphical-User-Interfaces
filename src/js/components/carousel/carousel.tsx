@@ -1,109 +1,42 @@
-// import React, { useState } from "react";
-// import { WidgetStatic } from "@opendash/plugin-monitoring";
-// import { useParseQuery } from "parse-hooks";
-// import Parse from "parse";
-// import { useUrlParam } from "@opendash/core";
-// import { Button, Carousel } from "antd";
-
-// interface CustomCarouselProps {
-//   images: string[];
-// }
-
-// const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => {
-//   const [zones, setZones] = useState([] as { label: string; value: string }[]);
-//   const [lakeId, setLakeId] = useUrlParam(
-//     "lakeid",
-//     null as string | null,
-//     "string"
-//   );
-
-//   React.useEffect(() => {
-//     init();
-//   }, []);
-
-//   const init = async () => {
-//     const zones = await new Parse.Query("MIAAS_Geographies").find();
-//     setZones(
-//       zones.map((zone) => {
-//         return { label: zone.get("label"), value: zone.id };
-//       })
-//     );
-//   };
-
-//   //Query Lake Meta Data
-//   const lakeQuery = React.useMemo(() => {
-//     return new Parse.Query("AD4GD_LakeMetaData");
-//   }, []);
-
-//   const { result: lakes, reload, error, loading } = useParseQuery(lakeQuery);
-
-//   console.log({ lakes });
-
-//   const config = React.useMemo(() => {
-//     return {
-//       markers: [],
-//       zones: {
-//         type: "zones",
-//         districtsFromZones: zones.map((zone) => zone.value),
-//         districts: null,
-//         districtFromDimension: null,
-//       },
-//       _history: {
-//         aggregation: false,
-//       },
-//       onEvent: (type: string, event: any) => {
-//         console.log({ type, event });
-//         console.log(
-//           "ID of clicked Features",
-//           event.features.map((f: any) => f.properties.objectId)
-//         );
-//       },
-//     };
-//   }, [zones]);
-
-//   console.log({ config });
-
-//   return (
-//     <>
-//       {/* <Carousel arrows>
-//         {images.map((image, index) => (
-//           <div key={index}>
-//             <Image
-//               src={require("./map.png")}
-//               alt={`Image ${index + 1}`}
-//               style={{ maxWidth: "100%", marginBottom: "5%", marginTop: "5%" }}
-//             />
-//           </div>
-//         ))}
-//       </Carousel> */}
-//     </>
-//   );
-// };
-
-// export default CustomCarousel;
-
 import React from "react";
-import { Carousel, Empty, Image, Typography } from "antd";
-interface CustomCarouselProps {
-  images: [string, string][] | undefined;
+import { Carousel } from "antd";
+import { Typography } from "antd";
+import Minimap from "../minimap/minimap";
+
+interface MapItem {
+  layerUrls: string[];
+  title: string;
 }
-const CustomCarousel: React.FC<CustomCarouselProps> = ({ images }) => (
+
+interface CustomCarouselProps {
+  maps: MapItem[];
+  bbox: string;
+  updateBbox: (newBbox: string) => void;
+}
+
+const CustomCarousel: React.FC<CustomCarouselProps> = ({
+  maps,
+  bbox,
+  updateBbox,
+}) => (
   <Carousel arrows>
-    {!images && <Empty />}
-    {images &&
-      images.map((image, index) => (
+    {!maps.length ? (
+      <div>No maps available</div>
+    ) : (
+      maps.map((map, index) => (
         <div key={index}>
-          {" "}
-          <Image
-            src={image[0]}
-            alt={image[1]}
-            style={{ maxWidth: "100%", marginBottom: "5%", marginTop: "5%" }}
-          />{" "}
+          <Minimap
+            layerUrls={map.layerUrls}
+            bbox={bbox}
+            updateBbox={updateBbox}
+          />
           <Typography.Title level={5} style={{ fontWeight: "bold" }}>
-            {image[1]}
+            {map.title}
           </Typography.Title>
         </div>
-      ))}
+      ))
+    )}
   </Carousel>
 );
+
 export default CustomCarousel;

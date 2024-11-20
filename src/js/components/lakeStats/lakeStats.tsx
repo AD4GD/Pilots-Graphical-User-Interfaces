@@ -3,30 +3,12 @@ import { Col, Row, Typography } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "@opendash/router";
-import { Carousel } from "../carousel";
-import {
-  StarFilled,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from "@ant-design/icons";
+import { StarFilled } from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
-import { useLakeImages, useLakeMetaData } from "../../hooks/useLakeMetaData";
-import MultiColorProgressbar from "multi-color-progressbar-with-indicator";
-import "multi-color-progressbar-with-indicator/dist/index.css";
+import { useLakeMetaData } from "../../hooks/useLakeMetaData";
 import Parse from "parse";
-
-// interface Geography {
-//   id: string;
-// }
-
-// type LakeStatsType = {
-//   id: string;
-//   name: string;
-//   area: number;
-//   swimmingUsage: boolean;
-//   district: string;
-//   circumference: number;
-// };
+import MultiColorBar from "../multicolorbar/multicolorbar";
+import CustomCarousel from "../carousel/carousel";
 
 interface PropertyRowProps {
   label: string;
@@ -72,14 +54,91 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ label, value }) => (
   </Row>
 );
 
+interface MapItem {
+  layerUrls: string[];
+  title: string;
+}
+
 const LakeStats: React.FC = ({}) => {
   const { lakeId } = useParams();
   const location = useLocation();
+  const [mapItems, setMapItems] = useState<MapItem[]>([]);
+  const [bbox, setBbox] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const {
     item: { sensors },
   } = location.state || {};
 
   const t = useTranslation();
+
+  const updateBbox = (newBbox: string) => {
+    setBbox(newBbox);
+  };
+
+  useEffect(() => {
+    // Fetch bbox and other details from Parse server
+    const fetchBoundingBox = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const query = new Parse.Query("MIAAS_Geographies");
+        query.equalTo("objectId", lakeId);
+        const result = await query.first();
+
+        if (result) {
+          const bbox = result.get("bbox");
+          const newMapItems = [
+            {
+              layerUrls: [
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k_fb_btwert?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k_fb_btwert?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+              ],
+              title: "Biotoptypen: Biotopwerte",
+            },
+            {
+              layerUrls: [
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=2&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+              ],
+              title:
+                "Versorgung mit öffentlichen, wohnungsnahen Grünanlagen 2016",
+            },
+            {
+              layerUrls: [
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=2&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=3&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=4&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=5&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=6&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=7&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=11&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=12&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
+              ],
+              title:
+                "Schutzgebiete und Schutzobjekte nach Naturschutzrecht Berlin (inklusive Natura 2000)",
+            },
+          ];
+
+          setMapItems(newMapItems);
+          setBbox(bbox);
+        } else {
+          setError("Lake data not found.");
+        }
+      } catch (err) {
+        setError("Failed to fetch bounding box data.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBoundingBox();
+  }, [lakeId]);
 
   const { result: properties } = useLakeMetaData();
 
@@ -96,17 +155,12 @@ const LakeStats: React.FC = ({}) => {
     averageDepth: 0,
     maximumDepth: 0,
   };
-  const { result: images } = useLakeImages(currentLake?.id);
-
-  const wqiBars = [
-    { width: 30, color: "#dc3545" },
-    { width: 40, color: "#f2d261" },
-    { width: 30, color: "#6fa053" },
-  ];
 
   const [wqiValues, setWqiValues] = useState({
     minVal: 0,
-    maxVal: 1000,
+    maxVal: 100,
+    minTrend: 0,
+    maxTrend: 100,
     value: 0,
     trend: 0,
   });
@@ -114,26 +168,56 @@ const LakeStats: React.FC = ({}) => {
   const getWQI = async () => {
     if (lakeId) {
       // Query to get the maximum value
-      const maxQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
-      const maxResults = await maxQuery
-        .select("WQI_status")
-        .ascending("WQI_status")
-        .limit(1)
-        .find();
+      const wqiQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
 
-      const maxValue =
-        maxResults.length > 0 ? maxResults[0].get("WQI_status") : null;
-
-      // Query to get the minimum value
-      const minQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
-      const minResults = await minQuery
+      // Get the maximum value (descending order)
+      const maxResults = await wqiQuery
         .select("WQI_status")
         .descending("WQI_status")
         .limit(1)
         .find();
 
+      // Get the minimum value (ascending order)
+      const minResults = await wqiQuery
+        .select("WQI_status")
+        .ascending("WQI_status")
+        .limit(1)
+        .find();
+
+      const maxResultsTrend = await wqiQuery
+        .select("WQI_trend")
+        .descending("WQI_trend")
+        .limit(1)
+        .find();
+
+      const minResultsTrend = await wqiQuery
+        .select("WQI_trend")
+        .ascending("WQI_trend")
+        .limit(1)
+        .find();
+
+      const round = (value: number, decimals: number) =>
+        value !== null ? parseFloat(value.toFixed(decimals)) : null;
+
+      const maxValue =
+        maxResults.length > 0
+          ? round(maxResults[0].get("WQI_status"), 2)
+          : null;
+
       const minValue =
-        minResults.length > 0 ? minResults[0].get("WQI_status") : null;
+        minResults.length > 0
+          ? round(minResults[0].get("WQI_status"), 2)
+          : null;
+
+      const maxTrend =
+        maxResultsTrend.length > 0
+          ? round(maxResultsTrend[0].get("WQI_trend"), 2)
+          : null;
+
+      const minTrend =
+        minResultsTrend.length > 0
+          ? round(minResultsTrend[0].get("WQI_trend"), 2)
+          : null;
 
       // Query to get the value of current lake
       const query = new Parse.Query("AD4GD_Lake_Quality_Index");
@@ -142,13 +226,15 @@ const LakeStats: React.FC = ({}) => {
 
       if (results.length > 0) {
         const lakeObject = results[0];
-        const wqiStatus = lakeObject.get("WQI_status");
-        const wqiTrend = lakeObject.get("WQI_trend");
+        const wqiStatus = round(lakeObject.get("WQI_status"), 2);
+        const wqiTrend = round(lakeObject.get("WQI_trend"), 2);
 
-        // Set the state with the values
+        // Set the state with the rounded values
         setWqiValues({
           minVal: minValue || 0,
-          maxVal: maxValue || 1000,
+          maxVal: maxValue || 100,
+          minTrend: minTrend || 0,
+          maxTrend: maxTrend || 100,
           value: wqiStatus || 0,
           trend: wqiTrend || 0,
         });
@@ -164,22 +250,6 @@ const LakeStats: React.FC = ({}) => {
     }
   }, [currentLake.name]);
 
-  const renderWQIArrow = () => {
-    if (wqiValues.trend > 0) {
-      return (
-        <ArrowUpOutlined
-          style={{ color: "green", fontSize: "20px", marginRight: "5px" }}
-        />
-      );
-    } else if (wqiValues.trend < 0) {
-      return (
-        <ArrowDownOutlined
-          style={{ color: "red", fontSize: "20px", marginRight: "5px" }}
-        />
-      );
-    }
-    return null;
-  };
   const config = useMemo(() => {
     return {
       _sources: [],
@@ -238,12 +308,8 @@ const LakeStats: React.FC = ({}) => {
             </Col>
           </Row>
 
-          <Carousel
-            images={images.map((image) => [
-              image.image._url,
-              image.description,
-            ])}
-          />
+          {/* ########################################################### */}
+          <CustomCarousel maps={mapItems} bbox={bbox} updateBbox={updateBbox} />
 
           <div style={{ marginTop: "6%", paddingLeft: "1rem" }}>
             <PropertyRow label={t("Name")} value={currentLake.name} />
@@ -291,61 +357,134 @@ const LakeStats: React.FC = ({}) => {
         >
           <div
             style={{
+              display: "flex",
+              flexDirection: "row",
               width: "100%",
-              height: "40%",
-              marginBottom: "1%",
-              borderRadius: "20px",
-              backgroundColor: "white",
+              height: "100%",
+              gap: "1%",
             }}
           >
-            <Typography.Title
-              level={4}
+            <div
               style={{
-                fontWeight: "bold",
-                paddingTop: "2%",
-                paddingLeft: "2%",
+                width: "100%",
+                height: "40%",
+                marginBottom: "1%",
+                borderRadius: "20px",
+                backgroundColor: "white",
               }}
             >
-              Water Quality Index
-            </Typography.Title>
-            <div style={{ width: "50%", height: "100%", margin: "0 auto" }}>
-              <div
+              <Typography.Title
+                level={4}
                 style={{
-                  padding: "5% 15% 15% 15%",
+                  fontWeight: "bold",
+                  paddingTop: "2%",
+                  paddingLeft: "4%",
                 }}
               >
-                {wqiValues.value !== 0 ? (
-                  <>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                          WQI: {wqiValues.value}
-                        </span>
+                Earth Observation Trophic State
+              </Typography.Title>
+              <div style={{ width: "100%", height: "100%", margin: "0 auto" }}>
+                <div
+                  style={{
+                    padding: "5% 15% 15% 15%",
+                  }}
+                >
+                  {wqiValues.value !== 0 ? (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            marginBottom: "1rem",
+                          }}
+                        >
+                          <span
+                            style={{ fontSize: "20px", fontWeight: "bold" }}
+                          >
+                            WQI State: {wqiValues.value}
+                          </span>
+                        </div>
                       </div>
+                      <MultiColorBar
+                        minValue={wqiValues.minVal}
+                        maxValue={wqiValues.maxVal}
+                        value={wqiValues.value}
+                      />
+                    </>
+                  ) : (
+                    <p>Loading WQI data...</p>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                      <span style={{ fontSize: "16px", color: "#555" }}>
-                        Trend: {wqiValues.trend}
-                        {renderWQIArrow()}
-                      </span>
-                    </div>
-                    <MultiColorProgressbar
-                      height={30}
-                      bars={wqiBars}
-                      minVal={wqiValues.minVal}
-                      maxVal={wqiValues.maxVal}
-                      value={wqiValues.value}
-                    />
-                  </>
-                ) : (
-                  <p>Loading WQI data...</p>
-                )}
+            <div
+              style={{
+                width: "100%",
+                height: "40%",
+                marginBottom: "1%",
+                borderRadius: "20px",
+                backgroundColor: "white",
+              }}
+            >
+              <Typography.Title
+                level={4}
+                style={{
+                  fontWeight: "bold",
+                  paddingTop: "2%",
+                  paddingLeft: "4%",
+                }}
+              >
+                Earth Observation Trophic Trend
+              </Typography.Title>
+              <div style={{ width: "100%", height: "100%", margin: "0 auto" }}>
+                <div
+                  style={{
+                    padding: "5% 15% 15% 15%",
+                  }}
+                >
+                  {wqiValues.value !== 0 ? (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            marginBottom: "1rem",
+                          }}
+                        >
+                          <span
+                            style={{ fontSize: "20px", fontWeight: "bold" }}
+                          >
+                            WQI Trend: {wqiValues.trend}
+                          </span>
+                        </div>
+                      </div>
+                      <MultiColorBar
+                        minValue={wqiValues.minTrend}
+                        maxValue={wqiValues.maxTrend}
+                        value={wqiValues.trend}
+                      />
+                    </>
+                  ) : (
+                    <p>Loading WQI data...</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
