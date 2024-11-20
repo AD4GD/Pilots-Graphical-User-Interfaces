@@ -108,6 +108,16 @@ const LakeOverview: React.FC = () => {
     );
   }, [zones, searchQuery]);
 
+  // test cloud function on server
+  const fetchData = async () => {
+    try {
+      const results = await Parse.Cloud.run("getData");
+      console.log(results);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  };
+
   return (
     <>
       <Row style={{ width: "100%", height: "80px" }}>
@@ -219,6 +229,7 @@ const LakeOverview: React.FC = () => {
                   marginBottom: "3rem",
                   padding: 0,
                 }}
+                onClick={fetchData}
               >
                 Mehr zur Datenerhebung
               </Button>

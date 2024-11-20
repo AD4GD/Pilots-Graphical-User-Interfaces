@@ -14,11 +14,6 @@
       "required": true,
       "defaultValue": false
     },
-    "firstSlide": {
-      "type": "String",
-      "required": true,
-      "defaultValue": "empty"
-    },
     "imgSrc": {
       "type": "String",
       "required": false
@@ -26,6 +21,11 @@
     "label": {
       "type": "String",
       "required": true
+    },
+    "slides": {
+      "type": "Array",
+      "required": true,
+      "defaultValue": []
     },
     "tOptions": {
       "type": "Object",

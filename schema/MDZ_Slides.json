@@ -1,5 +1,10 @@
 {
   "fields": {
+    "bulletpoints": {
+      "type": "Array",
+      "required": false,
+      "defaultValue": []
+    },
     "content1": {
       "type": "String",
       "required": false
@@ -18,10 +23,9 @@
       "required": false,
       "defaultValue": "Headline"
     },
-    "nextSlide": {
-      "type": "String",
-      "required": true,
-      "defaultValue": "empty"
+    "nestedSlides": {
+      "type": "Array",
+      "required": false
     },
     "picture1": {
       "type": "String",
@@ -36,11 +40,6 @@
       "required": true,
       "defaultValue": "empty"
     },
-    "slideNumber": {
-      "type": "Number",
-      "required": true,
-      "defaultValue": 0
-    },
     "subheadline": {
       "type": "String",
       "required": false,
@@ -50,6 +49,10 @@
       "type": "Number",
       "required": true,
       "defaultValue": 1
+    },
+    "video": {
+      "type": "String",
+      "required": false
     }
   },
   "classLevelPermissions": {

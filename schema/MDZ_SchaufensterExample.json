@@ -44,6 +44,10 @@
     },
     "title": {
       "type": "String"
+    },
+    "video": {
+      "type": "String",
+      "required": false
     }
   },
   "classLevelPermissions": {

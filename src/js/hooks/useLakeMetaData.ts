@@ -12,7 +12,7 @@ export const useLakeMetaData = () => {
 };
 export const useLakeImages = (lakeId?: string) => {
   const innerLake = lakeId || "____empty_____";
-  console.log({ innerLake, lakeId });
+  // console.log({ innerLake, lakeId });
   const query = React.useMemo(() => {
     const lake = AD4GD_LakeMetaData.createWithoutData(innerLake);
     const imageQuery = new Parse.Query(AD4GD_LakeImages).equalTo("lake", lake);
