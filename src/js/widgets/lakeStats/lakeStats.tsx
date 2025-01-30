@@ -44,6 +44,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     startDate?: number | null,
     endDate?: number | null
   ) => {
+    console.log("FETCHING DATA");
     const filterUnitMap: Record<FilterType, "day" | "week" | "month" | "year"> =
       {
         daily: "day",
@@ -54,11 +55,15 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
 
     DataService.fetchDimensionValuesMultiItem(items, {
       historyType: startDate && endDate ? "absolute" : "relative",
-      unit: filterUnitMap[filter],
+      unit: "month",
       start: startDate ?? undefined, // Pass undefined when startDate is null
       end: endDate ?? undefined, // Pass undefined when endDate is null
       value: 1000, // Fetch a large range for relative history
+      aggregation: true,
+      aggregationOperation: "avg",
+      aggregationDateUnit: filterUnitMap[filter],
     }).then((result) => {
+      console.log("RESULT", result);
       const transformedData = transformData(result);
       setData(transformedData);
     });
