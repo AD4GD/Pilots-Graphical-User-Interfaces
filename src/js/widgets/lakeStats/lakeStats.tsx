@@ -11,7 +11,7 @@ import {
 } from "../../components/dropdown";
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
-import { ConfigInterface } from "./types";
+import { ConfigInterface, AggregationOperationInterface } from "./types";
 import { DatePicker } from "../../components/datePicker";
 import {
   FilterType,
@@ -19,7 +19,7 @@ import {
   ChartData,
   FilterOption,
   DataPoint,
-} from "./types";
+} from "../../types/Lake_Stats";
 
 const { Title } = Typography;
 
@@ -38,11 +38,38 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
 
+  function separateSensors() {
+    const targetIds = [
+      "sensor_halensee_precipitation",
+      "sensor_halensee_evaporation",
+    ];
+    const matched: any[] = [];
+    const remaining: any[] = [];
+
+    items.forEach((item) => {
+      if (Array.isArray(item) && item[0] && targetIds.includes(item[0].id)) {
+        matched.push(item);
+      } else {
+        remaining.push(item);
+      }
+    });
+
+    Promise.all([
+      fetchData(matched, selectedFilter, startDate, endDate, "sum"),
+      fetchData(remaining, selectedFilter, startDate, endDate, "avg"),
+    ]).then(([matchedData, remainingData]) => {
+      const combinedData = [...matchedData, ...remainingData];
+      setData(combinedData);
+    });
+  }
+
   // Fetch data based on selected filter and date range
-  const fetchData = (
+  const fetchData = async (
+    items: any[],
     filter: FilterType,
     startDate?: number | null,
-    endDate?: number | null
+    endDate?: number | null,
+    aggregationOperation?: AggregationOperationInterface
   ) => {
     console.log("FETCHING DATA");
     const filterUnitMap: Record<FilterType, "day" | "week" | "month" | "year"> =
@@ -53,25 +80,24 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         yearly: "year",
       };
 
-    DataService.fetchDimensionValuesMultiItem(items, {
+    const result = await DataService.fetchDimensionValuesMultiItem(items, {
       historyType: startDate && endDate ? "absolute" : "relative",
       unit: "month",
       start: startDate ?? undefined, // Pass undefined when startDate is null
       end: endDate ?? undefined, // Pass undefined when endDate is null
       value: 1000, // Fetch a large range for relative history
       aggregation: true,
-      aggregationOperation: "avg",
+      aggregationOperation:
+        aggregationOperation as AggregationOperationInterface,
       aggregationDateUnit: filterUnitMap[filter],
-    }).then((result) => {
-      console.log("RESULT", result);
-      const transformedData = transformData(result);
-      setData(transformedData);
     });
+    console.log("RESULT", result);
+    return transformData(result);
   };
 
   // Initial data fetch and when filter or date range changes
   useEffect(() => {
-    fetchData(selectedFilter, startDate, endDate); // Passing startDate and endDate directly as they are of type number | null
+    separateSensors();
   }, [DataService, items, selectedFilter, startDate, endDate]);
 
   // Fetch Properties from item dimensions
