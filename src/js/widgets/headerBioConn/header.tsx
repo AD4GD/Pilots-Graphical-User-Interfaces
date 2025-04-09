@@ -1,58 +1,65 @@
 import { useTranslation } from "@opendash/core";
-
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
-
 import React from "react";
 import { ConfigInterface } from "./types";
+import { Row, Col, Divider, Typography, Space } from "antd";
 import { useNavigate } from "@opendash/router";
-import { Layout, Typography, Divider } from "antd";
-
-const { Header } = Layout;
-const { Text } = Typography;
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
     const t = useTranslation();
-
     context.setLoading(false);
-
     const navigate = useNavigate();
 
-    const headerStyle = {
-      backgroundColor: "#D9D9D9",
-      display: "flex",
-      alignItems: "center",
-      padding: "0 24px", // Add some padding for spacing
-    };
-
-    const textStyle = {
-      cursor: "pointer",
-      margin: "0 16px", // Add spacing between clickable texts
-    };
-
-    const handleConnectivityMapClick = () => {
-      console.log("Connectivity Map clicked");
-      // Add your navigation or logic here
-    };
-
-    const handleAboutClick = () => {
-      console.log("About clicked");
-      // Add your navigation or logic here
-    };
-
     return (
-      <Header style={headerStyle}>
-        <Text strong style={{ fontSize: "18px", marginRight: "16px" }}>
-          BioConnect
-        </Text>
-        <Divider type="vertical" style={{ height: "24px", margin: "0 16px" }} />
-        <Text style={textStyle} onClick={handleConnectivityMapClick}>
-          Connectivity Map
-        </Text>
-        <Text style={textStyle} onClick={handleAboutClick}>
-          About
-        </Text>
-      </Header>
+      <Row
+        style={{ width: "100%", height: "80px", backgroundColor: "#D2FBEB" }}
+        align="middle"
+      >
+        <Col
+          span={16}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            paddingLeft: "1%",
+          }}
+        >
+          <Typography.Title
+            level={2}
+            style={{
+              margin: 0,
+              color: "#000",
+              letterSpacing: "4px", // Increased letter spacing
+            }}
+          >
+            BioConnect
+          </Typography.Title>
+          <Divider
+            type="vertical"
+            style={{ height: "40px", margin: "0 16px" }}
+          />
+          <Space>
+            <Typography.Link
+              strong
+              style={{ fontSize: "16px", color: "#000" }}
+              onClick={() => navigate("/bioconnect")}
+            >
+              Connectivity Map
+            </Typography.Link>
+            <Divider
+              type="vertical"
+              style={{ height: "40px", margin: "0 16px" }}
+            />
+            <Typography.Link
+              strong
+              style={{ fontSize: "16px", color: "#000" }}
+              // onClick={() => navigate("/about")}
+            >
+              About
+            </Typography.Link>
+          </Space>
+        </Col>
+      </Row>
     );
   }
 );

@@ -21,7 +21,8 @@
     }
   },
   "home": {
-    "label": "Overview"
+    "pilot1": "Splashboard",
+    "pilot2": "BioConnect"
   },
   "menu": {
     "areasAndObject": {

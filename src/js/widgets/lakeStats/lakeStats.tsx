@@ -71,7 +71,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     endDate?: number | null,
     aggregationOperation?: AggregationOperationInterface
   ) => {
-    console.log("FETCHING DATA");
+    // console.log("FETCHING DATA");
     const filterUnitMap: Record<FilterType, "day" | "week" | "month" | "year"> =
       {
         daily: "day",
@@ -91,7 +91,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         aggregationOperation as AggregationOperationInterface,
       aggregationDateUnit: filterUnitMap[filter],
     });
-    console.log("RESULT", result);
+    // console.log("RESULT", result);
     return transformData(result);
   };
 
@@ -190,7 +190,9 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
       sensorNames.add(`${sensor.propertyName} (${sensor.unit})`);
     });
 
-    const timestampsArray = Array.from(allTimestamps).sort((a, b) => a - b);
+    const timestampsArray = Array.from(allTimestamps).sort(
+      (a: any, b: any) => a - b
+    );
     const headers = ["Timestamp", ...Array.from(sensorNames)];
     csvRows.push(headers.join(","));
 

@@ -8,6 +8,7 @@ import { Row, Col, Image, Button, Flex, ConfigProvider } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useNavigate } from "@opendash/router";
 import { Icon } from "@opendash/icons";
+import { $framework } from "@opendash/core";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
@@ -64,19 +65,25 @@ export default createWidgetComponent<ConfigInterface>(
                 type="primary"
                 size="large"
                 onClick={() => {
-                  navigate("/home");
+                  navigate("/splashboard");
                 }}
               >
                 Übersicht Seen
               </Button>
-              <Button type="primary" size="large">
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => {
+                  navigate("/splashboard/lake/favourite");
+                }}
+              >
                 Favoriten
               </Button>
               <Button
                 type="primary"
                 size="large"
                 onClick={() => {
-                  navigate("/info");
+                  navigate("/splashboard/info");
                 }}
               >
                 Info
@@ -96,7 +103,16 @@ export default createWidgetComponent<ConfigInterface>(
                 style={{ minWidth: "50px" }}
                 icon={<UserOutlined />}
                 onClick={() => {
-                  console.log("hi");
+                  $framework.services.UserService.logout();
+                }}
+              ></Button>
+              <Button
+                type="primary"
+                size="large"
+                style={{ minWidth: "50px" }}
+                icon={<Icon icon="fa:flag" />}
+                onClick={() => {
+                  console.log($framework.services.UserService.currentUser());
                 }}
               ></Button>
             </Flex>

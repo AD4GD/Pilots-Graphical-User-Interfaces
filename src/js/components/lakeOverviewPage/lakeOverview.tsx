@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
+import { $framework } from "@opendash/core";
 import {
   Avatar,
   Button,
@@ -11,20 +12,14 @@ import {
   Row,
   Typography,
   AutoComplete,
+  ConfigProvider,
 } from "antd";
 import { useNavigate } from "@opendash/router";
 import { SearchOutlined } from "@ant-design/icons";
 
-const { Search } = Input;
-
 const { Title, Text } = Typography;
 
 const LakeOverview: React.FC = () => {
-  // const [lakeId, setLakeId] = useUrlParam(
-  //   "lakeid",
-  //   null as string | null,
-  //   "string"
-  // );
   const navigate = useNavigate();
 
   const [zones, setZones] = useState(
@@ -70,7 +65,7 @@ const LakeOverview: React.FC = () => {
     label: string;
     id: string;
   }) => {
-    navigate(`/lake/${item.id}`, { state: { item } });
+    navigate(`/splashboard/lake/${item.id}`, { state: { item } });
   };
 
   const handleSearch = (value: string) => {
@@ -118,163 +113,182 @@ const LakeOverview: React.FC = () => {
     }
   };
 
+  console.log(
+    "TEST",
+    $framework.services.UserService.hasPermission("parse-admin")
+  );
+
   return (
     <>
-      <Row style={{ width: "100%", height: "80px" }}>
-        <WidgetStatic
-          style={{ width: "100%", height: "100%" }}
-          type="header-widget"
-          config={""}
-        ></WidgetStatic>
-      </Row>
-
-      <Row
-        style={{
-          width: "100%",
-          height: "calc(90vh - 80px)",
-          backgroundColor: "white",
+      <ConfigProvider
+        wave={{ disabled: true }}
+        theme={{
+          token: {
+            colorPrimary: "#96F5D0",
+            colorTextLightSolid: "fff",
+            borderRadius: 6,
+            fontSize: 16,
+          },
         }}
       >
-        <Flex
-          gap="middle"
-          align="start"
-          style={{ width: "100%", height: "100%" }}
+        <Row style={{ width: "100%", height: "80px" }}>
+          <WidgetStatic
+            style={{ width: "100%", height: "100%" }}
+            type="header-widget"
+            config={""}
+          ></WidgetStatic>
+        </Row>
+
+        <Row
+          style={{
+            width: "100%",
+            height: "calc(90vh - 80px)",
+            backgroundColor: "white",
+            overflow: "hidden",
+          }}
         >
           <Flex
-            gap="small"
-            vertical={true}
-            style={{ width: "67%", height: "100%", padding: "0 1rem" }}
+            gap="middle"
+            align="start"
+            style={{ width: "100%", height: "100%" }}
           >
-            <Title
-              level={1}
-              style={{
-                fontWeight: "bold",
-                marginBottom: "1%",
-                width: "100%",
-                letterSpacing: "0.25rem",
-                paddingTop: "1.5rem",
-              }}
+            <Flex
+              gap="small"
+              vertical={true}
+              style={{ width: "67%", height: "100%", padding: "0 1rem" }}
             >
-              Kleine Seen in Berlin
-            </Title>
-
-            <Input.Group compact>
-              <AutoComplete
-                options={options}
-                style={{ width: 220 }}
-                onSearch={handleSearch}
-                onSelect={handleSelect}
-                placeholder="See suchen..."
-                value={searchQuery}
-              />
-              <Button
-                icon={<SearchOutlined />}
-                onClick={() => handleSearch(searchQuery)}
-              />
-            </Input.Group>
-
-            {/* <WidgetStatic
-              style={{ width: "100%", height: "100%", position: "relative" }}
-              type="kpi-map"
-              config={mapConfig}
-            ></WidgetStatic> */}
-
-            <WidgetStatic
-              style={{ width: "100%", height: "100%", position: "relative" }}
-              type="lake-map-widget"
-              config={""}
-            ></WidgetStatic>
-          </Flex>
-
-          <div
-            style={{
-              width: "33%",
-              height: "100%",
-              backgroundColor: "#E9ECEF",
-              padding: "0 1rem",
-            }}
-          >
-            <Row style={{ width: "100%" }}>
               <Title
                 level={1}
                 style={{
                   fontWeight: "bold",
-                  marginBottom: "2rem",
+                  marginBottom: "1%",
+                  width: "100%",
+                  letterSpacing: "0.25rem",
+                  paddingTop: "1.5rem",
+                }}
+              >
+                Kleine Seen in Berlin
+              </Title>
+
+              <Input.Group compact>
+                <AutoComplete
+                  options={options}
+                  style={{ width: 220 }}
+                  onSearch={handleSearch}
+                  onSelect={handleSelect}
+                  placeholder="See suchen..."
+                  value={searchQuery}
+                />
+                <Button
+                  icon={<SearchOutlined />}
+                  onClick={() => handleSearch(searchQuery)}
+                />
+              </Input.Group>
+
+              <WidgetStatic
+                style={{
+                  width: "100%",
+                  height: "calc(100% - 100px)",
+                  position: "relative",
+                }}
+                type="lake-map-widget"
+                config={""}
+              ></WidgetStatic>
+            </Flex>
+
+            <Flex
+              vertical
+              style={{
+                width: "33%",
+                height: "100%",
+                backgroundColor: "#E9ECEF",
+                padding: "1rem",
+                overflow: "hidden",
+              }}
+            >
+              <Title
+                level={1}
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "1rem",
                   fontFamily: "Josefin Sans",
-                  paddingTop: "2rem",
+                  paddingTop: "1rem",
                 }}
               >
                 Wasserqualitätindex
               </Title>
-            </Row>
 
-            <Row
-              style={{
-                marginBottom: "2rem",
-              }}
-            >
-              <Text>
+              <Text style={{ marginBottom: "1rem", display: "block" }}>
                 Der Wasserqualitätsindex vergleicht die unten dargestellten Seen
                 in Bezug auf ihre Wasserqualität basierend auf langfristigen
                 Datenerhebungen.
               </Text>
-            </Row>
 
-            <Row>
-              <Button
-                type="link"
+              <div
                 style={{
-                  color: "#42A456",
-                  textDecoration: "underline",
-                  marginBottom: "3rem",
-                  padding: 0,
+                  width: "100%",
+                  textAlign: "left",
+                  marginBottom: "1rem",
                 }}
-                onClick={fetchData}
               >
-                Mehr zur Datenerhebung
-              </Button>
-            </Row>
+                <Button
+                  type="link"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                    padding: 0,
+                  }}
+                  onClick={fetchData}
+                >
+                  Mehr zur Datenerhebung
+                </Button>
+              </div>
 
-            <Row>
-              <List
-                style={{ width: "100%", height: "100%" }}
-                itemLayout="horizontal"
-                dataSource={filteredZones}
-                size="small"
-                split={false}
-                renderItem={(item, index) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      avatar={
-                        <Avatar
-                          src={
-                            <svg width="12" height="12">
-                              <circle cx="6" cy="6" r="6" fill="#55b169" />
-                            </svg>
-                          }
-                        />
-                      }
-                      title={
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleNavigateToStats(item);
-                          }}
-                        >
-                          {item.label}
-                        </a>
-                      }
-                      // description={item.id}
-                      description={"See"}
-                    />
-                  </List.Item>
-                )}
-              />
-            </Row>
-          </div>
-        </Flex>
-      </Row>
+              <div
+                style={{
+                  flexGrow: 1,
+                  overflow: "auto",
+                  marginBottom: "1rem",
+                }}
+              >
+                <List
+                  itemLayout="horizontal"
+                  dataSource={filteredZones}
+                  size="small"
+                  split={false}
+                  renderItem={(item) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={
+                          <Avatar
+                            src={
+                              <svg width="12" height="12">
+                                <circle cx="6" cy="6" r="6" fill="#55b169" />
+                              </svg>
+                            }
+                          />
+                        }
+                        title={
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleNavigateToStats(item);
+                            }}
+                          >
+                            {item.label}
+                          </a>
+                        }
+                        description={"See"}
+                      />
+                    </List.Item>
+                  )}
+                />
+              </div>
+            </Flex>
+          </Flex>
+        </Row>
+      </ConfigProvider>
     </>
   );
 };

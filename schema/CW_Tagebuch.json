@@ -1,23 +1,16 @@
 {
   "fields": {
-    "createdWith": {
-      "type": "Object"
+    "Eintrag": {
+      "type": "String",
+      "required": false
     },
-    "expiresAt": {
-      "type": "Date"
+    "Ende": {
+      "type": "Date",
+      "required": false
     },
-    "installationId": {
-      "type": "String"
-    },
-    "restricted": {
-      "type": "Boolean"
-    },
-    "sessionToken": {
-      "type": "String"
-    },
-    "user": {
-      "type": "Pointer",
-      "targetClass": "_User"
+    "Start": {
+      "type": "Date",
+      "required": false
     }
   },
   "classLevelPermissions": {

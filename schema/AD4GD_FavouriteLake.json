@@ -1,44 +1,28 @@
 {
   "fields": {
-    "description": {
-      "type": "String",
+    "lake": {
+      "type": "Pointer",
+      "targetClass": "MIAAS_Geographies",
       "required": true
     },
-    "enabled": {
-      "type": "Boolean",
-      "required": true,
-      "defaultValue": false
-    },
-    "imgSrc": {
+    "notes": {
       "type": "String",
       "required": false
     },
-    "label": {
-      "type": "String",
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
       "required": true
-    },
-    "slides": {
-      "type": "Array",
-      "required": true,
-      "defaultValue": []
-    },
-    "tags": {
-      "type": "Array",
-      "required": false,
-      "defaultValue": []
     }
   },
   "classLevelPermissions": {
     "find": {
-      "*": true,
       "requiresAuthentication": true
     },
     "count": {
-      "*": true,
       "requiresAuthentication": true
     },
     "get": {
-      "*": true,
       "requiresAuthentication": true
     },
     "create": {
@@ -50,7 +34,9 @@
     "delete": {
       "requiresAuthentication": true
     },
-    "addField": {},
+    "addField": {
+      "*": true
+    },
     "protectedFields": {
       "*": []
     }

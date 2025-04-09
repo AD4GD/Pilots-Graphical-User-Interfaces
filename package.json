@@ -59,9 +59,11 @@
     "react-is": "^18.3.1",
     "react-leaflet": "^3.2.5",
     "react-resizable": "^3.0.5",
+    "react-toastify": "^11.0.5",
     "react-window": "^1.8.10",
     "styled-components": "^5.3.11",
-    "tslib": "^2.7.0"
+    "tslib": "^2.7.0",
+    "turf": "^3.0.14"
   },
   "devDependencies": {
     "@opendash/cli": "nightly",

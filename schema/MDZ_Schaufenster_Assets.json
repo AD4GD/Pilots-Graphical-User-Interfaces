@@ -1,23 +1,12 @@
 {
   "fields": {
-    "createdWith": {
-      "type": "Object"
+    "file": {
+      "type": "File",
+      "required": true
     },
-    "expiresAt": {
-      "type": "Date"
-    },
-    "installationId": {
-      "type": "String"
-    },
-    "restricted": {
-      "type": "Boolean"
-    },
-    "sessionToken": {
-      "type": "String"
-    },
-    "user": {
-      "type": "Pointer",
-      "targetClass": "_User"
+    "label": {
+      "type": "String",
+      "required": true
     }
   },
   "classLevelPermissions": {

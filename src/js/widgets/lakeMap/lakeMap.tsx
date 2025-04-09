@@ -271,7 +271,7 @@ export default createWidgetComponent<ConfigInterface>(
         ),
         worldCopyJump: true,
       });
-
+      //@ts-ignore
       L.TileLayer.boundaryCanvas(
         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
         {
@@ -294,7 +294,7 @@ export default createWidgetComponent<ConfigInterface>(
         id: string;
       }) => {
         console.log(item);
-        navigate(`/lake/${item.id}`, { state: { item } });
+        navigate(`/splashboard/lake/${item.id}`, { state: { item } });
       };
 
       const handleMapClick = async (id: string) => {

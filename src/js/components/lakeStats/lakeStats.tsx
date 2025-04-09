@@ -1,14 +1,25 @@
 import { useTranslation } from "@opendash/core";
-import { Col, Row, Typography } from "antd";
+import {
+  Button,
+  Col,
+  ConfigProvider,
+  Row,
+  Typography,
+  Collapse,
+  CollapseProps,
+} from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "@opendash/router";
-import { StarFilled } from "@ant-design/icons";
+import { ConsoleSqlOutlined, StarFilled } from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 import { useLakeMetaData } from "../../hooks/useLakeMetaData";
 import Parse from "parse";
 import MultiColorBar from "../multicolorbar/multicolorbar";
 import CustomCarousel from "../carousel/carousel";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Notes } from "../Notes";
 
 interface PropertyRowProps {
   label: string;
@@ -59,11 +70,28 @@ interface MapItem {
   title: string;
 }
 
+const text = `tbd
+`;
+
+const items: CollapseProps["items"] = [
+  {
+    key: "1",
+    label: "Wasserstand Werte",
+    children: <p>{text}</p>,
+  },
+  {
+    key: "2",
+    label: "Temperatur Werte",
+    children: <p>{text}</p>,
+  },
+];
+
 const LakeStats: React.FC = ({}) => {
   const { lakeId } = useParams();
   const location = useLocation();
   const [mapItems, setMapItems] = useState<MapItem[]>([]);
   const [bbox, setBbox] = useState("");
+  const [isAddingFavorite, setIsAddingFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const {
@@ -142,7 +170,7 @@ const LakeStats: React.FC = ({}) => {
 
   const { result: properties } = useLakeMetaData();
 
-  const currentLake = properties.find(
+  const currentLakeMeta = properties.find(
     (item) => item.geography?.id === lakeId
   ) || {
     id: undefined,
@@ -221,7 +249,7 @@ const LakeStats: React.FC = ({}) => {
 
       // Query to get the value of current lake
       const query = new Parse.Query("AD4GD_Lake_Quality_Index");
-      query.equalTo("lake", currentLake.name);
+      query.equalTo("lake", currentLakeMeta.name);
       const results = await query.find();
 
       if (results.length > 0) {
@@ -239,16 +267,16 @@ const LakeStats: React.FC = ({}) => {
           trend: wqiTrend || 0,
         });
       } else {
-        console.log(`No lake found with the name: ${currentLake.name}`);
+        console.log(`No lake found with the name: ${currentLakeMeta.name}`);
       }
     }
   };
 
   useEffect(() => {
-    if (currentLake.name) {
+    if (currentLakeMeta.name) {
       getWQI();
     }
-  }, [currentLake.name]);
+  }, [currentLakeMeta.name]);
 
   const config = useMemo(() => {
     return {
@@ -259,169 +287,323 @@ const LakeStats: React.FC = ({}) => {
     };
   }, [sensors]);
 
+  const handleAddFavorite = async (itemId: string) => {
+    const user = Parse.User.current();
+    if (!user) {
+      toast.error("You must be logged in!");
+      return false;
+    }
+
+    try {
+      // First check if this lake is already favorited by the user
+      const FavoriteLake = Parse.Object.extend("AD4GD_FavouriteLake");
+      const checkQuery = new Parse.Query(FavoriteLake);
+
+      const Lake = Parse.Object.extend("MIAAS_Geographies");
+      const lakePointer = new Lake();
+      lakePointer.id = itemId;
+
+      checkQuery.equalTo("user", user);
+      checkQuery.equalTo("lake", lakePointer);
+
+      const existingFavorite = await checkQuery.first();
+
+      if (existingFavorite) {
+        toast.warning("This lake is already in your favorites!");
+        return false;
+      }
+
+      // If not already favorited, create new favorite
+      const favoriteLake = new FavoriteLake();
+      favoriteLake.set("user", user);
+      favoriteLake.set("lake", lakePointer);
+
+      // Set ACL permissions
+      const acl = new Parse.ACL(user);
+      acl.setReadAccess(user, true);
+      acl.setWriteAccess(user, true);
+      acl.setPublicReadAccess(false);
+      acl.setPublicWriteAccess(false);
+      favoriteLake.setACL(acl);
+
+      await favoriteLake.save();
+      toast.success("Lake added to favorites!");
+      return true;
+    } catch (error) {
+      console.error("Error saving favorite:", error);
+      toast.error("Failed to add favorite. Please try again.");
+      return false;
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!lakeId) {
+      toast.error("Lake ID is not available.");
+      return;
+    }
+    setIsAddingFavorite(true);
+    try {
+      await handleAddFavorite(lakeId);
+    } finally {
+      setIsAddingFavorite(false);
+    }
+  };
+
   return (
     <>
-      <Row style={{ width: "100%", height: "80px" }}>
-        <WidgetStatic
-          style={{ width: "100%", height: "100%" }}
-          type="header-widget"
-          config={""}
-        ></WidgetStatic>
-      </Row>
-      <Row>
-        <div
-          style={{
-            width: "30%",
-            backgroundColor: "white",
-          }}
-        >
-          <Title
-            level={1}
+      <ConfigProvider
+        wave={{ disabled: true }}
+        theme={{
+          token: {
+            colorPrimary: "#96F5D0",
+            colorTextLightSolid: "fff",
+            borderRadius: 6,
+            fontSize: 16,
+          },
+        }}
+      >
+        <Row style={{ width: "100%", height: "80px" }}>
+          <WidgetStatic
+            style={{ width: "100%", height: "100%" }}
+            type="header-widget"
+            config={""}
+          ></WidgetStatic>
+        </Row>
+        <Row>
+          <div
             style={{
-              fontWeight: "bold",
-              marginBottom: "2%",
-              paddingLeft: "1rem",
+              width: "30%",
+              backgroundColor: "white",
             }}
           >
-            {currentLake.name}
-          </Title>
-          <Row>
-            <Col
+            <Title
+              level={1}
               style={{
-                alignSelf: "center",
+                fontWeight: "bold",
+                marginBottom: "2%",
                 paddingLeft: "1rem",
               }}
             >
-              <svg width="12" height="12">
-                <circle cx="6" cy="6" r="6" fill="#55b169" />
-              </svg>
-              <Text
-                strong
+              {currentLakeMeta.name}
+            </Title>
+            <Row>
+              <Col
                 style={{
-                  lineHeight: 0,
-                  fontSize: "15px",
-                  marginLeft: "5px",
+                  alignSelf: "center",
+                  paddingLeft: "1rem",
                 }}
               >
-                {currentLake.name}
-              </Text>
-            </Col>
-          </Row>
+                <svg width="12" height="12">
+                  <circle cx="6" cy="6" r="6" fill="#55b169" />
+                </svg>
+                <Text
+                  strong
+                  style={{
+                    lineHeight: 0,
+                    fontSize: "15px",
+                    marginLeft: "5px",
+                  }}
+                >
+                  {currentLakeMeta.name}
+                </Text>
+              </Col>
+            </Row>
 
-          {/* ########################################################### */}
-          <CustomCarousel maps={mapItems} bbox={bbox} updateBbox={updateBbox} />
+            {/* ########################################################### */}
+            <CustomCarousel
+              maps={mapItems}
+              bbox={bbox}
+              updateBbox={updateBbox}
+            />
 
-          <div style={{ marginTop: "6%", paddingLeft: "1rem" }}>
-            <PropertyRow label={t("Name")} value={currentLake.name} />
-            <PropertyRow label={t("Fläche")} value={currentLake.area + " m²"} />
-            <PropertyRow
-              label={t("Badenutzung")}
-              value={currentLake.swimmingUsage ? "Ja" : "Nein"}
-            />
-            <PropertyRow label={t("Bezirk")} value={currentLake.district} />
-            <PropertyRow
-              label={t("Umfang")}
-              value={currentLake.circumference + " m"}
-            />
-            <PropertyRow
-              label={t("Volumen")}
-              value={currentLake.volume + " m³"}
-            />
-            <PropertyRow
-              label={t("Durchnittliche Tiefe")}
-              value={currentLake.averageDepth + " m"}
-            />
-            <PropertyRow
-              label={t("Maximale Tiefe")}
-              value={currentLake.maximumDepth + " m"}
-            />
+            <div style={{ marginTop: "6%", paddingLeft: "1rem" }}>
+              <PropertyRow label={t("Name")} value={currentLakeMeta.name} />
+              <PropertyRow
+                label={t("Fläche")}
+                value={currentLakeMeta.area + " m²"}
+              />
+              <PropertyRow
+                label={t("Badenutzung")}
+                value={currentLakeMeta.swimmingUsage ? "Ja" : "Nein"}
+              />
+              <PropertyRow
+                label={t("Bezirk")}
+                value={currentLakeMeta.district}
+              />
+              <PropertyRow
+                label={t("Umfang")}
+                value={currentLakeMeta.circumference + " m"}
+              />
+              <PropertyRow
+                label={t("Volumen")}
+                value={currentLakeMeta.volume + " m³"}
+              />
+              <PropertyRow
+                label={t("Durchnittliche Tiefe")}
+                value={currentLakeMeta.averageDepth + " m"}
+              />
+              <PropertyRow
+                label={t("Maximale Tiefe")}
+                value={currentLakeMeta.maximumDepth + " m"}
+              />
+            </div>
+
+            <Button
+              onClick={handleAdd}
+              loading={isAddingFavorite}
+              style={{ marginLeft: "1rem" }}
+              icon={<StarFilled />}
+            >
+              Als Favorit hinzufügen
+            </Button>
           </div>
 
-          <IconLabelComponent
-            icon={StarFilled}
-            label="Als Favorit hinzufügen"
-          />
-        </div>
-
-        <div
-          style={{
-            width: "68%",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: "2%",
-            marginLeft: "1%",
-            marginTop: "1%",
-          }}
-        >
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
-              width: "100%",
+              width: "68%",
               height: "100%",
-              gap: "1%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: "2%",
+              marginLeft: "1%",
+              marginTop: "1%",
             }}
           >
             <div
               style={{
+                display: "flex",
+                flexDirection: "row",
                 width: "100%",
-                height: "40%",
-                marginBottom: "1%",
-                borderRadius: "20px",
-                backgroundColor: "white",
+                height: "100%",
+                gap: "1%",
               }}
             >
-              <Typography.Title
-                level={4}
+              <div
                 style={{
-                  fontWeight: "bold",
-                  paddingTop: "2%",
-                  paddingLeft: "4%",
+                  width: "100%",
+                  height: "40%",
+                  marginBottom: "1%",
+                  borderRadius: "20px",
+                  backgroundColor: "white",
                 }}
               >
-                Earth Observation Trophic State
-              </Typography.Title>
-              <div style={{ width: "100%", height: "100%", margin: "0 auto" }}>
-                <div
+                <Typography.Title
+                  level={4}
                   style={{
-                    padding: "5% 15% 15% 15%",
+                    fontWeight: "bold",
+                    paddingTop: "2%",
+                    paddingLeft: "4%",
                   }}
                 >
-                  {wqiValues.value !== 0 ? (
-                    <>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "10px",
-                        }}
-                      >
+                  Earth Observation Trophic State
+                </Typography.Title>
+                <div
+                  style={{ width: "100%", height: "100%", margin: "0 auto" }}
+                >
+                  <div
+                    style={{
+                      padding: "5% 15% 15% 15%",
+                    }}
+                  >
+                    {wqiValues.value !== 0 ? (
+                      <>
                         <div
                           style={{
                             display: "flex",
+                            justifyContent: "space-between",
                             alignItems: "center",
-                            marginBottom: "1rem",
+                            marginBottom: "10px",
                           }}
                         >
-                          <span
-                            style={{ fontSize: "20px", fontWeight: "bold" }}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "1rem",
+                            }}
                           >
-                            WQI State: {wqiValues.value}
-                          </span>
+                            <span
+                              style={{ fontSize: "20px", fontWeight: "bold" }}
+                            >
+                              WQI State: {wqiValues.value}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <MultiColorBar
-                        minValue={wqiValues.minVal}
-                        maxValue={wqiValues.maxVal}
-                        value={wqiValues.value}
-                      />
-                    </>
-                  ) : (
-                    <p>Loading WQI data...</p>
-                  )}
+                        <MultiColorBar
+                          minValue={wqiValues.minVal}
+                          maxValue={wqiValues.maxVal}
+                          value={wqiValues.value}
+                        />
+                      </>
+                    ) : (
+                      <p>Loading WQI data...</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  width: "100%",
+                  height: "40%",
+                  marginBottom: "1%",
+                  borderRadius: "20px",
+                  backgroundColor: "white",
+                }}
+              >
+                <Typography.Title
+                  level={4}
+                  style={{
+                    fontWeight: "bold",
+                    paddingTop: "2%",
+                    paddingLeft: "4%",
+                  }}
+                >
+                  Earth Observation Trophic Trend
+                </Typography.Title>
+                <div
+                  style={{ width: "100%", height: "100%", margin: "0 auto" }}
+                >
+                  <div
+                    style={{
+                      padding: "5% 15% 15% 15%",
+                    }}
+                  >
+                    {wqiValues.value !== 0 ? (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "1rem",
+                            }}
+                          >
+                            <span
+                              style={{ fontSize: "20px", fontWeight: "bold" }}
+                            >
+                              WQI Trend: {wqiValues.trend}
+                            </span>
+                          </div>
+                        </div>
+                        <MultiColorBar
+                          minValue={wqiValues.minTrend}
+                          maxValue={wqiValues.maxTrend}
+                          value={wqiValues.trend}
+                        />
+                      </>
+                    ) : (
+                      <p>Loading WQI data...</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -429,81 +611,51 @@ const LakeStats: React.FC = ({}) => {
             <div
               style={{
                 width: "100%",
-                height: "40%",
+                borderRadius: "20px",
                 marginBottom: "1%",
+                backgroundColor: "white",
+                padding: "1% 2%",
+              }}
+            >
+              <WidgetStatic
+                type="lakeStats-widget"
+                config={config}
+              ></WidgetStatic>
+              <Collapse ghost items={items} />
+            </div>
+            <div
+              style={{
+                width: "100%",
                 borderRadius: "20px",
                 backgroundColor: "white",
+                padding: "1% 2%",
               }}
             >
               <Typography.Title
                 level={4}
                 style={{
                   fontWeight: "bold",
-                  paddingTop: "2%",
-                  paddingLeft: "4%",
                 }}
               >
-                Earth Observation Trophic Trend
+                Notizen zum {currentLakeMeta.name}
               </Typography.Title>
-              <div style={{ width: "100%", height: "100%", margin: "0 auto" }}>
-                <div
-                  style={{
-                    padding: "5% 15% 15% 15%",
-                  }}
-                >
-                  {wqiValues.value !== 0 ? (
-                    <>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            marginBottom: "1rem",
-                          }}
-                        >
-                          <span
-                            style={{ fontSize: "20px", fontWeight: "bold" }}
-                          >
-                            WQI Trend: {wqiValues.trend}
-                          </span>
-                        </div>
-                      </div>
-                      <MultiColorBar
-                        minValue={wqiValues.minTrend}
-                        maxValue={wqiValues.maxTrend}
-                        value={wqiValues.trend}
-                      />
-                    </>
-                  ) : (
-                    <p>Loading WQI data...</p>
-                  )}
-                </div>
-              </div>
+              <Notes lakeId={lakeId} currentUser={Parse.User.current()} />
             </div>
           </div>
-
-          <div
-            style={{
-              width: "100%",
-              borderRadius: "20px",
-              backgroundColor: "white",
-              padding: "1% 2%",
-            }}
-          >
-            <WidgetStatic
-              type="lakeStats-widget"
-              config={config}
-            ></WidgetStatic>
-          </div>
-        </div>
-      </Row>
+        </Row>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </ConfigProvider>
     </>
   );
 };

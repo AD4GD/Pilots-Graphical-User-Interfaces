@@ -20,11 +20,14 @@ import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStatss from "./widgets/lakeStats";
 import lakeMapWidget from "./widgets/lakeMap";
-// import wqiWidget from "./widgets/WQI";
+import HeaderBioConnWidget from "./widgets/headerBioConn";
 import { LakeOverview } from "./components/lakeOverviewPage";
 import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
+import { LakeFavourite } from "./components/lakeFavourite";
 import { NotFound } from "./components/NotFoundPage";
+import { bioConn } from "./components/bioConn";
+import { bioConnScenario } from "./components/bioConnScenario";
 import { testWMS } from "./components/testPage";
 import { testFIS } from "./components/testFIS";
 // import { malte } from "./components/malte";
@@ -41,25 +44,31 @@ init("opendash", async (factory) => {
   // ant design translations
 
   factory.registerRoute({
-    path: "/home",
+    path: "/splashboard",
     componentSync: LakeOverview,
     props: {},
   });
 
   factory.registerRoute({
-    path: "/info",
+    path: "/splashboard/info",
     componentSync: Information,
     props: {},
   });
 
   factory.registerRoute({
-    path: "/lake",
+    path: "/splashboard/lake/favourite",
+    componentSync: LakeFavourite,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/splashboard/lake",
     componentSync: LakeStats,
     props: {},
   });
 
   factory.registerRoute({
-    path: "/lake/:lakeId",
+    path: "/splashboard/lake/:lakeId",
     componentSync: LakeStats,
     props: {},
   });
@@ -76,15 +85,21 @@ init("opendash", async (factory) => {
     props: {},
   });
 
+  factory.registerRoute({
+    path: "/bioconnect",
+    componentSync: bioConn,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/bioconnect/scenario",
+    componentSync: bioConnScenario,
+    props: {},
+  });
+
   // factory.registerRoute({
   //   path: "/fis",
   //   componentSync: malte,
-  //   props: {},
-  // });
-
-  // factory.registerRoute({
-  //   path: "/newmap",
-  //   componentSync: MapComponent,
   //   props: {},
   // });
 
@@ -164,10 +179,23 @@ init("opendash", async (factory) => {
     group: "ad4gd",
     place: "frontpage",
     order: 0,
-    label: "ad4gd:home.label",
+    label: "ad4gd:home.pilot1",
     icon: "fa:water",
-    color: "#4385c2",
-    link: "/home",
+    color: "#96F5D0",
+    link: "/splashboard",
+    routeCondition: "**",
+    activeCondition: "/",
+  });
+
+  factory.registerStaticNavigationItem({
+    id: "ad4gd/home",
+    group: "ad4gd",
+    place: "frontpage",
+    order: 0,
+    label: "ad4gd:home.pilot2",
+    icon: "fa:map",
+    color: "#96F5D0",
+    link: "/bioconnect",
     routeCondition: "**",
     activeCondition: "/",
   });
@@ -261,6 +289,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(LakeDetails);
   $monitoring.registerWidget(LakeStatss);
   $monitoring.registerWidget(lakeMapWidget);
+  $monitoring.registerWidget(HeaderBioConnWidget);
   // $monitoring.registerWidget(wqiWidget);
 }).then((app) => {
   console.log("init open.DASH");

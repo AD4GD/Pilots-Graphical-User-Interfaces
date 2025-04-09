@@ -36,7 +36,6 @@ const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
       if (result) {
         const imageUrl = result.get("legendUrl");
         setLegendUrl(imageUrl._url);
-        console.log(imageUrl);
       } else {
         console.error("No legend URL found.");
       }

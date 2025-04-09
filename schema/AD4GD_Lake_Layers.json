@@ -1,23 +1,13 @@
 {
   "fields": {
-    "createdWith": {
-      "type": "Object"
-    },
-    "expiresAt": {
-      "type": "Date"
-    },
-    "installationId": {
-      "type": "String"
-    },
-    "restricted": {
-      "type": "Boolean"
-    },
-    "sessionToken": {
-      "type": "String"
-    },
-    "user": {
-      "type": "Pointer",
-      "targetClass": "_User"
+    "legendUrl": {
+      "type": "File",
+      "required": false,
+      "defaultValue": {
+        "__type": "File",
+        "name": "d5c136c726543624ad69686ce1e79b3a_1.png",
+        "url": "https://crowdwater.fit.fraunhofer.de/parse/files/opendashfit/d5c136c726543624ad69686ce1e79b3a_1.png"
+      }
     }
   },
   "classLevelPermissions": {
