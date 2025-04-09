@@ -30,6 +30,7 @@ import { bioConn } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
 import { testWMS } from "./components/testPage";
 import { testFIS } from "./components/testFIS";
+import { DataUpload } from "./components/dataUpload";
 // import { malte } from "./components/malte";
 // import MapComponent from "./components/testNewMap/testNewMap";
 
@@ -70,6 +71,12 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/splashboard/lake/:lakeId",
     componentSync: LakeStats,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/upload",
+    componentSync: DataUpload,
     props: {},
   });
 

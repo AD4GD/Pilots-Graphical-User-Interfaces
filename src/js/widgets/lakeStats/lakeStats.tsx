@@ -20,11 +20,13 @@ import {
   FilterOption,
   DataPoint,
 } from "../../types/Lake_Stats";
+import { useNavigate } from "@opendash/router";
 
 const { Title } = Typography;
 
 // Main Component
 export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
+  const navigate = useNavigate();
   const t = useTranslation();
   context["setLoading"](false);
   const DataService = useDataService();
@@ -91,7 +93,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         aggregationOperation as AggregationOperationInterface,
       aggregationDateUnit: filterUnitMap[filter],
     });
-    // console.log("RESULT", result);
+    console.log("RESULT ++++++", result);
     return transformData(result);
   };
 
@@ -303,7 +305,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         >
           Wie wurden die dargestellten Daten erhoben?
         </Typography.Link>
-        <Row style={{ flex: 0.45, justifyContent: "flex-end" }}>
+        <Row style={{ flex: 0.45, justifyContent: "flex-end", gap: "10px" }}>
           <CustomButton
             text="Download Graph"
             disabled={selectedProperties.length === 0}
@@ -313,6 +315,12 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
             onClick={downloadData}
             text="Download Rohdaten"
             disabled={selectedProperties.length === 0}
+          />
+          <CustomButton
+            onClick={() => {
+              navigate(`/upload`);
+            }}
+            text="Upload Data"
           />
         </Row>
       </Row>
