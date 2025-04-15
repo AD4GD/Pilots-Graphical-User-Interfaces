@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import { useParseQuery } from "parse-hooks";
 import Parse from "parse";
-import { $framework } from "@opendash/core";
 import {
   Avatar,
   Button,
@@ -112,11 +111,6 @@ const LakeOverview: React.FC = () => {
       console.error("Error fetching data: ", error);
     }
   };
-
-  console.log(
-    "TEST",
-    $framework.services.UserService.hasPermission("parse-admin")
-  );
 
   return (
     <>

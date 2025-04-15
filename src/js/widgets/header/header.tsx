@@ -18,6 +18,9 @@ export default createWidgetComponent<ConfigInterface>(
 
     const navigate = useNavigate();
 
+    const isAdmin =
+      $framework.services.UserService.hasPermission("parse-admin");
+
     return (
       <Row
         style={{ width: "100%", height: "80px", backgroundColor: "#D2FBEB" }}
@@ -70,6 +73,7 @@ export default createWidgetComponent<ConfigInterface>(
               >
                 Übersicht Seen
               </Button>
+
               <Button
                 type="primary"
                 size="large"
@@ -79,6 +83,7 @@ export default createWidgetComponent<ConfigInterface>(
               >
                 Favoriten
               </Button>
+
               <Button
                 type="primary"
                 size="large"
@@ -88,15 +93,19 @@ export default createWidgetComponent<ConfigInterface>(
               >
                 Info
               </Button>
-              <Button
-                type="primary"
-                size="large"
-                style={{ minWidth: "50px" }}
-                icon={<Icon icon="fa:cogs" />}
-                onClick={() => {
-                  navigate("/admin/parse/AD4GD_LakeMetaData");
-                }}
-              ></Button>
+
+              {isAdmin && (
+                <Button
+                  type="primary"
+                  size="large"
+                  style={{ minWidth: "50px" }}
+                  icon={<Icon icon="fa:cogs" />}
+                  onClick={() => {
+                    navigate("/admin/ow/sensors");
+                  }}
+                ></Button>
+              )}
+
               <Button
                 type="primary"
                 size="large"
@@ -104,15 +113,6 @@ export default createWidgetComponent<ConfigInterface>(
                 icon={<UserOutlined />}
                 onClick={() => {
                   $framework.services.UserService.logout();
-                }}
-              ></Button>
-              <Button
-                type="primary"
-                size="large"
-                style={{ minWidth: "50px" }}
-                icon={<Icon icon="fa:flag" />}
-                onClick={() => {
-                  console.log($framework.services.UserService.currentUser());
                 }}
               ></Button>
             </Flex>
