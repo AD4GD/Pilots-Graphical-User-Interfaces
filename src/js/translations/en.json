@@ -18,6 +18,27 @@
       },
       "label": "Lake",
       "label_plural": "Lakes"
+    },
+    "MIAAS_Geographies": {
+      "fields": {
+        "label": "Lake",
+        "geo": "Geography",
+        "sensors": "Sensors",
+        "bbox": "bbox",
+        "description": "Description"
+      },
+      "label": "Lake",
+      "label_plural": "Lakes"
+    },
+    "AD4GD_LakeLayers": {
+      "fields": {
+        "layersTitle": "Title",
+        "layersUrl": "Base URL",
+        "layersArray": "Layer List",
+        "layersLegend": "Legend"
+      },
+      "label": "Lake Layer",
+      "label_plural": "Lake Layers"
     }
   },
   "home": {

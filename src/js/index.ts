@@ -151,21 +151,21 @@ init("opendash", async (factory) => {
     })
   );
   await factory.use(new TimeseriesPlugin());
-  await factory.use(new MonitoringPlugin());
+  // await factory.use(new MonitoringPlugin());
   await factory.use(new GeoPlugin());
   await factory.use(new GeoPluginMapLibre());
-  await factory.use(
-    new MobilityPlugin({
-      menuGroupLabel: "ad4gd:menu.areasAndObject.label",
-      menuGroupIcon: "fa:map",
-      disableMenuItems: {
-        mobilityadminproviders: true,
-        mobilityadminzones: false,
-        mobilityadmingbfs: true,
-        mobilityadminpricing: true,
-      },
-    })
-  );
+  // await factory.use(
+  //   new MobilityPlugin({
+  //     menuGroupLabel: "ad4gd:menu.areasAndObject.label",
+  //     menuGroupIcon: "fa:map",
+  //     disableMenuItems: {
+  //       mobilityadminproviders: true,
+  //       mobilityadminzones: false,
+  //       mobilityadmingbfs: true,
+  //       mobilityadminpricing: true,
+  //     },
+  //   })
+  // );
   await factory.use(
     new OpenwarePlugin({
       host: "data.digitalzentrum-lr.de",
@@ -219,8 +219,21 @@ init("opendash", async (factory) => {
     group: "admin/ad4gd",
     place: "sidebar",
     order: 100,
-    label: "ad4gd:classes.AD4GD_LakeMetaData.label_plural",
+    label: "ad4gd:classes.MIAAS_Geographies.label_plural",
     icon: "fa:water",
+    color: "#676767",
+    link: "/admin/parse/MIAAS_Geographies",
+    routeCondition: "**",
+    activeCondition: "/",
+    permission: "parse-admin",
+  });
+  factory.registerStaticNavigationItem({
+    id: "admin/ad4gd/lakesMetaData",
+    group: "admin/ad4gd",
+    place: "sidebar",
+    order: 100,
+    label: "ad4gd:classes.AD4GD_LakeMetaData.label_plural",
+    icon: "fa:database",
     color: "#676767",
     link: "/admin/parse/AD4GD_LakeMetaData",
     routeCondition: "**",
@@ -228,18 +241,32 @@ init("opendash", async (factory) => {
     permission: "parse-admin",
   });
   factory.registerStaticNavigationItem({
-    id: "admin/ad4gd/lakeImages",
+    id: "admin/ad4gd/lakesLayers",
     group: "admin/ad4gd",
     place: "sidebar",
     order: 100,
-    label: "ad4gd:classes.AD4GD_LakeImages.label_plural",
-    icon: "fa:image",
+    label: "ad4gd:classes.AD4GD_LakeLayers.label_plural",
+    icon: "fa:layer-group",
     color: "#676767",
-    link: "/admin/parse/AD4GD_LakeImages",
+    link: "/admin/parse/AD4GD_LakeLayers",
     routeCondition: "**",
     activeCondition: "/",
     permission: "parse-admin",
   });
+
+  //----------------------------------------------------------------------------
+
+  $parse.ui.setClassConfig({
+    className: "MIAAS_Geographies",
+    createFields: ["label", "geo", "sensors", "bbox", "description"],
+    editFields: ["label", "geo", "sensors", "bbox", "description"],
+    displayFields: ["label", "geo", "sensors", "bbox", "description"],
+    titleFields: ["label"],
+    translationPrefix: "ad4gd:classes.",
+  });
+  $parse.ui.setDefaultView("MIAAS_Geographies", { type: "table" });
+
+  //----------------------------------------------------------------------------
 
   $parse.ui.setClassConfig({
     className: "AD4GD_LakeMetaData",
@@ -278,17 +305,20 @@ init("opendash", async (factory) => {
     translationPrefix: "ad4gd:classes.",
   });
   $parse.ui.setDefaultView("AD4GD_LakeMetaData", { type: "table" });
+
+  //----------------------------------------------------------------------------
+
   $parse.ui.setClassConfig({
-    className: "AD4GD_LakeImages",
-    createFields: ["lake", "image", "description"],
-    editFields: ["lake", "image", "description"],
-    displayFields: ["lake", "image", "description"],
-    titleFields: ["lake"],
+    className: "AD4GD_LakeLayers",
+    createFields: ["layersTitle", "layersUrl", "layersArray", "layersLegend"],
+    editFields: ["layersTitle", "layersUrl", "layersArray", "layersLegend"],
+    displayFields: ["layersTitle", "layersUrl", "layersArray", "layersLegend"],
+    titleFields: ["layersTitle"],
     // Tranlation for fields in /src/translations/[language].json
     translationPrefix: "ad4gd:classes.",
   });
+  $parse.ui.setDefaultView("AD4GD_LakeLayers", { type: "table" });
 
-  $parse.ui.setDefaultView("AD4GD_LakeImages", { type: "table" });
   //.------------------- Example Admin Interface Config-------------------
 
   $monitoring.registerWidget(ExampleWidget);

@@ -1,18 +1,22 @@
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, { FC, useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import debounce from "lodash.debounce";
 import { Button, Tooltip } from "antd";
-import Parse from "parse";
 
 interface MinimapProps {
   layerUrls: string[];
+  layerLegendUrl: string | null;
   bbox: string;
   updateBbox: (newBbox: string) => void;
 }
 
-const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
-  const [legendUrl, setLegendUrl] = useState<string | null>(null);
+const Minimap: FC<MinimapProps> = ({
+  layerUrls,
+  layerLegendUrl,
+  bbox,
+  updateBbox,
+}) => {
   const mapRef = useRef<L.Map | null>(null);
   const layerRefs = useRef<L.ImageOverlay[]>([]);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -24,27 +28,6 @@ const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
     }
     return urlObj.toString();
   };
-
-  useEffect(() => {
-    // Fetch the legend image URL from Parse Server
-    const fetchLegendUrl = async () => {
-      const LegendClass = Parse.Object.extend("AD4GD_Lake_Layers");
-      const query = new Parse.Query(LegendClass);
-      query.ascending("createdAt");
-      const result = await query.first();
-
-      if (result) {
-        const imageUrl = result.get("legendUrl");
-        setLegendUrl(imageUrl._url);
-      } else {
-        console.error("No legend URL found.");
-      }
-    };
-
-    fetchLegendUrl().catch((error) =>
-      console.error("Error fetching legend URL:", error)
-    );
-  }, []);
 
   useEffect(() => {
     if (mapContainerRef.current) {
@@ -72,7 +55,6 @@ const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
       }
 
       const minimap = mapRef.current;
-
       minimap?.setMaxBounds(maxBounds);
 
       const loadLayers = debounce(() => {
@@ -87,11 +69,11 @@ const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
 
           updateBbox(newBbox);
 
-          layerRefs.current.forEach((layer) => {
-            layer.remove();
-          });
+          // Clear existing layers
+          layerRefs.current.forEach((layer) => layer.remove());
           layerRefs.current = [];
 
+          // Add new layers
           layerUrls.forEach((url) => {
             const minimapLayer = L.imageOverlay(
               appendBboxToUrl(url, newBbox),
@@ -122,11 +104,11 @@ const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
         }}
       ></div>
 
-      <Tooltip
-        title={
-          legendUrl ? (
+      {layerLegendUrl && (
+        <Tooltip
+          title={
             <img
-              src={legendUrl}
+              src={layerLegendUrl}
               alt="Legend"
               style={{
                 width: "300px",
@@ -134,25 +116,23 @@ const Minimap: FC<MinimapProps> = ({ layerUrls, bbox, updateBbox }) => {
                 display: "block",
               }}
             />
-          ) : (
-            "Loading legend..."
-          )
-        }
-        placement="right"
-        trigger="click"
-      >
-        <Button
-          type="primary"
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            zIndex: 1000,
-          }}
+          }
+          placement="right"
+          trigger="click"
         >
-          i
-        </Button>
-      </Tooltip>
+          <Button
+            type="primary"
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "20px",
+              zIndex: 1000,
+            }}
+          >
+            i
+          </Button>
+        </Tooltip>
+      )}
     </div>
   );
 };

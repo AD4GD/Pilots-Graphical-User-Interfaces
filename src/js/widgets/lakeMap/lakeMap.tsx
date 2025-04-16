@@ -293,7 +293,6 @@ export default createWidgetComponent<ConfigInterface>(
         label: string;
         id: string;
       }) => {
-        console.log(item);
         navigate(`/splashboard/lake/${item.id}`, { state: { item } });
       };
 

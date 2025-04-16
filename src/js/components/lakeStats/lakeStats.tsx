@@ -11,7 +11,7 @@ import {
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "@opendash/router";
-import { ConsoleSqlOutlined, StarFilled } from "@ant-design/icons";
+import { StarFilled } from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 import { useLakeMetaData } from "../../hooks/useLakeMetaData";
 import Parse from "parse";
@@ -111,52 +111,46 @@ const LakeStats: React.FC = ({}) => {
       setError("");
 
       try {
-        const query = new Parse.Query("MIAAS_Geographies");
-        query.equalTo("objectId", lakeId);
-        const result = await query.first();
+        // query for bbox
+        const geoQuery = new Parse.Query("MIAAS_Geographies");
+        geoQuery.equalTo("objectId", lakeId);
+        const geoResult = await geoQuery.first();
 
-        if (result) {
-          const bbox = result.get("bbox");
-          const newMapItems = [
-            {
-              layerUrls: [
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k_fb_btwert?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k_fb_btwert?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-              ],
-              title: "Biotoptypen: Biotopwerte",
-            },
-            {
-              layerUrls: [
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=2&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-              ],
-              title:
-                "Versorgung mit öffentlichen, wohnungsnahen Grünanlagen 2016",
-            },
-            {
-              layerUrls: [
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=2&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=3&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=4&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=5&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=6&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=7&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=11&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-                `https://fbinter.stadt-berlin.de/fb/wms/senstadt/nsg_lsg?service=wms&request=getmap&version=1.3.0&layers=12&styles=&crs=EPSG:4326&bbox=${bbox}&width=1598&height=952&format=image/png&transparent=true`,
-              ],
-              title:
-                "Schutzgebiete und Schutzobjekte nach Naturschutzrecht Berlin (inklusive Natura 2000)",
-            },
-          ];
-
-          setMapItems(newMapItems);
-          setBbox(bbox);
-        } else {
-          setError("Lake data not found.");
+        if (!geoResult) {
+          throw new Error("Lake geography not found");
         }
+
+        const bbox = geoResult.get("bbox");
+        if (!bbox) {
+          throw new Error("Bounding box not available for this lake");
+        }
+
+        // query for layer
+        const layerQuery = new Parse.Query("AD4GD_LakeLayers");
+        const layerResults = await layerQuery.find();
+
+        const newMapItems = layerResults.map((layer) => {
+          const baseUrl = layer.get("layersUrl");
+          const layersArray = layer.get("layersArray");
+          const title = layer.get("layersTitle");
+          const legend = layer.get("layersLegend");
+
+          // Construct URLs for each layer number
+          const layerUrls = layersArray.map((layerNum: string) => {
+            // Handle URL with or without existing parameters
+            return `${baseUrl}&layers=${layerNum}&bbox=${bbox}`;
+          });
+
+          // console.log("Layer URLs:", layerUrls);
+          return {
+            layerUrls,
+            title,
+            legend: legend instanceof Parse.File ? legend.url() : legend,
+          };
+        });
+
+        setMapItems(newMapItems);
+        setBbox(bbox);
       } catch (err) {
         setError("Failed to fetch bounding box data.");
         console.error(err);

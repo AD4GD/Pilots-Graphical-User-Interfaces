@@ -21,7 +21,6 @@ import colorRamp from "./colorRamp.json";
 import { Spin } from "antd";
 import { useNavigate } from "@opendash/router";
 import Parse from "parse";
-import * as turf from "@turf/turf";
 import cataloniaBounds from "./cataloniaBounds.json";
 
 const { Option } = Select;
