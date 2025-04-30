@@ -8,14 +8,18 @@ Visit our project [Splashboard](https://ad4gd.fit.fraunhofer.de/splashboard)
 Visit our project [BioConnect Tool](https://ad4gd.fit.fraunhofer.de/bioconnect)
 
 <p align="center">
-  <img src="./pilot1.png" alt="Splashboard Screenshot" width="600"/>
+  <figure>
+    <img src="./pilot1.png" alt="Splashboard Screenshot" width="600"/>
+    <figcaption><em>Figure 1: The Splashboard</em></figcaption>
+  </figure>
 </p>
-<p align="center"><em>Figure 1: The Splashboard</em></p>
 
 <p align="center">
-  <img src="./pilot2.png" alt="BioConnect Tool Screenshot" width="600"/>
+  <figure>
+    <img src="./pilot2.png" alt="BioConnect Tool Screenshot" width="600"/>
+    <figcaption><em>Figure 2: The BioConnect Tool</em></figcaption>
+  </figure>
 </p>
-<p align="center"><em>Figure 2: The BioConnect Tool</em></p>
 
 ## Getting Started
 
