@@ -1,88 +1,70 @@
-## Installing and Building
+# AD4GD Graphical User Interface
 
-You will need Node (^18), npm (>=7) and pnpm (^8)
+## About
 
-```
+The AD4GD (All Data for Green Deal) Graphical User Interface component contains two separated web-based applications: The Splashboard (Pilot 1) and the BioConnect Tool (Pilot 2). The Splashboard provides users with a flexible interface for data visualization of the lakes from Berlin. The BioConnect Tool offers a user-friendly interface for the BioConnect platform, which monitors the habitat connectivity for the Catalonia region in Spain.
+
+Visit our project Splashboard (https://ad4gd.fit.fraunhofer.de/splashboard)
+Visit our project BioConnect Tool (https://ad4gd.fit.fraunhofer.de/bioconnect)
+
+![Splashboard Screenshot](.pilot1.png)
+_Figure 1: The Splashboard_
+![BioConnect Tool Screenshot](.pilot2.png)
+_Figure 2: The BioConnect Tool_
+
+## Getting Started
+
+### User Access
+
+To use the application:
+
+1. Visit https://ad4gd.fit.fraunhofer.de
+2. Create an account or log in with existing credentials (You can just log in without email verification)
+3. Access the application you want to use (Splashboard or BioConnect Tool)
+
+### Development Setup
+
+#### Prerequisites
+
+You will need:
+
+- Node.js (^18)
+- npm (>=7)
+- pnpm (^8)
+
+Verify your installation:
+
+```bash
 node --version
 npm --version
 npm i -g pnpm
 ```
 
-and run the npm install for CI command:
+#### Installation
 
-```
+Install dependencies:
+
+```bash
 pnpm i
 ```
 
-To start a development web server which listens on port 8080 and listens for code changes to rebuild the website run the command
+#### Development Server
 
-```
-pnpm run start
+Start the development server (port 8080):
+
+```bash
+pnpm start
 ```
 
-To create a production deployment, which will end up in the ./dist folder, run the command.
+#### Production Build
 
-```
+Create a production build:
+
+```bash
 pnpm run build
 ```
 
-Put the content of the `./dist` folder on a web server, make sure to have a not-found fallback on `index.html` to allow client side routing.
+The build output will be in the `./dist` folder. When deploying:
 
-### Widgets
-
-Widgets are located in the `src/js/widgets` folder. To create a new widget, copy the folder of an existing widget, make sure to give it a fitting name and update the `type` property in the `index.ts` file.
-
-Please use translation where ever possible and update the translation file in `src/js/translations/app/en.json`.
-
-Example `example`:
-
-- It's located in the `src/js/widgets/example` folder
-- The type property is `opendash-widget-example`
-- Translations use the `app:widget.example.xxx` namespace
-
-Each widget has the following files:
-
-- `index.ts` - For configuration and as an entrypoint
-- `types.ts` - For widget specific typings, especially for typings of the widget config
-- `component.ts` - The React component which will render the widget in the dashboard view
-- `settings.ts` - (optionally) The React component which will render the settings dialog
-
-### New Component
-
-New Plugins can be located in the `src/js/components`folder. To create a new plugin, copy the folder of an existing plugin.
-
-Please use translation where ever possible and update the translation file in `translations` folder.
-
-Use the `AppPluginInterface` for the best integration.
-
-In your plugin.ts, you first need to register a route:
-
-```
-factory.registerRoute({
-  path: "/test/start",
-  props: this.options,
-  component: async () => ({ default: TestComponent })
-});
-```
-
-Afterwards, you can register the Navigation Item on the Frontpage:
-
-```
-factory.registerStaticNavigationItem({
-  id: "test/start",
-  place: "frontpage",
-  group: "test",
-  order: 11,
-  color: "#676767",
-
-  label: "Test",
-  icon: "fa:wrench",
-
-  link: "/test/start",
-
-  routeCondition: "**",
-  activeCondition: "/test"
-});
-```
-
-Finally, in the index.ts of the instance, register the new plugin `await factory.use(new TestPlugin());`
+- Copy the contents of `./dist` to your web server
+- Configure the server to redirect 404s to `index.html` for client-side routing

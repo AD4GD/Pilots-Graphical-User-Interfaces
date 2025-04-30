@@ -11,6 +11,7 @@ import {
   Radio,
   ConfigProvider,
   Collapse,
+  Divider,
 } from "antd";
 import { PlusOutlined, DownOutlined } from "@ant-design/icons";
 import geoblaze from "geoblaze";
@@ -83,6 +84,7 @@ const BioConn: React.FC = () => {
   const [gbifSuggestions, setGbifSuggestions] = useState([]);
   const [selectedTaxonKey, setSelectedTaxonKey] = useState(null);
   const [occurrenceData, setOccurrenceData] = useState([]);
+  const [hasLoadedAnyLayer, setHasLoadedAnyLayer] = useState(false);
 
   const searchGbifSpecies = async (query) => {
     try {
@@ -506,6 +508,10 @@ const BioConn: React.FC = () => {
 
   const updateMap = (rasterLayer: any, georaster: any) => {
     if (leafletMap.current && rasterLayer) {
+      // Store current view state
+      const currentCenter = leafletMap.current.getCenter();
+      const currentZoom = leafletMap.current.getZoom();
+
       // Remove only GeoRasterLayers, keep other layers intact
       leafletMap.current.eachLayer((layer) => {
         if (layer instanceof GeoRasterLayer) {
@@ -519,8 +525,17 @@ const BioConn: React.FC = () => {
         setLoading(false); // Set loading to false only after layer is loaded
       });
 
-      const layerBounds = rasterLayer.getBounds();
-      leafletMap.current.fitBounds(layerBounds);
+      // Only fit bounds on first load
+      if (!hasLoadedAnyLayer) {
+        const layerBounds = rasterLayer.getBounds();
+        leafletMap.current.fitBounds(layerBounds);
+        setHasLoadedAnyLayer(true); // Mark that we've loaded at least one layer
+      } else {
+        // For subsequent loads, maintain the previous center and zoom
+        leafletMap.current.setView(currentCenter, currentZoom, {
+          animate: false,
+        });
+      }
 
       // Make sure our raster layer is above the satellite but below the roads
       if (satelliteLayerRef.current) {
@@ -533,31 +548,39 @@ const BioConn: React.FC = () => {
 
       leafletMap.current.on("click", async (e) => {
         const { lat, lng } = e.latlng;
-
         // Convert WGS84 (Lat, Lng) to EPSG:32631 (Easting, Northing)
         const [easting, northing] = proj4(wgs84, epsg32631, [lng, lat]);
-
         const pixelCoords = geoToPixel(georaster, easting, northing);
-
         // Get value using geoblaze.identify with converted coordinates
         const values = await geoblaze.identify(georaster, [easting, northing]);
 
-        console.log(
-          `Pixel Value read by clicking at [${easting}, ${northing}]:`,
-          values
-        );
+        // Create popup content with all information
+        let popupContent = `<div style="font-family: Arial, sans-serif">
+    <p><strong>WGS84:</strong> Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(
+          6
+        )}</p>
+    <p><strong>EPSG:32631:</strong> Easting: ${easting.toFixed(
+      2
+    )}, Northing: ${northing.toFixed(2)}</p>
+    <p><strong>Value:</strong> ${values !== null ? values : "No data"}</p>`;
 
-        if (pixelCoords) {
-          const { col, row } = pixelCoords;
-          console.log(
-            `Clicked at [${easting}, ${northing}] which corresponds to pixel [${row}, ${col}]`
-          );
+        // Add pixel information if available
+        //     if (pixelCoords) {
+        //       const { col, row } = pixelCoords;
+        //       const rasterValue = georaster.values[0][row][col];
+        //       popupContent += `<p><strong>Pixel Coordinates:</strong> Row: ${row}, Col: ${col}</p>
+        // <p><strong>Raster Value:</strong> ${
+        //   rasterValue !== null ? rasterValue : "No data"
+        // }</p>`;
+        //     }
 
-          const rasterValue = georaster.values[0][row][col];
-          console.log(
-            `Raster Value at georaster.values[0][${row}][${col}]: ${rasterValue}`
-          );
-        }
+        popupContent += "</div>";
+
+        // Create and open a popup at the clicked location
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(popupContent)
+          .openOn(leafletMap.current);
       });
     }
   };
@@ -571,6 +594,7 @@ const BioConn: React.FC = () => {
         layerOption === "connectivity" ? "getConnectivity" : "getMucsc",
         layerOption === "connectivity" ? { time, properties } : { time }
       );
+      console.log(time);
 
       if (result.status !== "success" || !result.data) {
         throw new Error("Failed to fetch image data");
@@ -764,11 +788,42 @@ const BioConn: React.FC = () => {
         <Row style={{ width: "100%", display: "flex" }}>
           <div style={{ width: "30%", padding: "16px" }}>
             {/* Map Settings Heading */}
-            <h2>Map Settings</h2>
+            <h2>Connectivity Calculation</h2>
+
+            {/* Layers Section */}
+            <div style={{ marginBottom: "24px" }}>
+              <Radio.Group onChange={handleLayerChange} value={layerOption}>
+                <Radio
+                  value="muscsc"
+                  style={{ display: "block", marginBottom: "8px" }}
+                >
+                  Catalan Land Use Land Cover (MUCSC)
+                </Radio>
+                <Radio
+                  value="connectivity"
+                  style={{ display: "block", marginBottom: "8px" }}
+                >
+                  Connectivity Index
+                </Radio>
+              </Radio.Group>
+
+              <Select
+                defaultValue={properties}
+                style={{ width: "100%" }}
+                onChange={setProperties}
+                disabled={layerOption !== "connectivity"}
+              >
+                {propertyOptions.map((property) => (
+                  <Option key={property} value={property}>
+                    {property}
+                  </Option>
+                ))}
+              </Select>
+            </div>
 
             {/* Species Section */}
             <div style={{ marginBottom: "24px" }}>
-              <h3>Species</h3>
+              <h2>Layers</h2>
               <Radio.Group onChange={handleSpeciesChange} value={speciesOption}>
                 <Radio
                   value="all"
@@ -847,37 +902,7 @@ const BioConn: React.FC = () => {
               )}
             </div>
 
-            {/* Layers Section */}
-            <div style={{ marginBottom: "24px" }}>
-              <h3>Layers</h3>
-              <Radio.Group onChange={handleLayerChange} value={layerOption}>
-                <Radio
-                  value="muscsc"
-                  style={{ display: "block", marginBottom: "8px" }}
-                >
-                  Catalan Land Use Land Cover (MUCSC)
-                </Radio>
-                <Radio
-                  value="connectivity"
-                  style={{ display: "block", marginBottom: "8px" }}
-                >
-                  Connectivity Index
-                </Radio>
-              </Radio.Group>
-
-              <Select
-                defaultValue={properties}
-                style={{ width: "100%" }}
-                onChange={setProperties}
-                disabled={layerOption !== "connectivity"}
-              >
-                {propertyOptions.map((property) => (
-                  <Option key={property} value={property}>
-                    {property}
-                  </Option>
-                ))}
-              </Select>
-            </div>
+            <Divider></Divider>
 
             {/* Checkboxes Section */}
             <div style={{ marginBottom: "24px" }}>
@@ -909,6 +934,13 @@ const BioConn: React.FC = () => {
                 Water bodies
               </Checkbox>
               <br />
+              <Checkbox
+                checked={checkboxOptions.waterBodies}
+                onChange={() => handleCheckboxChange("waterBodies")}
+              >
+                Cadastral Information
+              </Checkbox>
+              <br />
 
               {/* Protected Areas Collapse */}
               <Collapse
@@ -922,15 +954,15 @@ const BioConn: React.FC = () => {
                   header="Protected Areas"
                   key="1"
                   style={{ padding: 0 }}
-                  extra={
-                    <Checkbox
-                      checked={checkboxOptions.protectedAreas}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        handleCheckboxChange("protectedAreas");
-                      }}
-                    />
-                  }
+                  // extra={
+                  //   <Checkbox
+                  //     checked={checkboxOptions.protectedAreas}
+                  //     onChange={(e) => {
+                  //       e.stopPropagation();
+                  //       handleCheckboxChange("protectedAreas");
+                  //     }}
+                  //   />
+                  // }
                 >
                   <div style={{ marginLeft: "24px" }}>
                     <Checkbox

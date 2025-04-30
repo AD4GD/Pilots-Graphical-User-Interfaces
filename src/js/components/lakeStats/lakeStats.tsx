@@ -274,8 +274,8 @@ const LakeStats: React.FC = ({}) => {
 
   const config = useMemo(() => {
     return {
-      _sources: [],
-      _items: [],
+      _sources: ["ad4gd_private"],
+      _items: ["flag"],
       _dimensions: [...sensors],
       _history: {},
     };
@@ -617,6 +617,7 @@ const LakeStats: React.FC = ({}) => {
               ></WidgetStatic>
               <Collapse ghost items={items} />
             </div>
+
             <div
               style={{
                 width: "100%",

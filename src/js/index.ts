@@ -28,8 +28,6 @@ import { LakeFavourite } from "./components/lakeFavourite";
 import { NotFound } from "./components/NotFoundPage";
 import { bioConn } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
-import { testWMS } from "./components/testPage";
-import { testFIS } from "./components/testFIS";
 import { DataUpload } from "./components/dataUpload";
 // import { malte } from "./components/malte";
 // import MapComponent from "./components/testNewMap/testNewMap";
@@ -81,18 +79,6 @@ init("opendash", async (factory) => {
   });
 
   factory.registerRoute({
-    path: "/fcube",
-    componentSync: testWMS,
-    props: {},
-  });
-
-  factory.registerRoute({
-    path: "/odc",
-    componentSync: testFIS,
-    props: {},
-  });
-
-  factory.registerRoute({
     path: "/bioconnect",
     componentSync: bioConn,
     props: {},
@@ -103,12 +89,6 @@ init("opendash", async (factory) => {
     componentSync: bioConnScenario,
     props: {},
   });
-
-  // factory.registerRoute({
-  //   path: "/fis",
-  //   componentSync: malte,
-  //   props: {},
-  // });
 
   factory.registerRoute({
     path: "*",

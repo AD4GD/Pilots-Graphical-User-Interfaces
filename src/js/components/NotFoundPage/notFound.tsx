@@ -8,13 +8,13 @@ const NotFound: React.FC = () => {
 
   return (
     <>
-      <Row style={{ width: "100%", height: "80px" }}>
+      {/* <Row style={{ width: "100%", height: "80px" }}>
         <WidgetStatic
           style={{ width: "100%", height: "100%" }}
           type="header-widget"
           config={""}
         ></WidgetStatic>
-      </Row>
+      </Row> */}
 
       <Result
         status="warning"
@@ -35,7 +35,7 @@ const NotFound: React.FC = () => {
               type="primary"
               size="large"
               onClick={() => {
-                navigate("/home");
+                navigate("/");
               }}
             >
               Zurück zur Startseite

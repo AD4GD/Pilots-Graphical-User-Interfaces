@@ -4,6 +4,7 @@ import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { Row, Typography } from "antd";
 import { useDataService } from "@opendash/plugin-timeseries";
+import { $framework } from "@opendash/core";
 
 import {
   SingleSelectDropdown,
@@ -29,8 +30,26 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   const navigate = useNavigate();
   const t = useTranslation();
   context["setLoading"](false);
+  console.log("CONTEXT", context);
+  console.log(context.config._items);
+  console.log(context.config._sources);
   const DataService = useDataService();
   const items = context["useItemDimensionConfig"]();
+
+  function filterItemsBySource(items: any[], sourceName: string) {
+    return items.filter((item) => item[0].source === sourceName);
+  }
+
+  const ad4gdLakesItems = filterItemsBySource(items, "ad4gd_lakes");
+  const ad4gdPrivateItems = filterItemsBySource(items, "ad4gd_private");
+
+  console.log("ITEMS", items);
+  console.log("AD4GD LAKES ITEMS", ad4gdLakesItems);
+  console.log("AD4GD PRIVATE ITEMS", ad4gdPrivateItems);
+  console.log(
+    "isAdmin",
+    $framework.services.UserService.hasPermission("parse-admin")
+  );
   const chartRef = useRef<HTMLDivElement>(null);
 
   // State Variables
@@ -93,7 +112,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         aggregationOperation as AggregationOperationInterface,
       aggregationDateUnit: filterUnitMap[filter],
     });
-    console.log("RESULT ++++++", result);
+    // console.log("RESULT ++++++", result);
     return transformData(result);
   };
 
@@ -127,6 +146,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
 
   // Map properties for selection dropdown
   const properties = useMemo(() => fetchProperties(items), [items]);
+  // console.log("PROPERTIES", properties);
 
   // Time filter options
   const timeFilter: FilterOption[] = [
