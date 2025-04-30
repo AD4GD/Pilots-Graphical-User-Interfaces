@@ -4,13 +4,18 @@
 
 The AD4GD (All Data for Green Deal) Graphical User Interface component contains two separated web-based applications: The Splashboard (Pilot 1) and the BioConnect Tool (Pilot 2). The Splashboard provides users with a flexible interface for data visualization of the lakes from Berlin. The BioConnect Tool offers a user-friendly interface for the BioConnect platform, which monitors the habitat connectivity for the Catalonia region in Spain.
 
-Visit our project Splashboard (https://ad4gd.fit.fraunhofer.de/splashboard)
-Visit our project BioConnect Tool (https://ad4gd.fit.fraunhofer.de/bioconnect)
+Visit our project [Splashboard](https://ad4gd.fit.fraunhofer.de/splashboard)  
+Visit our project [BioConnect Tool](https://ad4gd.fit.fraunhofer.de/bioconnect)
 
-![Splashboard Screenshot](./pilot1.png)
-_Figure 1: The Splashboard_
-![BioConnect Tool Screenshot](./pilot2.png)
-_Figure 2: The BioConnect Tool_
+<p align="center">
+  <img src="./pilot1.png" alt="Splashboard Screenshot" width="600"/>
+</p>
+<p align="center"><em>Figure 1: The Splashboard</em></p>
+
+<p align="center">
+  <img src="./pilot2.png" alt="BioConnect Tool Screenshot" width="600"/>
+</p>
+<p align="center"><em>Figure 2: The BioConnect Tool</em></p>
 
 ## Getting Started
 
