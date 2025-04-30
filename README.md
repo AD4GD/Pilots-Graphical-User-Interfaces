@@ -7,9 +7,9 @@ The AD4GD (All Data for Green Deal) Graphical User Interface component contains 
 Visit our project Splashboard (https://ad4gd.fit.fraunhofer.de/splashboard)
 Visit our project BioConnect Tool (https://ad4gd.fit.fraunhofer.de/bioconnect)
 
-![Splashboard Screenshot](.pilot1.png)
+![Splashboard Screenshot](./pilot1.png)
 _Figure 1: The Splashboard_
-![BioConnect Tool Screenshot](.pilot2.png)
+![BioConnect Tool Screenshot](./pilot2.png)
 _Figure 2: The BioConnect Tool_
 
 ## Getting Started
