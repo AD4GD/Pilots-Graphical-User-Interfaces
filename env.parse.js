@@ -1,7 +1,9 @@
+require("dotenv").config();
+
 const envConfig = {
-  publicServerURL: "https://data.digitalzentrum-lr.de/parse",
-  appId: "opendashfit",
-  masterKey: "NEK5g3pu7XActr",
+  publicServerURL: process.env.PARSE_PUBLIC_SERVER_URL,
+  appId: process.env.PARSE_APP_ID,
+  masterKey: process.env.PARSE_MASTER_KEY,
 };
 
 module.exports = envConfig;

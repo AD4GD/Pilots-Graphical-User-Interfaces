@@ -33,6 +33,17 @@ To use the application:
 
 ### Development Setup
 
+#### Environment Setup
+
+1. Copy `.env.example` to `.env`
+2. Fill in your Parse Server credentials in `.env`:
+
+```env
+PARSE_PUBLIC_SERVER_URL=your_parse_server_url
+PARSE_APP_ID=your_app_id
+PARSE_MASTER_KEY=your_master_key
+```
+
 #### Prerequisites
 
 You will need:

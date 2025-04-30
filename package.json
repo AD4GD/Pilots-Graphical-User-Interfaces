@@ -34,6 +34,7 @@
     "@turf/turf": "^6.5.0",
     "antd": "^5.20.4",
     "dayjs": "^1.11.13",
+    "dotenv": "^16.5.0",
     "geoblaze": "^2.8.0",
     "georaster-layer-for-leaflet": "^3.10.0",
     "geotiff": "^2.1.3",

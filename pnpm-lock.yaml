@@ -83,6 +83,9 @@ dependencies:
   dayjs:
     specifier: ^1.11.13
     version: 1.11.13
+  dotenv:
+    specifier: ^16.5.0
+    version: 16.5.0
   geoblaze:
     specifier: ^2.8.0
     version: 2.8.0(typescript@4.9.5)(webpack@4.47.0)
@@ -2280,7 +2283,7 @@ packages:
       copy-webpack-plugin: 11.0.0(webpack@5.94.0)
       css-loader: 6.11.0(webpack@5.94.0)
       deepmerge: 4.3.1
-      dotenv: 16.4.5
+      dotenv: 16.5.0
       express: 4.19.2
       favicons: 6.2.2
       favicons-webpack-plugin: 5.0.2(favicons@6.2.2)(webpack@5.94.0)
@@ -7151,10 +7154,9 @@ packages:
       tslib: 2.7.0
     dev: true
 
-  /dotenv@16.4.5:
-    resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
+  /dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
-    dev: true
 
   /downloadjs@1.4.7:
     resolution: {integrity: sha512-LN1gO7+u9xjU5oEScGFKvXhYf7Y/empUIIEAGBs1LzUq/rg5duiDrkuH5A2lQGd5jfMOb9X9usDa2oVXwJ0U/Q==}
