@@ -1,0 +1,68 @@
+{
+  "fields": {
+    "description": {
+      "type": "String",
+      "required": false
+    },
+    "items": {
+      "type": "Array",
+      "required": true,
+      "defaultValue": []
+    },
+    "masterData": {
+      "type": "Object",
+      "required": true,
+      "defaultValue": {}
+    },
+    "name": {
+      "type": "String",
+      "required": false
+    },
+    "options": {
+      "type": "Object",
+      "required": true,
+      "defaultValue": {}
+    },
+    "template": {
+      "type": "File",
+      "required": true
+    },
+    "title": {
+      "type": "String",
+      "required": false
+    },
+    "type": {
+      "type": "String",
+      "required": true
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

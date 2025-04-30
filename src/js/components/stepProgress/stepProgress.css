@@ -1,0 +1,15 @@
+.custom-step .ant-steps-item-icon {
+  background-color: #96f5d0 !important;
+  border-color: #96f5d0 !important;
+  color: white !important;
+}
+
+.custom-step .ant-steps-item-finish .ant-steps-item-icon {
+  background-color: #96f5d0 !important;
+  border-color: #96f5d0 !important;
+  color: white !important;
+}
+
+.custom-step .ant-steps-item-finish .ant-steps-item-icon .anticon {
+  color: white !important;
+}

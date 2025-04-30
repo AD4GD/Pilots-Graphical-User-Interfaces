@@ -1,0 +1,68 @@
+{
+  "fields": {
+    "authData": {
+      "type": "Object"
+    },
+    "email": {
+      "type": "String"
+    },
+    "emailVerified": {
+      "type": "Boolean"
+    },
+    "name": {
+      "type": "String"
+    },
+    "password": {
+      "type": "String"
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    },
+    "tenantAdmin": {
+      "type": "Boolean"
+    },
+    "tenantBanned": {
+      "type": "Boolean"
+    },
+    "tenantChanged": {
+      "type": "Boolean"
+    },
+    "tenantGlobal": {
+      "type": "Boolean"
+    },
+    "tenantVerified": {
+      "type": "Boolean"
+    },
+    "username": {
+      "type": "String"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

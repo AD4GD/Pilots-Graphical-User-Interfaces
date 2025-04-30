@@ -1,0 +1,65 @@
+{
+  "fields": {
+    "catchall": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": true
+    },
+    "icon": {
+      "type": "String",
+      "required": false
+    },
+    "issuecode": {
+      "type": "String",
+      "required": false
+    },
+    "name": {
+      "type": "String",
+      "required": true
+    },
+    "parent": {
+      "type": "Pointer",
+      "targetClass": "OD3_Maintenance_Issuecategory",
+      "required": false
+    },
+    "source": {
+      "type": "Relation",
+      "targetClass": "OD3_Source",
+      "required": false
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

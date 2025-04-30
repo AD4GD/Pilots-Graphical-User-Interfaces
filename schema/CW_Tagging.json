@@ -1,0 +1,51 @@
+{
+  "fields": {
+    "End": {
+      "type": "Date",
+      "required": false
+    },
+    "Liter": {
+      "type": "Number",
+      "required": false
+    },
+    "Nutzer": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": false
+    },
+    "Start": {
+      "type": "Date",
+      "required": false
+    },
+    "Tag": {
+      "type": "String",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

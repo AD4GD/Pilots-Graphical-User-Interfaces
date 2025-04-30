@@ -1,0 +1,87 @@
+{
+  "fields": {
+    "bulletpoints": {
+      "type": "Array",
+      "required": false,
+      "defaultValue": []
+    },
+    "content1": {
+      "type": "String",
+      "required": false
+    },
+    "content2": {
+      "type": "String",
+      "required": false
+    },
+    "description": {
+      "type": "Number"
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": true
+    },
+    "headline": {
+      "type": "String",
+      "required": false,
+      "defaultValue": "Headline"
+    },
+    "nestedSlides": {
+      "type": "Array",
+      "required": false
+    },
+    "picture1": {
+      "type": "String",
+      "required": false
+    },
+    "picture2": {
+      "type": "String",
+      "required": false
+    },
+    "schaufensterId": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "empty"
+    },
+    "subheadline": {
+      "type": "String",
+      "required": false,
+      "defaultValue": "Subheadline"
+    },
+    "template": {
+      "type": "Number",
+      "required": true,
+      "defaultValue": 1
+    },
+    "video": {
+      "type": "String",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

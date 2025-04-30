@@ -1,0 +1,35 @@
+{
+  "fields": {
+    "error": {
+      "type": "Boolean",
+      "defaultValue": false
+    },
+    "payload": {
+      "type": "Object",
+      "required": true
+    },
+    "response": {
+      "type": "Object"
+    },
+    "sent": {
+      "type": "Boolean",
+      "defaultValue": false
+    },
+    "success": {
+      "type": "Boolean",
+      "defaultValue": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {},
+    "count": {},
+    "get": {},
+    "create": {},
+    "update": {},
+    "delete": {},
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "fields": {
+    "dataProtectionUrl": {
+      "type": "String",
+      "required": false,
+      "defaultValue": ""
+    },
+    "dataSource": {
+      "type": "Pointer",
+      "targetClass": "OD3_Source"
+    },
+    "description": {
+      "type": "String",
+      "required": false,
+      "defaultValue": ""
+    },
+    "hasDataSource": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    },
+    "icon": {
+      "type": "File",
+      "required": false
+    },
+    "imprintUrl": {
+      "type": "String",
+      "required": false,
+      "defaultValue": ""
+    },
+    "interactWithOtherTenants": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "logo": {
+      "type": "File",
+      "required": false
+    },
+    "public": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    },
+    "tagPrefix": {
+      "type": "String"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "role:od-admin": true
+    },
+    "update": {
+      "role:od-admin": true
+    },
+    "delete": {
+      "role:od-admin": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

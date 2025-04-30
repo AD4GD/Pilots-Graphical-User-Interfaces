@@ -1,0 +1,42 @@
+{
+  "fields": {
+    "lake": {
+      "type": "String",
+      "required": false
+    },
+    "WQI_status": {
+      "type": "Number",
+      "required": false
+    },
+    "WQI_trend": {
+      "type": "Number",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}
