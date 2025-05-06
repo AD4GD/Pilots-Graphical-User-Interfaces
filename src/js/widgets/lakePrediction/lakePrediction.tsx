@@ -28,24 +28,12 @@ export default createWidgetComponent(({ ...context }) => {
   const t = useTranslation();
   context["setLoading"](false);
   const items = context["useItemDimensionConfig"]();
-
-  function filterItemsBySource(items: any[], sourceName: string) {
-    return items.filter((item) => item[0].source === sourceName);
-  }
-
-  const ad4gdLakesItems = filterItemsBySource(items, "ad4gd_lakes");
-  const ad4gdPrivateItems = filterItemsBySource(items, "ad4gd_private");
-
-  console.log("ITEMS", items);
-  console.log("AD4GD LAKES ITEMS", ad4gdLakesItems);
-  console.log("AD4GD PRIVATE ITEMS", ad4gdPrivateItems);
-  console.log(
-    "isAdmin",
-    $framework.services.UserService.hasPermission("parse-admin")
-  );
   const chartRef = useRef<HTMLDivElement>(null);
 
-  // State Variables
+  // State
+  const [selectedMainSensor, setSelectedMainSensor] = useState<string | null>(
+    null
+  );
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("daily");
   const [startDate, setStartDate] = useState<number | null>(null);
@@ -63,51 +51,46 @@ export default createWidgetComponent(({ ...context }) => {
   const data = useSensorData(items, selectedFilter, startDate, endDate);
   const chartData = useChartDataTransform(data, selectedProperties);
 
-  // Toggle Minimize State
-  const toggleMinimize = () => {
-    setIsMinimized((prev) => !prev);
+  const toggleMinimize = () => setIsMinimized((prev) => !prev);
+
+  // Handle Main Sensor Selection
+  const handleMainSensorSelect = (key: string) => {
+    setSelectedMainSensor(key);
+    setSelectedProperties([key]); // Only select main sensor initially
   };
 
-  // Handle property selection
-  const selectProperties = (e: any) => {
+  // Handle Prediction Sensor Selection
+  const handlePredictionSelect = (e: any) => {
     const value = e.key;
-    setSelectedProperties((prevValues) =>
-      prevValues.includes(value)
-        ? prevValues.filter((v) => v !== value)
-        : [...prevValues, value]
+    setSelectedProperties((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
   };
 
-  // Handle filter selection
-  const selectFilter = (key: FilterType) => {
-    setSelectedFilter(key);
-  };
+  // Handle filter and date
 
-  // Handle start date change
-  const handleStartDateChange = (timestamp: number | null) => {
+  const handleStartDateChange = (timestamp: number | null) =>
     setStartDate(timestamp);
-  };
-
-  // Handle end date change
-  const handleEndDateChange = (timestamp: number | null) => {
+  const handleEndDateChange = (timestamp: number | null) =>
     setEndDate(timestamp);
-  };
 
-  // Download Graph as PNG
-  const downloadGraph = () => {
+  // Downloads
+  const downloadGraph = () =>
     downloadGraphAsPng(chartRef, data, selectedFilter);
-  };
+  const downloadData = () => downloadDataAsCsv(data);
 
-  // Download Data as CSV
-  const downloadData = () => {
-    downloadDataAsCsv(data);
-  };
+  const predictionItems =
+    selectedMainSensor && properties[selectedMainSensor]
+      ? properties[selectedMainSensor].filter(
+          (p) => p.key !== selectedMainSensor
+        )
+      : [];
 
   return (
     <>
       <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
         <Title level={4} style={{ fontWeight: "bold", margin: 0 }}>
-          Lake Statistics
+          Lake Prediction
         </Title>
         <div
           style={{
@@ -131,18 +114,22 @@ export default createWidgetComponent(({ ...context }) => {
           gutter={[16, 16]}
           style={{ marginTop: "2%", justifyContent: "space-evenly" }}
         >
-          <CustomDropdown
-            items={properties["Main"]}
-            selectedValues={selectedProperties}
-            placeholder="Select Sensor"
-            handleClick={selectProperties}
-          />
           <SingleSelectDropdown
-            items={timeFilter}
-            placeholder="Select Frequency"
-            selectedValue={selectedFilter}
-            handleClick={selectFilter}
+            items={properties["Main"]}
+            selectedValue={selectedMainSensor}
+            placeholder="Select Sensor"
+            handleClick={handleMainSensorSelect}
           />
+
+          {selectedMainSensor && (
+            <CustomDropdown
+              items={predictionItems}
+              selectedValues={selectedProperties}
+              placeholder="Select Prediction Sensor"
+              handleClick={handlePredictionSelect}
+            />
+          )}
+
           <DatePicker
             onDateChange={handleStartDateChange}
             placeholder="Start Date"
@@ -158,7 +145,7 @@ export default createWidgetComponent(({ ...context }) => {
           filter={selectedFilter}
           properties={selectedProperties}
           ref={chartRef}
-          multipleAxis={true}
+          multipleAxis={false}
         />
 
         <Row style={{ marginTop: "2%" }}>

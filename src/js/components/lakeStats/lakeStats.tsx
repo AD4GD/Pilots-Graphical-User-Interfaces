@@ -363,6 +363,7 @@ const LakeStats: React.FC = ({}) => {
             config={""}
           ></WidgetStatic>
         </Row>
+
         <Row>
           <div
             style={{
@@ -613,6 +614,10 @@ const LakeStats: React.FC = ({}) => {
             >
               <WidgetStatic
                 type="lakeStats-widget"
+                config={config}
+              ></WidgetStatic>
+              <WidgetStatic
+                type="lakePrediction-widget"
                 config={config}
               ></WidgetStatic>
               <Collapse ghost items={items} />

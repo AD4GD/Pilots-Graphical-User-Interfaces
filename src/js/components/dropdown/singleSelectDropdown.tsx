@@ -1,26 +1,24 @@
 import { CaretDownFilled, CaretUpFilled } from "@ant-design/icons";
 import { Button, Dropdown, Menu, Typography } from "antd";
 import React, { useState } from "react";
+import "./customDropdown.css";
 
-import "./customDropdown.css"; // Import the CSS file
-import { FilterType } from "../../types/Lake_Stats"; // Import the FilterType type
-
-interface SingleSelectDropdownProps {
+interface SingleSelectDropdownProps<T = string> {
   items: {
-    key: string;
+    key: T;
     label: React.ReactNode;
-  }[]; // Define the type for the items prop
-  placeholder?: string; // Define the type for the placeholder prop
-  selectedValue: string | null;
-  handleClick: (key: FilterType) => void;
+  }[];
+  placeholder?: string;
+  selectedValue: T | null;
+  handleClick: (key: T) => void;
 }
 
-const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({
+const SingleSelectDropdown = <T extends string | number>({
   items,
   placeholder = "Select",
   selectedValue = null,
   handleClick,
-}) => {
+}: SingleSelectDropdownProps<T>) => {
   const [open, setOpen] = useState(false);
 
   const handleDropdownVisibleChange = (flag: boolean) => {
@@ -28,7 +26,7 @@ const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({
   };
 
   if (!items || items.length === 0) {
-    return <div>No items available</div>; // Display a message if no items are provided
+    return <div>No items available</div>;
   }
 
   const displayText =
@@ -39,7 +37,7 @@ const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({
   const menu = (
     <Menu>
       {items.map((item) => (
-        <Menu.Item key={item.key} onClick={() => handleClick(item.key)}>
+        <Menu.Item key={String(item.key)} onClick={() => handleClick(item.key)}>
           {item.label}
         </Menu.Item>
       ))}
@@ -51,7 +49,7 @@ const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({
       overlay={menu}
       onOpenChange={handleDropdownVisibleChange}
       open={open}
-      overlayClassName="custom-dropdown-overlay" // Apply custom class for dropdown menu
+      overlayClassName="custom-dropdown-overlay"
     >
       <Button className="custom-dropdown-button">
         <Typography.Text

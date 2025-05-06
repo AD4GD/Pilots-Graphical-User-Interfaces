@@ -16,29 +16,30 @@ export interface FilterOption {
 
 // Data structure for a single data point
 export interface DataPoint {
-  date: string; // Date in string format
+  date: string;
   value: number;
 }
 
 // Data structure for each sensor data
 export interface SensorData {
-  id: any;
-  lake: string;
   propertyName: string;
   unit: string;
   data: DataPoint[];
+  lake: string;
 }
 
 // Chart data format
 export interface ChartData {
-  type: "line" | "column"; // Chart type can either be 'line' or 'column'
+  type: string;
   name: string;
   unit: string;
-  data: [number, number][]; // Time-value pairs
+  data: [number, number][];
 }
+
 // ChartProps interface
 export interface ChartProps {
   data: ChartData[]; // Data passed to the chart, of type ChartData
   filter: string; // Filter to decide date grouping (daily, weekly, etc.)
   properties: string[]; // Selected properties for the chart
+  multipleAxis: boolean; // Flag to indicate if it's a prediction graph
 }
