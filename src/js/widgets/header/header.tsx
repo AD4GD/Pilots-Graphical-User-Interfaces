@@ -99,9 +99,21 @@ export default createWidgetComponent<ConfigInterface>(
                   type="primary"
                   size="large"
                   style={{ minWidth: "50px" }}
-                  icon={<Icon icon="fa:cogs" />}
+                  icon={<Icon icon="fa:database" />}
                   onClick={() => {
                     navigate("/admin/ow/sensors");
+                  }}
+                ></Button>
+              )}
+
+              {isAdmin && (
+                <Button
+                  type="primary"
+                  size="large"
+                  style={{ minWidth: "50px" }}
+                  icon={<Icon icon="fa:upload" />}
+                  onClick={() => {
+                    navigate("/upload");
                   }}
                 ></Button>
               )}
