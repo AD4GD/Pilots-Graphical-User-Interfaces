@@ -19,10 +19,7 @@ import ExampleWidget from "./widgets/example";
 import HeaderWidget from "./widgets/header";
 import LakeDetails from "./widgets/lakeDetails";
 import LakeStatss from "./widgets/lakeStats";
-<<<<<<< HEAD
-=======
 import LakePrediction from "./widgets/lakePrediction";
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
 import lakeMapWidget from "./widgets/lakeMap";
 import HeaderBioConnWidget from "./widgets/headerBioConn";
 import { LakeOverview } from "./components/lakeOverviewPage";
@@ -309,10 +306,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(HeaderWidget);
   $monitoring.registerWidget(LakeDetails);
   $monitoring.registerWidget(LakeStatss);
-<<<<<<< HEAD
-=======
   $monitoring.registerWidget(LakePrediction);
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   $monitoring.registerWidget(lakeMapWidget);
   $monitoring.registerWidget(HeaderBioConnWidget);
   // $monitoring.registerWidget(wqiWidget);

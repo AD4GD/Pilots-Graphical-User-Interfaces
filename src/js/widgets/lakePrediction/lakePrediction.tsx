@@ -175,12 +175,6 @@ export default createWidgetComponent(({ ...context }) => {
               text="Download Rohdaten"
               disabled={selectedProperties.length === 0}
             />
-            <CustomButton
-              onClick={() => {
-                navigate(`/upload`);
-              }}
-              text="Upload Data"
-            />
           </Row>
         </Row>
       </CollapseWrapper>

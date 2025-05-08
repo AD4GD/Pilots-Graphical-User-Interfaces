@@ -363,10 +363,6 @@ const LakeStats: React.FC = ({}) => {
             config={""}
           ></WidgetStatic>
         </Row>
-<<<<<<< HEAD
-=======
-
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
         <Row>
           <div
             style={{
@@ -619,13 +615,10 @@ const LakeStats: React.FC = ({}) => {
                 type="lakeStats-widget"
                 config={config}
               ></WidgetStatic>
-<<<<<<< HEAD
-=======
               <WidgetStatic
                 type="lakePrediction-widget"
                 config={config}
               ></WidgetStatic>
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
               <Collapse ghost items={items} />
             </div>
 

@@ -4,12 +4,7 @@ import { ChartProps } from "../../types/Lake_Stats";
 import "./chartComponent.css";
 
 const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
-<<<<<<< HEAD
-  ({ data, filter, properties }, ref) => {
-    // Function to format the x-axis labels based on the filter (daily, weekly, etc.)
-=======
   ({ data, filter, properties, multipleAxis }, ref) => {
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     const formatXAxisLabel = useCallback(
       (value: number): string => {
         const date = new Date(value);
@@ -33,13 +28,6 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
       [filter]
     );
 
-<<<<<<< HEAD
-    // Define an array for bar properties (e.g., Precipitation, Evaporation)
-    const barProperties = ["Precipitation", "Evaporation"];
-
-    // Generate chart configuration based on the passed data
-    const generateChartConfig = useCallback((): Options => {
-=======
     const barProperties = ["Precipitation", "Evaporation"];
 
     const generateChartConfig = useCallback((): Options => {
@@ -76,7 +64,6 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
         };
       });
 
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
       return {
         title: { text: undefined },
         xAxis: {
@@ -91,54 +78,18 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
           },
           tickPixelInterval: 50,
         },
-<<<<<<< HEAD
-        yAxis: properties.map((property, index) => {
-          const propertyData = data.find((item) => item.name === property);
-          const unit = propertyData?.unit || ""; // Get unit for the current property
-          return {
-            title: {
-              text: `${property} (${unit})`, // Use the correct unit for each property
-            },
-            opposite: index % 2 === 1,
-          };
-        }),
-        series: data.map((item, index) => {
-          // Determine if the current item should be a bar or line series
-          const isBarChart = barProperties.includes(item.name);
-          return {
-            ...item,
-            type: isBarChart ? "column" : "line", // Use 'column' for bar chart and 'line' for line chart
-            yAxis: index % properties.length,
-          };
-        }) as SeriesOptionsType[],
-      };
-    }, [data, formatXAxisLabel, properties]);
-=======
         yAxis: yAxes,
         series,
       };
     }, [data, formatXAxisLabel, properties, multipleAxis]);
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
 
     useEffect(() => {
       if (filter && properties.length > 0) {
         const chart = Highcharts.chart("container", generateChartConfig());
-<<<<<<< HEAD
-        return () => {
-          if (chart) {
-            chart.destroy();
-          }
-        };
-      }
-    }, [generateChartConfig, filter]);
-
-    // If no filter or properties are selected, show a placeholder
-=======
         return () => chart && chart.destroy();
       }
     }, [generateChartConfig, filter]);
 
->>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     if (!filter || properties.length === 0) {
       return (
         <div className="chart-placeholder-container">
