@@ -1,0 +1,32 @@
+{
+  "fields": {
+    "key": {
+      "type": "String",
+      "required": true
+    },
+    "payload": {
+      "type": "Object",
+      "required": true
+    },
+    "url": {
+      "type": "String",
+      "required": true
+    },
+    "used": {
+      "type": "Boolean",
+      "defaultValue": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {},
+    "count": {},
+    "get": {},
+    "create": {},
+    "update": {},
+    "delete": {},
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

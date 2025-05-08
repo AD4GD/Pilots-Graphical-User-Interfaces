@@ -1,0 +1,16 @@
+.custom-button {
+  background-color: #96f5d0;
+  color: #343a40;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  border-color: #96f5d0;
+  /* margin-left: auto; */
+}
+
+.custom-button:hover {
+  background-color: #76e6b8 !important;
+  color: #343a40 !important;
+  font-weight: 600;
+  /* background-color: var(--primaryColor); */
+}

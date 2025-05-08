@@ -1,0 +1,55 @@
+{
+  "fields": {
+    "email": {
+      "type": "String",
+      "required": false
+    },
+    "img": {
+      "type": "File",
+      "required": false,
+      "defaultValue": {
+        "__type": "File",
+        "name": "4eeb28cae9429e0eb358e76f2678d3f8_people-person-icon-modern-flat-600nw-1691909635.webp",
+        "url": "https://crowdwater.fit.fraunhofer.de/parse/files/opendashfit/4eeb28cae9429e0eb358e76f2678d3f8_people-person-icon-modern-flat-600nw-1691909635.webp"
+      }
+    },
+    "name": {
+      "type": "String",
+      "required": true
+    },
+    "phone": {
+      "type": "String",
+      "required": false
+    },
+    "position": {
+      "type": "String",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

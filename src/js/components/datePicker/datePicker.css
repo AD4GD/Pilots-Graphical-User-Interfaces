@@ -1,0 +1,41 @@
+/* Custom styles for the Ant Design DatePicker */
+.custom-datepicker {
+  border: 1px solid #adb5bd; /* Border style */
+  border-radius: 10px; /* Rounded corners */
+  /* padding-top: 20px;
+  padding-bottom: 20px; */
+  display: flex; /* Flexbox for alignment */
+  flex: 0.23;
+  align-items: center; /* Center content vertically */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-size: 18px; /* Font size for the input text */
+  color: #495057; /* Darker text color */
+}
+
+/* Change border color on hover */
+.custom-datepicker:hover {
+  border-color: #6c757d; /* Change border color on hover */
+}
+
+/* Input styling */
+.custom-datepicker .ant-picker-input {
+  border: none; /* Remove default border */
+  outline: none; /* Remove outline */
+  background: transparent; /* Transparent background */
+}
+
+.ant-picker .ant-picker-input > input {
+  font-size: 18px;
+  color: #000;
+  font-weight: 600;
+}
+
+/* Change placeholder color */
+.ant-picker .ant-picker-input > input::placeholder {
+  color: #adb5bd; /* Replace with your desired color */
+  opacity: 1; /* Ensures the color is fully opaque */
+}
+.custom-datepicker:hover {
+  color: #000 !important;
+  border-color: #adb5bd !important;
+}

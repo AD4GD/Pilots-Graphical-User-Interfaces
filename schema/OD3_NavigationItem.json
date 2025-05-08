@@ -1,0 +1,77 @@
+{
+  "fields": {
+    "activeCondition": {
+      "type": "String",
+      "required": false
+    },
+    "color": {
+      "type": "String",
+      "required": false
+    },
+    "event": {
+      "type": "String",
+      "required": false
+    },
+    "group": {
+      "type": "String",
+      "required": false
+    },
+    "icon": {
+      "type": "String",
+      "required": false
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "link": {
+      "type": "String",
+      "required": false
+    },
+    "name": {
+      "type": "String"
+    },
+    "order": {
+      "type": "Number",
+      "required": true,
+      "defaultValue": 10
+    },
+    "place": {
+      "type": "String",
+      "required": true
+    },
+    "routeCondition": {
+      "type": "String",
+      "required": false
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "fields": {
+    "data": {
+      "type": "Object",
+      "required": true
+    },
+    "installationId": {
+      "type": "String",
+      "required": true,
+      "defaultValue": ""
+    },
+    "label": {
+      "type": "String",
+      "required": true,
+      "defaultValue": ""
+    },
+    "type": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "invalid"
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

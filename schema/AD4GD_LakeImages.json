@@ -1,0 +1,44 @@
+{
+  "fields": {
+    "description": {
+      "type": "String",
+      "required": true,
+      "defaultValue": ""
+    },
+    "image": {
+      "type": "File",
+      "required": true
+    },
+    "lake": {
+      "type": "Pointer",
+      "targetClass": "AD4GD_LakeMetaData",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

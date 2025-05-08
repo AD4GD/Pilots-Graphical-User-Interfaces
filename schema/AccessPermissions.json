@@ -1,0 +1,46 @@
+{
+  "fields": {
+    "delete": {
+      "type": "String"
+    },
+    "owner": {
+      "type": "String"
+    },
+    "read": {
+      "type": "String"
+    },
+    "source": {
+      "type": "Pointer",
+      "targetClass": "OD3_Source"
+    },
+    "write": {
+      "type": "String"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

@@ -1,0 +1,35 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  min-height: 100vh;
+  padding-bottom: 2%;
+}
+
+.headerRow {
+  width: 100%;
+  height: 80px;
+}
+
+.widget {
+  width: 100%;
+  height: 100%;
+}
+
+.title {
+  font-weight: bold;
+  margin-bottom: 5rem;
+  margin-top: 2rem;
+}
+
+.stepProgress {
+  margin-bottom: 2rem;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 5rem;
+  align-self: flex-end;
+}

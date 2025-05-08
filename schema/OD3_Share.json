@@ -1,0 +1,61 @@
+{
+  "fields": {
+    "accepted": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    },
+    "key": {
+      "type": "String",
+      "required": true
+    },
+    "targetRole": {
+      "type": "Pointer",
+      "targetClass": "_Role",
+      "required": false
+    },
+    "targetUser": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": false
+    },
+    "type": {
+      "type": "String",
+      "required": true
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": true
+    },
+    "writePermission": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

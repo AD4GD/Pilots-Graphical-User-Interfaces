@@ -1,0 +1,42 @@
+{
+  "fields": {
+    "Eintrag": {
+      "type": "String",
+      "required": false
+    },
+    "Ende": {
+      "type": "Date",
+      "required": false
+    },
+    "Start": {
+      "type": "Date",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

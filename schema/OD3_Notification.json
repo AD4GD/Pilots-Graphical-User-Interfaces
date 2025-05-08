@@ -1,0 +1,55 @@
+{
+  "fields": {
+    "data": {
+      "type": "Object",
+      "required": false,
+      "defaultValue": {}
+    },
+    "description": {
+      "type": "String",
+      "required": false
+    },
+    "iconPath": {
+      "type": "String",
+      "required": false
+    },
+    "isSent": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": false
+    },
+    "title": {
+      "type": "String",
+      "required": true
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

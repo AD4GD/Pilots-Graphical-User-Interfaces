@@ -1,0 +1,44 @@
+{
+  "fields": {
+    "file": {
+      "type": "File",
+      "required": true
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "role:od-admin": true,
+      "role:od-tenant-admin": true
+    },
+    "update": {
+      "role:od-admin": true,
+      "role:od-tenant-admin": true
+    },
+    "delete": {
+      "role:od-admin": true,
+      "role:od-tenant-admin": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

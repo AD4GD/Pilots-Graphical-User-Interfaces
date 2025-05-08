@@ -1,0 +1,61 @@
+{
+  "fields": {
+    "customCSS": {
+      "type": "String",
+      "required": false
+    },
+    "footer_content": {
+      "type": "String",
+      "required": false
+    },
+    "home_content": {
+      "type": "String",
+      "required": false,
+      "defaultValue": "<p>Willkommen<p>"
+    },
+    "home_title": {
+      "type": "String",
+      "required": true,
+      "defaultValue": "Willkommen"
+    },
+    "tag": {
+      "type": "String",
+      "required": false
+    },
+    "themen_title": {
+      "type": "String",
+      "required": false,
+      "defaultValue": "Themen"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true,
+      "requiresAuthentication": true,
+      "role:od-tenant-admin": true
+    },
+    "count": {
+      "*": true,
+      "requiresAuthentication": true,
+      "role:od-tenant-admin": true
+    },
+    "get": {
+      "*": true,
+      "requiresAuthentication": true,
+      "role:od-tenant-admin": true
+    },
+    "create": {
+      "role:od-tenant-admin": true
+    },
+    "update": {
+      "role:od-tenant-admin": true
+    },
+    "delete": {
+      "role:od-tenant-admin": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

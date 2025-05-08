@@ -1,0 +1,58 @@
+{
+  "fields": {
+    "description": {
+      "type": "String",
+      "required": true
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": true,
+      "defaultValue": false
+    },
+    "imgSrc": {
+      "type": "String",
+      "required": false
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "slides": {
+      "type": "Array",
+      "required": true,
+      "defaultValue": []
+    },
+    "tags": {
+      "type": "Array",
+      "required": false,
+      "defaultValue": []
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "count": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "get": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

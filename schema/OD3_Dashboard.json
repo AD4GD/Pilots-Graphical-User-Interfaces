@@ -1,0 +1,55 @@
+{
+  "fields": {
+    "heroWidget": {
+      "type": "String",
+      "required": false
+    },
+    "layout": {
+      "type": "Array"
+    },
+    "name": {
+      "type": "String"
+    },
+    "source": {
+      "type": "Pointer",
+      "targetClass": "OD3_Source"
+    },
+    "type": {
+      "type": "String",
+      "required": false,
+      "defaultValue": "grid"
+    },
+    "user": {
+      "type": "Pointer",
+      "targetClass": "_User",
+      "required": true
+    },
+    "widgets": {
+      "type": "Array"
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

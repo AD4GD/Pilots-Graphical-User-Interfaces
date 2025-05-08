@@ -1,0 +1,64 @@
+{
+  "fields": {
+    "description": {
+      "type": "String",
+      "required": false
+    },
+    "enabled": {
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": true
+    },
+    "media": {
+      "type": "Relation",
+      "targetClass": "OD3_Maintenance_Media",
+      "required": false
+    },
+    "run_cron": {
+      "type": "String",
+      "required": false
+    },
+    "run_timestamp": {
+      "type": "Date",
+      "required": false
+    },
+    "source": {
+      "type": "Pointer",
+      "targetClass": "OD3_Source",
+      "required": true
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    },
+    "title": {
+      "type": "String",
+      "required": true
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}

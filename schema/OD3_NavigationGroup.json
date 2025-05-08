@@ -1,0 +1,46 @@
+{
+  "fields": {
+    "icon": {
+      "type": "String",
+      "required": false
+    },
+    "label": {
+      "type": "String",
+      "required": true
+    },
+    "order": {
+      "type": "Number",
+      "required": true,
+      "defaultValue": 10
+    },
+    "tenant": {
+      "type": "Pointer",
+      "targetClass": "OD3_Tenant",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true
+    },
+    "count": {
+      "requiresAuthentication": true
+    },
+    "get": {
+      "requiresAuthentication": true
+    },
+    "create": {
+      "requiresAuthentication": true
+    },
+    "update": {
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "requiresAuthentication": true
+    },
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  }
+}
