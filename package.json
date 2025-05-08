@@ -35,6 +35,10 @@
     "antd": "^5.20.4",
     "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
+<<<<<<< HEAD
+=======
+    "framer-motion": "^12.7.3",
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     "geoblaze": "^2.8.0",
     "georaster-layer-for-leaflet": "^3.10.0",
     "geotiff": "^2.1.3",

@@ -16,7 +16,11 @@ interface CustomDropdownProps {
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
   items,
+<<<<<<< HEAD
   placeholder = "Select Sensor",
+=======
+  placeholder,
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   selectedValues = [],
   handleClick,
 }) => {
@@ -26,6 +30,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     setOpen(flag);
   };
 
+<<<<<<< HEAD
   if (!items || items.length === 0) {
     return <div>No items available</div>; // Display a message if no items are provided
   }
@@ -37,6 +42,21 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           .map((item) => item.label)
           .join(", ")
       : placeholder;
+=======
+  // if (!items || items.length === 0) {
+  //   return <div>No items available</div>; // Display a message if no items are provided
+  // }
+
+  const displayText =
+    items.length > 0
+      ? selectedValues.length > 0
+        ? items
+            .filter((item) => selectedValues.includes(item.key))
+            .map((item) => item.label)
+            .join(", ")
+        : placeholder
+      : "No Prediction Available"; // Display a message if no items are provided
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
 
   // Handle text overflow for selected items
   const truncatedText =

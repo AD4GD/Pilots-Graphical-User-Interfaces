@@ -4,8 +4,12 @@ import { ChartProps } from "../../types/Lake_Stats";
 import "./chartComponent.css";
 
 const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
+<<<<<<< HEAD
   ({ data, filter, properties }, ref) => {
     // Function to format the x-axis labels based on the filter (daily, weekly, etc.)
+=======
+  ({ data, filter, properties, multipleAxis }, ref) => {
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     const formatXAxisLabel = useCallback(
       (value: number): string => {
         const date = new Date(value);
@@ -29,11 +33,50 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
       [filter]
     );
 
+<<<<<<< HEAD
     // Define an array for bar properties (e.g., Precipitation, Evaporation)
     const barProperties = ["Precipitation", "Evaporation"];
 
     // Generate chart configuration based on the passed data
     const generateChartConfig = useCallback((): Options => {
+=======
+    const barProperties = ["Precipitation", "Evaporation"];
+
+    const generateChartConfig = useCallback((): Options => {
+      const yAxes = multipleAxis
+        ? properties.map((property, index) => {
+            const matchingData = data.find((d) => d.name === property);
+            const unit = matchingData?.unit || "";
+            return {
+              title: {
+                text: `${property} (${unit})`,
+              },
+              opposite: index % 2 === 1,
+            };
+          })
+        : [
+            {
+              title: {
+                text: `${properties[0]} (${data[0]?.unit || ""})`,
+              },
+              opposite: false,
+            },
+          ];
+
+      const series: SeriesOptionsType[] = data.map((item) => {
+        const isBarChart = barProperties.includes(item.name);
+        const yAxisIndex = multipleAxis
+          ? properties.findIndex((p) => p === item.name)
+          : 0;
+
+        return {
+          ...item,
+          type: isBarChart ? "column" : "line",
+          yAxis: yAxisIndex >= 0 ? yAxisIndex : 0, // fallback for derived series
+        };
+      });
+
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
       return {
         title: { text: undefined },
         xAxis: {
@@ -48,6 +91,7 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
           },
           tickPixelInterval: 50,
         },
+<<<<<<< HEAD
         yAxis: properties.map((property, index) => {
           const propertyData = data.find((item) => item.name === property);
           const unit = propertyData?.unit || ""; // Get unit for the current property
@@ -69,10 +113,17 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
         }) as SeriesOptionsType[],
       };
     }, [data, formatXAxisLabel, properties]);
+=======
+        yAxis: yAxes,
+        series,
+      };
+    }, [data, formatXAxisLabel, properties, multipleAxis]);
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
 
     useEffect(() => {
       if (filter && properties.length > 0) {
         const chart = Highcharts.chart("container", generateChartConfig());
+<<<<<<< HEAD
         return () => {
           if (chart) {
             chart.destroy();
@@ -82,6 +133,12 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
     }, [generateChartConfig, filter]);
 
     // If no filter or properties are selected, show a placeholder
+=======
+        return () => chart && chart.destroy();
+      }
+    }, [generateChartConfig, filter]);
+
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     if (!filter || properties.length === 0) {
       return (
         <div className="chart-placeholder-container">

@@ -9,7 +9,10 @@ import "leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
 import { writeArrayBuffer } from "geotiff";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
+<<<<<<< HEAD
 import Parse from "parse";
+=======
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
 
 const { Option } = Select;
 
@@ -544,10 +547,15 @@ const BioConnScenario: React.FC = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
+  // fetch thu voi mode: cors, method GET, ...
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   const fetchImage = async () => {
     setLoading(true);
     setError("");
     try {
+<<<<<<< HEAD
       // Call the Parse Cloud Function for MUCSC
       const result = await Parse.Cloud.run("getMucsc", { time });
 
@@ -565,6 +573,21 @@ const BioConnScenario: React.FC = () => {
       }
 
       // Parse the GeoTIFF
+=======
+      const response = await fetch(`http://localhost:3000/mucsc?time=${time}`);
+      if (!response.ok) throw new Error("Network response was not ok");
+
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+
+      if (
+        blob.type !== "image/tiff" &&
+        blob.type !== "application/octet-stream"
+      ) {
+        throw new Error("Invalid file format received. Expected a GeoTIFF.");
+      }
+
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
       const georaster = await geoblaze.parse(arrayBuffer);
       setGeoraster(georaster);
 

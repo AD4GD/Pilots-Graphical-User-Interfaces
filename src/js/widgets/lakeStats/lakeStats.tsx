@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import html2canvas from "html2canvas";
 import { useTranslation } from "@opendash/core";
@@ -34,6 +35,37 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   console.log(context.config._items);
   console.log(context.config._sources);
   const DataService = useDataService();
+=======
+import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import { useTranslation } from "@opendash/core";
+import { createWidgetComponent } from "@opendash/plugin-monitoring";
+import { useNavigate } from "@opendash/router";
+import { Row, Typography } from "antd";
+import React, { useRef, useState } from "react";
+import { CustomButton } from "../../components/button";
+import { CustomChart } from "../../components/chart";
+import CollapseWrapper from "../../components/CollapseWrapper/CollapseWrapper";
+import { DatePicker } from "../../components/datePicker";
+import {
+  CustomDropdown,
+  SingleSelectDropdown,
+} from "../../components/dropdown";
+import { useChartDataTransform } from "../../hooks/useChartDataTransform";
+import { useProperties } from "../../hooks/useProperties";
+import { useSensorData } from "../../hooks/useSensorData";
+import { FilterType } from "../../types/Lake_Stats";
+import {
+  downloadDataAsCsv,
+  downloadGraphAsPng,
+} from "../../utlis/downloadUtils";
+
+const { Title } = Typography;
+
+export default createWidgetComponent(({ ...context }) => {
+  const navigate = useNavigate();
+  const t = useTranslation();
+  context["setLoading"](false);
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   const items = context["useItemDimensionConfig"]();
 
   function filterItemsBySource(items: any[], sourceName: string) {
@@ -53,6 +85,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   // State Variables
+<<<<<<< HEAD
   const [data, setData] = useState<SensorData[]>([]);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("daily"); // Restrict to valid filter types
@@ -150,13 +183,36 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
 
   // Time filter options
   const timeFilter: FilterOption[] = [
+=======
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>("daily");
+  const [startDate, setStartDate] = useState<number | null>(null);
+  const [endDate, setEndDate] = useState<number | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  // Hooks
+  const properties = useProperties(items);
+  const timeFilter = [
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     { key: "daily", label: "Daily" },
     { key: "weekly", label: "Weekly" },
     { key: "monthly", label: "Monthly" },
     { key: "yearly", label: "Yearly" },
   ];
+<<<<<<< HEAD
 
   // Select properties for chart
+=======
+  const data = useSensorData(items, selectedFilter, startDate, endDate);
+  const chartData = useChartDataTransform(data, selectedProperties);
+
+  // Toggle Minimize State
+  const toggleMinimize = () => {
+    setIsMinimized((prev) => !prev);
+  };
+
+  // Handle property selection
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   const selectProperties = (e: any) => {
     const value = e.key;
     setSelectedProperties((prevValues) =>
@@ -166,7 +222,11 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
     );
   };
 
+<<<<<<< HEAD
   // Select filter type
+=======
+  // Handle filter selection
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   const selectFilter = (key: FilterType) => {
     setSelectedFilter(key);
   };
@@ -183,6 +243,7 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
 
   // Download Graph as PNG
   const downloadGraph = () => {
+<<<<<<< HEAD
     if (chartRef.current) {
       html2canvas(chartRef.current).then((canvas) => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -197,10 +258,14 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
         link.click();
       });
     }
+=======
+    downloadGraphAsPng(chartRef, data, selectedFilter);
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   };
 
   // Download Data as CSV
   const downloadData = () => {
+<<<<<<< HEAD
     const csvRows: string[] = [];
     const allTimestamps = new Set<string>();
     const sensorNames = new Set<string>();
@@ -272,10 +337,14 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
           ]),
         })
       );
+=======
+    downloadDataAsCsv(data);
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
   };
 
   return (
     <>
+<<<<<<< HEAD
       <Title level={4} style={{ fontWeight: "bold", paddingBottom: "2%" }}>
         Verfügbare Daten zu diesem See
       </Title>
@@ -344,6 +413,100 @@ export default createWidgetComponent<ConfigInterface>(({ ...context }) => {
           />
         </Row>
       </Row>
+=======
+      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <Title level={4} style={{ fontWeight: "bold", margin: 0 }}>
+          Lake Statistics
+        </Title>
+        <div
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            padding: "4px",
+          }}
+          onClick={toggleMinimize}
+        >
+          {isMinimized ? (
+            <DownOutlined style={{ fontSize: 20 }} />
+          ) : (
+            <UpOutlined style={{ fontSize: 20 }} />
+          )}
+        </div>
+      </Row>
+
+      <CollapseWrapper isCollapsed={isMinimized}>
+        <Row
+          gutter={[16, 16]}
+          style={{ marginTop: "2%", justifyContent: "space-evenly" }}
+        >
+          <CustomDropdown
+            items={properties["Main"]}
+            selectedValues={selectedProperties}
+            placeholder="Select Sensor"
+            handleClick={selectProperties}
+          />
+          <SingleSelectDropdown
+            items={timeFilter}
+            placeholder="Select Frequency"
+            selectedValue={selectedFilter}
+            handleClick={selectFilter}
+          />
+          <DatePicker
+            onDateChange={handleStartDateChange}
+            placeholder="Start Date"
+          />
+          <DatePicker
+            onDateChange={handleEndDateChange}
+            placeholder="End Date"
+          />
+        </Row>
+
+        <CustomChart
+          data={chartData}
+          filter={selectedFilter}
+          properties={selectedProperties}
+          ref={chartRef}
+          multipleAxis={true}
+        />
+
+        <Row style={{ marginTop: "2%" }}>
+          <Typography.Link
+            style={{
+              color: "#42A456",
+              fontSize: "16px",
+              display: "flex",
+              flex: 0.55,
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+            href="https://ant.design"
+            target="_blank"
+            underline
+          >
+            How was the data presented collected?
+          </Typography.Link>
+          <Row style={{ flex: 0.45, justifyContent: "flex-end", gap: "10px" }}>
+            <CustomButton
+              text="Download Graph"
+              disabled={selectedProperties.length === 0}
+              onClick={downloadGraph}
+            />
+            <CustomButton
+              onClick={downloadData}
+              text="Download Rohdaten"
+              disabled={selectedProperties.length === 0}
+            />
+            <CustomButton
+              onClick={() => {
+                navigate(`/upload`);
+              }}
+              text="Upload Data"
+            />
+          </Row>
+        </Row>
+      </CollapseWrapper>
+>>>>>>> 19d3a8a4f69549848239d0ab8c0ce9fd84f13505
     </>
   );
 });
