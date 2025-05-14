@@ -126,6 +126,7 @@ const Minimap: FC<MinimapProps> = ({
               position: "absolute",
               top: "20px",
               right: "20px",
+              color: "black",
               zIndex: 1000,
             }}
           >

@@ -6,13 +6,12 @@ import {
   Typography,
   Empty,
   ConfigProvider,
+  message,
 } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Parse from "parse";
 import CustomCarousel from "../carousel/carousel";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "@opendash/router";
 import { useLakeMetaData } from "../../hooks/useLakeMetaData";
 
@@ -33,6 +32,7 @@ interface LakeItem {
 interface MapItem {
   layerUrls: string[];
   title: string;
+  legend?: string;
 }
 
 const LakeFavourite: React.FC = ({}) => {
@@ -48,25 +48,31 @@ const LakeFavourite: React.FC = ({}) => {
 
   const fetchMapItems = async (bbox: string): Promise<MapItem[]> => {
     try {
-      return [
-        {
-          layerUrls: [
-            `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k_fb_btwert?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=800&height=200&format=image/png&transparent=true`,
-            `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k_fb_btwert?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=800&height=200&format=image/png&transparent=true`,
-          ],
-          title: "Biotoptypen: Biotopwerte",
-        },
-        {
-          layerUrls: [
-            `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=0&styles=&crs=EPSG:4326&bbox=${bbox}&width=800&height=200&format=image/png&transparent=true`,
-            `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=1&styles=&crs=EPSG:4326&bbox=${bbox}&width=800&height=200&format=image/png&transparent=true`,
-            `https://fbinter.stadt-berlin.de/fb/wms/senstadt/k06_05gruenversorg2016?service=wms&request=getmap&version=1.3.0&layers=2&styles=&crs=EPSG:4326&bbox=${bbox}&width=800&height=200&format=image/png&transparent=true`,
-          ],
-          title: "Versorgung mit öffentlichen Grünanlagen 2016",
-        },
-      ];
+      // Query for layer information from AD4GD_LakeLayers
+      const layerQuery = new Parse.Query("AD4GD_LakeLayers");
+      const layerResults = await layerQuery.find();
+
+      // Transform the results into the format expected by CustomCarousel
+      return layerResults.map((layer) => {
+        const baseUrl = layer.get("layersUrl");
+        const layersArray = layer.get("layersArray");
+        const title = layer.get("layersTitle");
+        const legend = layer.get("layersLegend");
+
+        // Construct URLs for each layer number
+        const layerUrls = layersArray.map((layerNum: string) => {
+          // Handle URL with or without existing parameters
+          return `${baseUrl}&layers=${layerNum}&bbox=${bbox}`;
+        });
+
+        return {
+          layerUrls,
+          title,
+          legend: legend instanceof Parse.File ? legend.url() : legend,
+        };
+      });
     } catch (error) {
-      console.error("Error generating map items:", error);
+      console.error("Error fetching map layers:", error);
       return [];
     }
   };
@@ -109,7 +115,7 @@ const LakeFavourite: React.FC = ({}) => {
       await fetchSensorsForFavorites(favLakes);
     } catch (error) {
       console.error("Error fetching favorites:", error);
-      toast.error("Failed to load favorites");
+      message.error("Failed to load favorites");
     } finally {
       setLoading(false);
     }
@@ -118,7 +124,7 @@ const LakeFavourite: React.FC = ({}) => {
   const handleRemoveFavorite = async (favlakeId: string) => {
     const user = Parse.User.current();
     if (!user) {
-      toast.error("You must be logged in to remove favorites!");
+      message.error("You must be logged in to remove favorites!");
       return;
     }
 
@@ -128,24 +134,20 @@ const LakeFavourite: React.FC = ({}) => {
       const lakeToRemove = await query.get(favlakeId);
 
       if (!lakeToRemove) {
-        toast.error("Favorite not found or not owned by user");
+        message.error("Favorite not found or not owned by user");
         return;
       }
 
-      // Get the lake name before deleting (for the toast message)
       const lakeName =
         favorites.find((fav) => fav.id === favlakeId)?.name || "the lake";
 
       await lakeToRemove.destroy();
-
-      // Optimistic UI update
       setFavorites((prev) => prev.filter((fav) => fav.id !== favlakeId));
 
-      // Show success toast
-      toast.success(`${lakeName} was removed from favorites!`);
+      message.success(`${lakeName} was removed from favorites!`);
     } catch (error) {
       console.error("Error removing favorite:", error);
-      toast.error("Failed to remove favorite. Please try again.");
+      message.error("Failed to remove favorite. Please try again.");
     }
   };
 
@@ -276,7 +278,7 @@ const LakeFavourite: React.FC = ({}) => {
         theme={{
           token: {
             colorPrimary: "#96F5D0",
-            colorTextLightSolid: "fff",
+            colorTextLightSolid: "black",
             borderRadius: 6,
             fontSize: 16,
           },
@@ -573,18 +575,6 @@ const LakeFavourite: React.FC = ({}) => {
             )}
           </Col>
         </Row>
-        <ToastContainer
-          position="bottom-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </ConfigProvider>
     </div>
   );

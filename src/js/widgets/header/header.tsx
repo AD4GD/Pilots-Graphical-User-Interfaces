@@ -52,7 +52,7 @@ export default createWidgetComponent<ConfigInterface>(
             theme={{
               token: {
                 colorPrimary: "#96F5D0",
-                colorTextLightSolid: "fff",
+                colorTextLightSolid: "black",
                 borderRadius: 6,
                 fontSize: 16,
               },
@@ -101,7 +101,8 @@ export default createWidgetComponent<ConfigInterface>(
                   style={{ minWidth: "50px" }}
                   icon={<Icon icon="fa:database" />}
                   onClick={() => {
-                    navigate("/admin/ow/sensors");
+                    // navigate("/admin/ow/sensors");
+                    navigate("/admin/parse/MIAAS_Geographies");
                   }}
                 ></Button>
               )}

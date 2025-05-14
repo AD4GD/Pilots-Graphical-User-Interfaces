@@ -7,6 +7,7 @@ import {
   Typography,
   Collapse,
   CollapseProps,
+  message,
 } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import React, { useEffect, useMemo, useState } from "react";
@@ -17,8 +18,6 @@ import { useLakeMetaData } from "../../hooks/useLakeMetaData";
 import Parse from "parse";
 import MultiColorBar from "../multicolorbar/multicolorbar";
 import CustomCarousel from "../carousel/carousel";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { Notes } from "../Notes";
 
 interface PropertyRowProps {
@@ -284,7 +283,7 @@ const LakeStats: React.FC = ({}) => {
   const handleAddFavorite = async (itemId: string) => {
     const user = Parse.User.current();
     if (!user) {
-      toast.error("You must be logged in!");
+      message.error("You must be logged in!");
       return false;
     }
 
@@ -303,7 +302,7 @@ const LakeStats: React.FC = ({}) => {
       const existingFavorite = await checkQuery.first();
 
       if (existingFavorite) {
-        toast.warning("This lake is already in your favorites!");
+        message.error("This lake is already in your favorites!");
         return false;
       }
 
@@ -321,18 +320,18 @@ const LakeStats: React.FC = ({}) => {
       favoriteLake.setACL(acl);
 
       await favoriteLake.save();
-      toast.success("Lake added to favorites!");
+      message.success("Lake added to favorites!");
       return true;
     } catch (error) {
       console.error("Error saving favorite:", error);
-      toast.error("Failed to add favorite. Please try again.");
+      message.error("Failed to add favorite. Please try again.");
       return false;
     }
   };
 
   const handleAdd = async () => {
     if (!lakeId) {
-      toast.error("Lake ID is not available.");
+      message.error("Lake ID is not available.");
       return;
     }
     setIsAddingFavorite(true);
@@ -642,18 +641,6 @@ const LakeStats: React.FC = ({}) => {
             </div>
           </div>
         </Row>
-        <ToastContainer
-          position="bottom-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </ConfigProvider>
     </>
   );

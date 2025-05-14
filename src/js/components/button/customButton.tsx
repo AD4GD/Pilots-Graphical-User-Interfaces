@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "antd";
-import "./customButton.css"; // Import the CSS file
+import "./customButton.css";
 
 interface CustomButtonProps {
   text: string;
@@ -17,9 +17,10 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     <Button
       type="primary"
       size="large"
-      className="custom-button" // Apply custom class for styling
+      className="custom-button"
       onClick={onClick}
       disabled={disabled}
+      aria-disabled={disabled}
     >
       {text}
     </Button>

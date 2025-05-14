@@ -1,3 +1,4 @@
-import bioConn from "./bioConn";
+import BioConn from "./bioConn";
+import { GeoTiffExplorer } from "./GeoTiffExplorerIndex";
 
-export { bioConn as bioConn };
+export { BioConn as bioConn, GeoTiffExplorer as geoTiffExplorer };

@@ -7,6 +7,7 @@ import {
   Typography,
   Popconfirm,
   message,
+  ConfigProvider,
 } from "antd";
 import {
   PlusOutlined,
@@ -197,94 +198,106 @@ const Notes: React.FC<NotesProps> = ({ lakeId, currentUser }) => {
 
   return (
     <div style={{ width: "100%", margin: "0 auto" }}>
-      <Space direction="vertical" style={{ width: "100%" }} size="large">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleAddNote}
-          loading={loading}
-        >
-          Fügen Sie eine Notiz zu diesem See hinzu
-        </Button>
+      <ConfigProvider
+        wave={{ disabled: true }}
+        theme={{
+          token: {
+            colorPrimary: "#96F5D0",
+            colorTextLightSolid: "black",
+            borderRadius: 6,
+            fontSize: 16,
+          },
+        }}
+      >
+        <Space direction="vertical" style={{ width: "100%" }} size="large">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddNote}
+            loading={loading}
+          >
+            Fügen Sie eine Notiz zu diesem See hinzu
+          </Button>
 
-        {notes.map((note) => (
-          <Card key={note.id} style={{ width: "100%" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
-                >
-                  {note.content}
-                </div>
-                <Text
-                  type="secondary"
-                  style={{
-                    display: "block",
-                    marginTop: "8px",
-                    fontSize: "12px",
-                  }}
-                >
-                  {note.timestamp}
-                </Text>
-              </div>
-              <div style={{ marginLeft: "16px" }}>
-                <Space>
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    onClick={() => handleEditNote(note)}
-                    disabled={loading}
-                  />
-                  <Popconfirm
-                    title="Notiz löschen?"
-                    onConfirm={() => handleDeleteNote(note.id)}
-                    okText="Ja"
-                    cancelText="Nein"
-                    disabled={loading}
+          {notes.map((note) => (
+            <Card key={note.id} style={{ width: "100%" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
                   >
+                    {note.content}
+                  </div>
+                  <Text
+                    type="secondary"
+                    style={{
+                      display: "block",
+                      marginTop: "8px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {note.timestamp}
+                  </Text>
+                </div>
+                <div style={{ marginLeft: "16px" }}>
+                  <Space>
                     <Button
                       type="text"
-                      danger
-                      icon={<DeleteOutlined />}
+                      icon={<EditOutlined />}
+                      onClick={() => handleEditNote(note)}
                       disabled={loading}
                     />
-                  </Popconfirm>
-                </Space>
+                    <Popconfirm
+                      title="Notiz löschen?"
+                      onConfirm={() => handleDeleteNote(note.id)}
+                      okText="Ja"
+                      cancelText="Nein"
+                      disabled={loading}
+                    >
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        disabled={loading}
+                      />
+                    </Popconfirm>
+                  </Space>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
 
-        {isEditing && (
-          <div style={{ position: "relative" }}>
-            <TextArea
-              value={currentNote}
-              onChange={handleNoteChange}
-              placeholder="Type your note here..."
-              autoSize={{ minRows: 3, maxRows: 6 }}
-              style={{
-                marginBottom: "40px",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-              disabled={loading}
-            />
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              onClick={handleSaveNote}
-              loading={loading}
-              style={{
-                position: "absolute",
-                right: 0,
-                bottom: 0,
-              }}
-            >
-              Notiz speichen
-            </Button>
-          </div>
-        )}
-      </Space>
+          {isEditing && (
+            <div style={{ position: "relative" }}>
+              <TextArea
+                value={currentNote}
+                onChange={handleNoteChange}
+                placeholder="Type your note here..."
+                autoSize={{ minRows: 3, maxRows: 6 }}
+                style={{
+                  marginBottom: "40px",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+                disabled={loading}
+              />
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSaveNote}
+                loading={loading}
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  bottom: 0,
+                }}
+              >
+                Notiz speichen
+              </Button>
+            </div>
+          )}
+        </Space>
+      </ConfigProvider>
     </div>
   );
 };
