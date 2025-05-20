@@ -114,7 +114,7 @@ export default createWidgetComponent<ConfigInterface>(
                   style={{ minWidth: "50px" }}
                   icon={<Icon icon="fa:upload" />}
                   onClick={() => {
-                    navigate("/upload");
+                    navigate("/splashboard/upload");
                   }}
                 ></Button>
               )}

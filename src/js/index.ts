@@ -13,7 +13,7 @@ import { $monitoring, MonitoringPlugin } from "@opendash/plugin-monitoring";
 import { OpenwarePlugin } from "@opendash/plugin-openware";
 import { $parse, ParsePlugin } from "@opendash/plugin-parse";
 import { ParseMonitoringPlugin } from "@opendash/plugin-parse-monitoring";
-import { MobilityPlugin } from "@opendash/plugin-mobility";
+// import { MobilityPlugin } from "@opendash/plugin-mobility";
 import { TimeseriesPlugin } from "@opendash/plugin-timeseries";
 import ExampleWidget from "./widgets/example";
 import HeaderWidget from "./widgets/header";
@@ -27,11 +27,9 @@ import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
 import { LakeFavourite } from "./components/lakeFavourite";
 import { NotFound } from "./components/NotFoundPage";
-import { bioConn } from "./components/bioConn";
+import { bioConn, geoTiffExplorer } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
 import { DataUpload } from "./components/dataUpload";
-// import { malte } from "./components/malte";
-// import MapComponent from "./components/testNewMap/testNewMap";
 
 init("opendash", async (factory) => {
   // Icons
@@ -74,7 +72,7 @@ init("opendash", async (factory) => {
   });
 
   factory.registerRoute({
-    path: "/upload",
+    path: "/splashboard/upload",
     componentSync: DataUpload,
     props: {},
   });
@@ -82,6 +80,12 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/bioconnect",
     componentSync: bioConn,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/bioconnect/explorer",
+    componentSync: geoTiffExplorer,
     props: {},
   });
 
@@ -122,7 +126,6 @@ init("opendash", async (factory) => {
   );
 
   // Adapter + Plugins
-
   factory.registerDeviceStorageAdapter(new StorageAdapterLS());
   factory.ui.disableHeader();
 
@@ -301,14 +304,13 @@ init("opendash", async (factory) => {
   $parse.ui.setDefaultView("AD4GD_LakeLayers", { type: "table" });
 
   //.------------------- Example Admin Interface Config-------------------
-
   $monitoring.registerWidget(ExampleWidget);
   $monitoring.registerWidget(HeaderWidget);
   $monitoring.registerWidget(LakeDetails);
   $monitoring.registerWidget(LakeStatss);
   $monitoring.registerWidget(LakePrediction);
   $monitoring.registerWidget(lakeMapWidget);
-  $monitoring.registerWidget(HeaderBioConnWidget);
+  // $monitoring.registerWidget(HeaderBioConnWidget);
   // $monitoring.registerWidget(wqiWidget);
 }).then((app) => {
   console.log("init open.DASH");

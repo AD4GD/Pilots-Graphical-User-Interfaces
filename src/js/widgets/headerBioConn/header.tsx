@@ -7,7 +7,6 @@ import { ConfigInterface } from "./types";
 import { Row, Col, Image, Button, Flex, ConfigProvider } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useNavigate } from "@opendash/router";
-import { Icon } from "@opendash/icons";
 import { $framework } from "@opendash/core";
 
 export default createWidgetComponent<ConfigInterface>(
@@ -52,7 +51,7 @@ export default createWidgetComponent<ConfigInterface>(
             theme={{
               token: {
                 colorPrimary: "#96F5D0",
-                colorTextLightSolid: "fff",
+                colorTextLightSolid: "black",
                 borderRadius: 6,
                 fontSize: 16,
               },

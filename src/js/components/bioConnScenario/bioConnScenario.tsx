@@ -597,7 +597,7 @@ const BioConnScenario: React.FC = () => {
         theme={{
           token: {
             colorPrimary: "#96F5D0",
-            colorTextLightSolid: "fff",
+            colorTextLightSolid: "black",
             borderRadius: 6,
             fontSize: 16,
           },
