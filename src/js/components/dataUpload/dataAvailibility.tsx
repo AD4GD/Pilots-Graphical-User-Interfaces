@@ -1,12 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Radio, Form, Row, Col } from "antd";
 
-export const DataAvailibility: React.FC = () => {
+interface DataAvailibilityProps {
+  onAvailabilityChange?: (isPublic: boolean) => void;
+}
+
+export const DataAvailibility: React.FC<DataAvailibilityProps> = ({
+  onAvailabilityChange,
+}) => {
   const [availability, setAvailability] = useState<string>("public");
 
   const handleAvailabilityChange = (e: any) => {
-    setAvailability(e.target.value);
+    const value = e.target.value;
+    setAvailability(value);
+    if (onAvailabilityChange) {
+      onAvailabilityChange(value === "public");
+    }
   };
+
+  // Notify parent on initial render
+  useEffect(() => {
+    if (onAvailabilityChange) {
+      onAvailabilityChange(availability === "public");
+    }
+  }, [onAvailabilityChange]);
 
   return (
     <Form

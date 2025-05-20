@@ -1,9 +1,14 @@
-import React, { useState } from "react";
-import { Form, Input, Select, Col, Row } from "antd";
+import React from "react";
+import { Form, Input, Select, Col, Row, FormInstance } from "antd";
 
-export const UploadForm: React.FC = () => {
+interface UploadFormProps {
+  form: FormInstance;
+}
+
+export const UploadForm: React.FC<UploadFormProps> = ({ form }) => {
   return (
     <Form
+      form={form}
       layout="vertical"
       style={{
         backgroundColor: "#fafafa",
@@ -86,6 +91,7 @@ export const UploadForm: React.FC = () => {
                 message: "Please select the data type!",
               },
             ]}
+            initialValue="timeseries"
           >
             <Select placeholder="Select data type">
               <Select.Option value="timeseries">Timeseries</Select.Option>
