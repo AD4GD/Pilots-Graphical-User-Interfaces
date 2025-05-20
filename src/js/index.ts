@@ -166,8 +166,8 @@ init("opendash", async (factory) => {
   await factory.use(new HighchartsPlugin());
 
   factory.registerStaticNavigationItem({
-    id: "ad4gd/home",
-    group: "ad4gd",
+    id: "ad4gd/home2",
+    group: "ad4gd2",
     place: "frontpage",
     order: 0,
     label: "ad4gd:home.pilot1",
