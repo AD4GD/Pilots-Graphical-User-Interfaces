@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 export const useProperties = (items: any[]) => {
   return useMemo(() => {
+    // Flatten properties from items
     const flatProperties = items.map((item: any[]) => {
       const { valueTypes } = item[0];
       const key = valueTypes[0].name;
@@ -9,6 +10,7 @@ export const useProperties = (items: any[]) => {
       return { key, label };
     });
 
+    // Separate prediction vs main props
     const predictionProps = flatProperties.filter((prop) =>
       /prediction/i.test(prop.label)
     );
@@ -20,7 +22,12 @@ export const useProperties = (items: any[]) => {
       Main: mainProps,
     };
 
+    // To keep track of used prediction keys in groups
     const used = new Set<string>();
+
+    // Keep track of main sensors that have predictions
+    const mainWithPredictionSet = new Set<string>();
+
     predictionProps.forEach((predictionProp) => {
       if (used.has(predictionProp.key)) return;
 
@@ -30,6 +37,7 @@ export const useProperties = (items: any[]) => {
         return keywords.some((kw) => mainKeywords.includes(kw));
       });
 
+      // Find all prediction props related by keywords
       const groupMembers = predictionProps.filter((p) => {
         if (used.has(p.key)) return false;
         const pKeywords = p.label.toLowerCase().split(/[\s\-_/]+/);
@@ -38,10 +46,19 @@ export const useProperties = (items: any[]) => {
 
       groupMembers.forEach((p) => used.add(p.key));
       if (relatedMain && groupMembers.length > 0) {
+        // Add the main sensor with its prediction sensors as a group
         result[relatedMain.label] = [relatedMain, ...groupMembers];
+        mainWithPredictionSet.add(relatedMain.label); // mark this main as having prediction data
       }
     });
 
-    return result;
+    // Create an array of main sensors which have prediction data available
+    const MainWithPrediction = mainProps.filter((main) =>
+      mainWithPredictionSet.has(main.label)
+    );
+
+    console.log("Properties", { ...result, MainWithPrediction });
+
+    return { ...result, MainWithPrediction };
   }, [items]);
 };

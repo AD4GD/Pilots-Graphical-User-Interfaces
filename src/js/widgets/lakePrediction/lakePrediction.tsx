@@ -126,7 +126,7 @@ export default createWidgetComponent(({ ...context }) => {
           style={{ marginTop: "2%", justifyContent: "space-evenly" }}
         >
           <SingleSelectDropdown
-            items={properties["Main"]}
+            items={properties["MainWithPrediction"]}
             selectedValue={selectedMainSensor}
             placeholder="Select Sensor"
             handleClick={handleMainSensorSelect}
