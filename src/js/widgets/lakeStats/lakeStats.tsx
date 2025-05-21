@@ -3,7 +3,7 @@ import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useNavigate } from "@opendash/router";
 import { Row, Typography } from "antd";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import CollapseWrapper from "../../components/CollapseWrapper/CollapseWrapper";
@@ -36,16 +36,10 @@ export default createWidgetComponent(({ ...context }) => {
   const ad4gdLakesItems = filterItemsBySource(items, "ad4gd_lakes");
   const ad4gdPrivateItems = filterItemsBySource(items, "ad4gd_private");
 
-  console.log("ITEMS", items);
-  console.log("AD4GD LAKES ITEMS", ad4gdLakesItems);
-  console.log("AD4GD PRIVATE ITEMS", ad4gdPrivateItems);
-  console.log(
-    "isAdmin",
-    $framework.services.UserService.hasPermission("parse-admin")
-  );
+  // Chart ref for Highcharts container, uniquely scoped
   const chartRef = useRef<HTMLDivElement>(null);
 
-  // State Variables
+  // State variables with new arrays on update to avoid reference sharing
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("daily");
   const [startDate, setStartDate] = useState<number | null>(null);
@@ -54,21 +48,32 @@ export default createWidgetComponent(({ ...context }) => {
 
   // Hooks
   const properties = useProperties(items);
-  const timeFilter = [
-    { key: "daily", label: "Daily" },
-    { key: "weekly", label: "Weekly" },
-    { key: "monthly", label: "Monthly" },
-    { key: "yearly", label: "Yearly" },
-  ];
+  const timeFilter = useMemo(
+    () => [
+      { key: "daily", label: "Daily" },
+      { key: "weekly", label: "Weekly" },
+      { key: "monthly", label: "Monthly" },
+      { key: "yearly", label: "Yearly" },
+    ],
+    []
+  );
   const data = useSensorData(items, selectedFilter, startDate, endDate);
-  const chartData = useChartDataTransform(data, selectedProperties);
 
-  // Toggle Minimize State
+  // Use a memoized copy of selectedProperties to avoid mutation side effects
+  const selectedPropsMemo = useMemo(
+    () => [...selectedProperties],
+    [selectedProperties]
+  );
+
+  // Transform data for chart based on selectedProperties (defensive copy)
+  const chartData = useChartDataTransform(data, selectedPropsMemo);
+
+  // Toggle minimize state
   const toggleMinimize = () => {
     setIsMinimized((prev) => !prev);
   };
 
-  // Handle property selection
+  // Handle property selection (always create new array)
   const selectProperties = (e: any) => {
     const value = e.key;
     setSelectedProperties((prevValues) =>
@@ -93,12 +98,12 @@ export default createWidgetComponent(({ ...context }) => {
     setEndDate(timestamp);
   };
 
-  // Download Graph as PNG
+  // Download graph PNG (pass unique ref)
   const downloadGraph = () => {
     downloadGraphAsPng(chartRef, data, selectedFilter);
   };
 
-  // Download Data as CSV
+  // Download CSV data
   const downloadData = () => {
     downloadDataAsCsv(data);
   };
@@ -156,7 +161,7 @@ export default createWidgetComponent(({ ...context }) => {
         <CustomChart
           data={chartData}
           filter={selectedFilter}
-          properties={selectedProperties}
+          properties={selectedPropsMemo} // Pass memoized copy
           ref={chartRef}
           multipleAxis={true}
         />

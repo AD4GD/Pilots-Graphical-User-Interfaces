@@ -3,7 +3,7 @@ import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useNavigate } from "@opendash/router";
 import { Row, Typography } from "antd";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import CollapseWrapper from "../../components/CollapseWrapper/CollapseWrapper";
@@ -42,24 +42,35 @@ export default createWidgetComponent(({ ...context }) => {
 
   // Hooks
   const properties = useProperties(items);
-  const timeFilter = [
-    { key: "daily", label: "Daily" },
-    { key: "weekly", label: "Weekly" },
-    { key: "monthly", label: "Monthly" },
-    { key: "yearly", label: "Yearly" },
-  ];
+  const timeFilter = useMemo(
+    () => [
+      { key: "daily", label: "Daily" },
+      { key: "weekly", label: "Weekly" },
+      { key: "monthly", label: "Monthly" },
+      { key: "yearly", label: "Yearly" },
+    ],
+    []
+  );
+
   const data = useSensorData(items, selectedFilter, startDate, endDate);
-  const chartData = useChartDataTransform(data, selectedProperties);
+
+  // Memoize selectedProperties copy for immutability
+  const selectedPropsMemo = useMemo(
+    () => [...selectedProperties],
+    [selectedProperties]
+  );
+
+  const chartData = useChartDataTransform(data, selectedPropsMemo);
 
   const toggleMinimize = () => setIsMinimized((prev) => !prev);
 
   // Handle Main Sensor Selection
   const handleMainSensorSelect = (key: string) => {
     setSelectedMainSensor(key);
-    setSelectedProperties([key]); // Only select main sensor initially
+    setSelectedProperties([key]); // Reset selection to main sensor only
   };
 
-  // Handle Prediction Sensor Selection
+  // Handle Prediction Sensor Selection (toggle)
   const handlePredictionSelect = (e: any) => {
     const value = e.key;
     setSelectedProperties((prev) =>
@@ -67,8 +78,7 @@ export default createWidgetComponent(({ ...context }) => {
     );
   };
 
-  // Handle filter and date
-
+  // Handle filter and date changes
   const handleStartDateChange = (timestamp: number | null) =>
     setStartDate(timestamp);
   const handleEndDateChange = (timestamp: number | null) =>
@@ -79,6 +89,7 @@ export default createWidgetComponent(({ ...context }) => {
     downloadGraphAsPng(chartRef, data, selectedFilter);
   const downloadData = () => downloadDataAsCsv(data);
 
+  // Prediction items exclude the main sensor
   const predictionItems =
     selectedMainSensor && properties[selectedMainSensor]
       ? properties[selectedMainSensor].filter(
@@ -143,7 +154,7 @@ export default createWidgetComponent(({ ...context }) => {
         <CustomChart
           data={chartData}
           filter={selectedFilter}
-          properties={selectedProperties}
+          properties={selectedPropsMemo} // Pass memoized copy for safety
           ref={chartRef}
           multipleAxis={false}
         />
