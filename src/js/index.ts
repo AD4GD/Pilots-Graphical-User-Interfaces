@@ -170,7 +170,7 @@ init("opendash", async (factory) => {
     group: "ad4gd2",
     place: "frontpage",
     order: 0,
-    label: "ad4gd:home.pilot1",
+    label: "Splashboard",
     icon: "fa:water",
     color: "#96F5D0",
     link: "/splashboard",
@@ -183,7 +183,7 @@ init("opendash", async (factory) => {
     group: "ad4gd",
     place: "frontpage",
     order: 0,
-    label: "ad4gd:home.pilot2",
+    label: "BioConnect",
     icon: "fa:map",
     color: "#96F5D0",
     link: "/bioconnect",
@@ -310,7 +310,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(LakeStatss);
   $monitoring.registerWidget(LakePrediction);
   $monitoring.registerWidget(lakeMapWidget);
-  // $monitoring.registerWidget(HeaderBioConnWidget);
+  $monitoring.registerWidget(HeaderBioConnWidget);
   // $monitoring.registerWidget(wqiWidget);
 }).then((app) => {
   console.log("init open.DASH");

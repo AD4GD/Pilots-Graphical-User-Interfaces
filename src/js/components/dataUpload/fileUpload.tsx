@@ -69,15 +69,9 @@ export const FileUpload: React.FC = () => {
         "text/csv",
         "application/vnd.ms-excel",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/json",
-        "application/xml",
-        "text/plain",
       ];
-
       if (!allowedTypes.includes(file.type)) {
-        message.error(
-          "You can only upload files containing tabular data (CSV, Excel, JSON, XML, TXT)!"
-        );
+        message.error("You can only upload CSV or Excel files!");
         return Upload.LIST_IGNORE; // Prevents file from being added to the upload list
       }
 
@@ -104,10 +98,9 @@ export const FileUpload: React.FC = () => {
       </p>
       <p className="ant-upload-text">
         Click or drag a file to this area to upload
-      </p>
+      </p>{" "}
       <p className="ant-upload-hint">
-        Only tabular data files are allowed (CSV, Excel, JSON, XML, TXT). You
-        can upload one file at a time.
+        Only CSV or Excel files are allowed. You can upload one file at a time.
       </p>
     </Dragger>
   );

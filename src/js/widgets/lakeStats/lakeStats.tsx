@@ -35,6 +35,11 @@ export default createWidgetComponent(({ ...context }) => {
 
   const ad4gdLakesItems = filterItemsBySource(items, "ad4gd_lakes");
   const ad4gdPrivateItems = filterItemsBySource(items, "ad4gd_private");
+  const ad4gdPeriodicItems = filterItemsBySource(items, "ad4gd_periodic");
+  const ad4gdPeriodicPrivateItems = filterItemsBySource(
+    items,
+    "ad4gd_periodic_private"
+  );
 
   // Chart ref for Highcharts container, uniquely scoped
   const chartRef = useRef<HTMLDivElement>(null);
