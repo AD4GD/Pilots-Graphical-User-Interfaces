@@ -20,6 +20,7 @@ import {
   downloadDataAsCsv,
   downloadGraphAsPng,
 } from "../../utlis/downloadUtils";
+import { $framework } from "@opendash/core";
 
 const { Title } = Typography;
 
@@ -28,6 +29,8 @@ export default createWidgetComponent(({ ...context }) => {
   const t = useTranslation();
   context["setLoading"](false);
   const items = context["useItemDimensionConfig"]();
+
+  const isAdmin = $framework.services.UserService.hasPermission("parse-admin");
 
   function filterItemsBySource(items: any[], sourceName: string) {
     return items.filter((item) => item[0].source === sourceName);
@@ -41,6 +44,25 @@ export default createWidgetComponent(({ ...context }) => {
     "ad4gd_periodic_private"
   );
 
+  const displayItems = useMemo(() => {
+    if (isAdmin) {
+      return [
+        ...ad4gdLakesItems,
+        ...ad4gdPrivateItems,
+        ...ad4gdPeriodicItems,
+        ...ad4gdPeriodicPrivateItems,
+      ];
+    } else {
+      return [...ad4gdLakesItems, ...ad4gdPeriodicItems];
+    }
+  }, [
+    isAdmin,
+    ad4gdLakesItems,
+    ad4gdPrivateItems,
+    ad4gdPeriodicItems,
+    ad4gdPeriodicPrivateItems,
+  ]);
+
   // Chart ref for Highcharts container, uniquely scoped
   const chartRef = useRef<HTMLDivElement>(null);
 
@@ -51,8 +73,7 @@ export default createWidgetComponent(({ ...context }) => {
   const [endDate, setEndDate] = useState<number | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // Hooks
-  const properties = useProperties(items);
+  const properties = useProperties(displayItems);
   const timeFilter = useMemo(
     () => [
       { key: "daily", label: "Daily" },
@@ -62,7 +83,7 @@ export default createWidgetComponent(({ ...context }) => {
     ],
     []
   );
-  const data = useSensorData(items, selectedFilter, startDate, endDate);
+  const data = useSensorData(displayItems, selectedFilter, startDate, endDate);
 
   // Use a memoized copy of selectedProperties to avoid mutation side effects
   const selectedPropsMemo = useMemo(

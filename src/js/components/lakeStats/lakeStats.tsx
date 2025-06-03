@@ -614,6 +614,18 @@ const LakeStats: React.FC = ({}) => {
                 type="lakeStats-widget"
                 config={config}
               ></WidgetStatic>
+              <Collapse ghost items={items} />
+            </div>
+
+            <div
+              style={{
+                width: "100%",
+                borderRadius: "20px",
+                marginBottom: "1%",
+                backgroundColor: "white",
+                padding: "1% 2%",
+              }}
+            >
               <WidgetStatic
                 type="lakePrediction-widget"
                 config={config}

@@ -633,6 +633,267 @@ const init = async () => {
     };
     return JSON.stringify(item);
   }
+
+  Parse.Cloud.define("processBioconnTiff", async (request) => {
+    console.log("[BioConn] Function started");
+    const { type, mode, fileData } = request.params;
+
+    // Log parameters without the actual file content
+    console.log(
+      `[BioConn] Params: type=${type}, mode=${mode}, fileData=${
+        fileData
+          ? `${fileData.substring(0, 20)}... (${fileData.length} bytes)`
+          : "undefined"
+      }`
+    );
+
+    if (!type || !mode || !fileData) {
+      console.log("[BioConn] Error: Missing required parameters");
+      throw new Parse.Error(
+        Parse.Error.INVALID_PARAMETER,
+        "Missing required parameters: type, mode, or fileData"
+      );
+    }
+
+    // Validate type parameter
+    const validTypes = ["forest", "woody", "shrublands", "herbaceous"];
+    if (!validTypes.includes(type)) {
+      console.log(`[BioConn] Error: Invalid type parameter: ${type}`);
+      throw new Parse.Error(
+        Parse.Error.INVALID_PARAMETER,
+        `Invalid type parameter. Must be one of: ${validTypes.join(", ")}`
+      );
+    }
+
+    // Validate mode parameter
+    const validModes = ["high", "low"];
+    if (!validModes.includes(mode)) {
+      console.log(`[BioConn] Error: Invalid mode parameter: ${mode}`);
+      throw new Parse.Error(
+        Parse.Error.INVALID_PARAMETER,
+        `Invalid mode parameter. Must be one of: ${validModes.join(", ")}`
+      );
+    }
+    try {
+      console.log("[BioConn] Step 1: Preparing request to BioConn API");
+      // Create a FormData-like object for the multipart/form-data request
+      const FormData = require("form-data");
+      const form = new FormData();
+
+      // Convert base64 string back to buffer
+      const fileBuffer = Buffer.from(fileData, "base64");
+      console.log(`[BioConn] File buffer created: ${fileBuffer.length} bytes`);
+
+      if (!fileBuffer || fileBuffer.length === 0) {
+        console.log("[BioConn] Error: Failed to create file buffer");
+        throw new Error("Failed to create file buffer from base64 data");
+      }
+
+      // Add the file to the form
+      form.append("file", fileBuffer, {
+        filename: "upload.tiff",
+        contentType: "image/tiff",
+      });
+      console.log("[BioConn] File appended to form data");
+
+      // Log the start time for debugging timeout issues
+      const startTime = Date.now();
+      console.log(
+        `[BioConn] Request starting at: ${new Date(startTime).toISOString()}`
+      );
+
+      console.log(
+        `[BioConn] Step 2: Sending request to API endpoint (type=${type}, mode=${mode})`
+      );
+
+      // Make the request to the bioconn API with an extended timeout
+      const response = await axios.post(
+        `https://pilot2api.dashboard-siba.store/bioconn/?type=${type}&mode=${mode}`,
+        form,
+        {
+          headers: {
+            ...form.getHeaders(),
+            Accept: "image/tiff,*/*",
+          },
+          responseType: "arraybuffer",
+          timeout: 1200000, // 20 minute timeout for handling larger files (10-20MB)
+        }
+      );
+
+      // Calculate and log the request duration
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000; // in seconds
+      console.log(
+        `[BioConn] Request completed in ${duration.toFixed(2)} seconds (${(
+          duration / 60
+        ).toFixed(2)} minutes)`
+      );
+      console.log(
+        `[BioConn] Step 3: Response received (Status: ${response.status})`
+      );
+      console.log(
+        `[BioConn] Response data size: ${
+          response.data ? `${response.data.byteLength} bytes` : "No data"
+        }`
+      );
+
+      // Check if the response is actually a GeoTIFF by examining the header
+      // TIFF files typically start with "49 49 2A 00" (little-endian) or "4D 4D 00 2A" (big-endian)
+      if (response.data && response.data.byteLength > 4) {
+        const header = Buffer.from(response.data.slice(0, 4));
+        const headerHex = Array.from(header)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        console.log("[BioConn] Response header (hex):", headerHex);
+
+        const isTiff = headerHex === "49492a00" || headerHex === "4d4d002a";
+        if (!isTiff) {
+          console.log(
+            "[BioConn] Warning: Response does not appear to be a valid TIFF"
+          );
+
+          try {
+            // Try to decode as text to see if it's an error message
+            const textContent = Buffer.from(response.data)
+              .toString("utf8")
+              .substring(0, 200);
+            console.log(
+              "[BioConn] Response as text (first 200 chars):",
+              textContent
+            );
+          } catch (e) {
+            console.log(
+              "[BioConn] Could not decode response as text:",
+              e.message
+            );
+          }
+        } else {
+          console.log("[BioConn] Response is a valid TIFF format");
+        }
+      }
+
+      // Additional metadata extraction for debugging purposes
+      if (response.data && response.data.byteLength > 0) {
+        try {
+          // Try to extract basic TIFF structure info for the client
+          const GeoTIFF = require("geotiff");
+          console.log("[BioConn] Checking TIFF structure on server...");
+
+          const tiff = await GeoTIFF.fromArrayBuffer(response.data);
+          const imageCount = await tiff.getImageCount();
+          const firstImage = await tiff.getImage();
+          const metadata = firstImage.getFileDirectory();
+
+          console.log("[BioConn] TIFF structure summary:", {
+            imageCount,
+            width: metadata.ImageWidth,
+            height: metadata.ImageLength,
+            hasTileInfo: !!metadata.TileWidth,
+            hasBitsPerSample: !!metadata.BitsPerSample,
+            hasSampleFormat: !!metadata.SampleFormat,
+            hasGeoKeys: !!metadata.GeoKeyDirectory,
+            hasModelTiepoints: !!metadata.ModelTiepointTag,
+            hasModelPixelScale: !!metadata.ModelPixelScaleTag,
+          });
+        } catch (error) {
+          console.log(
+            "[BioConn] Failed to extract TIFF metadata on server:",
+            error.message
+          );
+        }
+      }
+
+      // Convert the response back to base64 for transmission
+      const responseData = Buffer.from(response.data).toString("base64");
+      console.log(
+        `[BioConn] Converted response to base64 (${responseData.length} chars)`
+      );
+      console.log("[BioConn] Function completed successfully"); // Include content type information in the response
+      const contentType = response.headers["content-type"] || "image/tiff";
+      console.log(`[BioConn] Response content type: ${contentType}`);
+
+      // Create the response object with basic info
+      const responseObj = {
+        status: "success",
+        data: responseData,
+        contentType: contentType,
+        fileSize: response.data ? response.data.byteLength : 0,
+        metadata: {},
+      };
+
+      // Try to include metadata if we extracted it
+      try {
+        const GeoTIFF = require("geotiff");
+        const tiff = await GeoTIFF.fromArrayBuffer(response.data);
+        const firstImage = await tiff.getImage();
+        const metadata = firstImage.getFileDirectory();
+
+        responseObj.metadata = {
+          width: metadata.ImageWidth,
+          height: metadata.ImageLength,
+          hasTileInfo: !!metadata.TileWidth,
+          hasBitsPerSample: !!metadata.BitsPerSample,
+          hasSampleFormat: !!metadata.SampleFormat,
+          hasGeoKeys: !!metadata.GeoKeyDirectory,
+          hasModelTransform: !!(
+            metadata.ModelTiepointTag || metadata.ModelPixelScaleTag
+          ),
+        };
+      } catch (e) {
+        console.log(
+          "[BioConn] Could not extract metadata for response:",
+          e.message
+        );
+      }
+
+      return responseObj;
+    } catch (error) {
+      console.log("[BioConn] Error occurred during processing");
+
+      let errorMessage = "Error processing TIFF file";
+      if (error.name) {
+        errorMessage = `${error.name}: ${error.message}`;
+        console.log(`[BioConn] Error type: ${error.name}`);
+      }
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log(
+          `[BioConn] Server responded with status ${error.response.status}`
+        );
+        errorMessage = `Server responded with status ${error.response.status}`;
+
+        // If we have response data, try to convert it to string for more context
+        if (error.response.data) {
+          try {
+            const dataStr = Buffer.from(error.response.data).toString();
+            // Log only the first 100 chars of the error response to avoid flooding the logs
+            console.log(
+              `[BioConn] Response data: ${dataStr.substring(0, 100)}${
+                dataStr.length > 100 ? "..." : ""
+              }`
+            );
+            errorMessage += `: ${dataStr.substring(0, 500)}`; // Include a reasonable amount in the error
+          } catch (e) {
+            // Ignore conversion errors
+            console.log("[BioConn] Could not convert response data to string");
+          }
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log("[BioConn] No response received from server");
+        errorMessage = "No response received from server";
+      } else {
+        // Something happened in setting up the request
+        console.log(`[BioConn] Request setup error: ${error.message}`);
+        errorMessage = error.message;
+      }
+
+      console.log(`[BioConn] Function failed: ${errorMessage}`);
+      throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, errorMessage);
+    }
+  });
 };
 
 module.exports.init = init;

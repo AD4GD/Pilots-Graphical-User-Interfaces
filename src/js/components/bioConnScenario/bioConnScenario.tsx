@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Slider, Button, Select, Row, ConfigProvider } from "antd";
+import { Button, Select, Row, ConfigProvider, Spin, message } from "antd";
 import geoblaze from "geoblaze";
 import GeoRasterLayer from "georaster-layer-for-leaflet";
 import proj4 from "proj4";
@@ -10,11 +10,78 @@ import "leaflet-draw/dist/leaflet.draw.css";
 import { writeArrayBuffer } from "geotiff";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import Parse from "parse";
+import { useNavigate } from "@opendash/router";
 
 const { Option } = Select;
 
 const epsg32631 = "+proj=utm +zone=31 +datum=WGS84 +units=m +no_defs";
 const wgs84 = "+proj=longlat +datum=WGS84 +no_defs";
+
+const injectCustomIconCSS = () => {
+  const customIconsCSS = `
+    /* Custom polygon draw icon */
+    .leaflet-draw-draw-polygon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDJMMTggOEwxNSAxNkg1TDIgOEwxMCAyWiIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz4KPC9zdmc+') !important;
+      background-size: 16px 16px !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+    }
+
+    /* Custom edit icon */
+    .leaflet-draw-edit-edit {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0LjA2IDQuMjhMMTUuNzIgNS45NEwxMC45NCAxMC43Mkw5LjI4IDkuMDZMMTQuMDYgNC4yOFoiIGZpbGw9IiMzMzMiLz4KPHBhdGggZD0iTTggMTJMOCAxNkw0IDE2TDQgMTJIOFoiIGZpbGw9IiMzMzMiLz4KPC9zdmc+') !important;
+      background-size: 16px 16px !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+    }
+
+    /* Custom delete icon */
+    .leaflet-draw-edit-remove {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTUgNUwxNSAxNU01IDE1TDE1IDUiIHN0cm9rZT0iI2ZmMzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg==') !important;
+      background-size: 16px 16px !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+    }
+
+    /* Custom save icon */
+    .leaflet-draw-actions-save {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTUgM0MzLjg5IDMgMyAzLjg5IDMgNVYxNUMzIDE2LjExIDMuODkgMTcgNSAxN0gxNUMxNi4xMSAxNyAxNyAxNi4xMSAxNyAxNVY3TDE1IDNINVpNMTAgMTVDOC4zNCAxNSA3IDEzLjY2IDcgMTJTOC4zNCAxMCAxMCAxMFMxMyAxMS4zNCAxMyAxMlMxMS42NiAxNSAxMCAxNVpNMTMgN0g1VjVIMTNWN1oiIGZpbGw9IiMzMzMiLz4KPC9zdmc+') !important;
+      background-size: 16px 16px !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+    }
+
+    /* Custom cancel icon */
+    .leaflet-draw-actions-cancel {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNEwxNiAxNk00IDE2TDE2IDQiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg==') !important;
+      background-size: 16px 16px !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+    }
+  `;
+
+  const style = document.createElement("style");
+  style.textContent = customIconsCSS;
+  document.head.appendChild(style);
+};
+
+// Utility function to convert a Blob to base64 string
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        // Remove data URL prefix (e.g., "data:application/octet-stream;base64,")
+        const base64 = reader.result.split(",")[1];
+        resolve(base64);
+      } else {
+        reject(new Error("Failed to convert blob to base64"));
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 
 const availableTimes = [
   "1987-01-01T00:00:00.000Z",
@@ -27,7 +94,16 @@ const availableTimes = [
   "2022-01-01T00:00:00.000Z",
 ];
 
-const landCoverTypes = [
+// API parameter types (only 3, 4, 5, 6 as requested)
+const apiParameterTypes = [
+  { value: 3, label: "Herbaceous cropland" },
+  { value: 4, label: "Woody cropland" },
+  { value: 5, label: "Shrubland and grassland" },
+  { value: 6, label: "Forestland" },
+];
+
+// All land cover types for individual polygon value assignment (1-7)
+const allLandCoverTypes = [
   { value: 1, label: "Aquatic" },
   { value: 2, label: "Built area" },
   { value: 3, label: "Herbaceous cropland" },
@@ -37,7 +113,10 @@ const landCoverTypes = [
   { value: 7, label: "Bare/sparse vegetation" },
 ];
 
-const exportCombinedRaster = async (combinedRaster: any) => {
+const exportCombinedRaster = async (
+  combinedRaster: any,
+  navigate: Function
+) => {
   try {
     const { values, width, height, xmin, ymin, xmax, ymax } = combinedRaster;
 
@@ -72,7 +151,11 @@ const exportCombinedRaster = async (combinedRaster: any) => {
       GeographicTypeGeoKey: 32631, // WGS 84 / UTM zone 31N
       ModelPixelScale: [pixelScaleX, Math.abs(pixelScaleY), 0],
       ModelTiepoint: [0, 0, 0, xmin, ymax, 0], // Upper left corner coordinates
-    };
+    }; // Show loading message
+    message.loading({ content: "Processing scenario...", key: "bioconn" });
+
+    // Create GeoTIFF and call API
+    console.log("Creating GeoTIFF for API submission...");
 
     // Convert to appropriate array if needed
     const typedArray =
@@ -80,29 +163,122 @@ const exportCombinedRaster = async (combinedRaster: any) => {
         ? flattenedValues
         : new Uint8Array(flattenedValues);
 
-    // Create GeoTIFF using writeArrayBuffer with simplified metadata
-    const tiff = await writeArrayBuffer(typedArray, metadata);
+    try {
+      // Create GeoTIFF using writeArrayBuffer with metadata
+      const tiff = await writeArrayBuffer(typedArray, metadata);
 
-    // Export as blob and download
-    const blob = new Blob([tiff], { type: "image/tiff" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "combined_raster.tiff";
-    link.click();
-    URL.revokeObjectURL(url);
+      // Export as blob for API transmission
+      const blob = new Blob([tiff], { type: "image/tiff" });
 
-    return true;
-  } catch (error) {
+      // Convert GeoTIFF to base64 for transmission
+      const base64Data = await blobToBase64(blob);
+      console.log("Making request to BioConn API via Cloud Function...");
+
+      // Add retry logic for the API call
+      let result;
+      let lastError;
+      const maxRetries = 3;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`API attempt ${attempt}/${maxRetries}...`);
+
+          // Call the Parse Cloud Function with fixed parameters (forest, high)
+          result = await Parse.Cloud.run("processBioconnTiff", {
+            type: "forest",
+            mode: "high",
+            fileData: base64Data,
+          });
+
+          console.log("BioConn API Response:", result);
+          break; // Success, exit retry loop
+        } catch (error) {
+          lastError = error;
+          console.error(`API attempt ${attempt} failed:`, error);
+
+          if (attempt < maxRetries) {
+            const delayMs = 2000 * attempt;
+            console.log(`Retrying in ${delayMs}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
+        }
+      }
+
+      if (!result) {
+        throw new Error(
+          `API failed after ${maxRetries} attempts. Last error: ${
+            lastError instanceof Error ? lastError.message : "Unknown error"
+          }`
+        );
+      }
+
+      // Check if the response was successful
+      if (result.status !== "success") {
+        throw new Error(`API Error: ${result.message || "Unknown error"}`);
+      }
+
+      message.success({ content: "Ready to view scenario!", key: "bioconn" });
+
+      console.log("cai object di tiep vao compare la cai nay:", combinedRaster);
+
+      // Navigate to the compare view with both original raster and API response
+      navigate("/bioconnect/compare", {
+        state: {
+          originalRaster: combinedRaster,
+          apiResponse: result,
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error in API processing:", error);
+
+      let errorMessage = "Unknown error occurred";
+
+      if (error instanceof Error) {
+        if (
+          error.message.includes("502") ||
+          error.message.includes("Bad Gateway")
+        ) {
+          errorMessage =
+            "BioConn API server is temporarily unavailable (502 Bad Gateway). Please try again later.";
+        } else if (
+          error.message.includes("503") ||
+          error.message.includes("Service Unavailable")
+        ) {
+          errorMessage =
+            "BioConn API service is temporarily unavailable. Please try again later.";
+        } else if (
+          error.message.includes("timeout") ||
+          error.message.includes("TIMEOUT")
+        ) {
+          errorMessage =
+            "API request timed out. The server may be busy, please try again.";
+        } else if (error.message.includes("Network")) {
+          errorMessage =
+            "Network error occurred. Please check your connection and try again.";
+        } else if (error.message.includes("failed after")) {
+          errorMessage = `API service is currently unavailable. ${error.message}`;
+        } else {
+          errorMessage = `API Error: ${error.message}`;
+        }
+      }
+
+      message.error({
+        content: errorMessage,
+        key: "bioconn",
+        duration: 6,
+      });
+      return false;
+    }
+  } catch (error: any) {
     console.error("Error exporting combined raster:", error);
-    alert(`Failed to export combined raster: ${error.message}`);
+    message.error({
+      content: `Failed to export raster: ${error.message}`,
+      key: "bioconn",
+    });
     return false;
   }
-};
-
-const getResolution = () => {
-  const width = window.innerWidth;
-  return width < 600 ? 32 : width < 1200 ? 48 : 64;
 };
 
 const getDrawingBounds = (polygons: L.Polygon[]): L.LatLngBounds => {
@@ -310,8 +486,6 @@ const padRasterPreservePosition = (
         paddedValues[y][x] = 0;
       }
 
-      // For positions that were in the cropped raster, always use those values
-      // (they should appear exactly at their original position)
       const relX = x - leftPadding;
       const relY = y - topPadding;
       if (relX >= 0 && relX < width && relY >= 0 && relY < height) {
@@ -336,7 +510,7 @@ const padRasterPreservePosition = (
 const rasterizeDrawing = (
   croppedRaster: any,
   polygons: L.Polygon[],
-  value: number
+  polygonValues: Map<string, number>
 ) => {
   const { width, height, xmin, ymin, xmax, ymax, pixelWidth, pixelHeight } =
     croppedRaster;
@@ -346,22 +520,28 @@ const rasterizeDrawing = (
     Array(width).fill(0)
   );
 
-  // For each pixel, check if it's inside any polygon
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      // Convert pixel coordinates to geographic coordinates
-      const easting = xmin + col * pixelWidth;
-      const northing = ymax - row * pixelHeight;
+  // Process polygons in drawing order - each polygon completely overwrites the area it covers
+  // This implements "last drawn wins" behavior
+  for (let i = 0; i < polygons.length; i++) {
+    const polygon = polygons[i] as any;
+    const polygonId = polygon.polygonId;
+    const value = polygonValues.get(polygonId) || 1;
 
-      // Convert to WGS84 (lat/lng)
-      const [lng, lat] = proj4(epsg32631, wgs84, [easting, northing]);
-      const point = L.latLng(lat, lng);
+    // For each pixel, check if it's inside this specific polygon
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
+        // Convert pixel coordinates to geographic coordinates
+        const easting = xmin + col * pixelWidth;
+        const northing = ymax - row * pixelHeight;
 
-      // Check if this point is inside any polygon
-      for (const polygon of polygons) {
+        // Convert to WGS84 (lat/lng)
+        const [lng, lat] = proj4(epsg32631, wgs84, [easting, northing]);
+        const point = L.latLng(lat, lng);
+
+        // If this pixel is inside the current polygon, set its value
+        // This will overwrite any previous polygon values
         if (isPointInPolygon(point, polygon)) {
-          drawingRaster[row][col] = value; // Use the selected value for points in the polygons
-          break; // No need to check other polygons
+          drawingRaster[row][col] = value;
         }
       }
     }
@@ -463,27 +643,100 @@ const createRaster = async (georaster: any) => {
 };
 
 const BioConnScenario: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [time, setTime] = useState(availableTimes[6]);
-  const [drawingValue, setDrawingValue] = useState(2); // Default to 2 (Built area)
+  const [apiParameterType, setApiParameterType] = useState(3); // API parameter type (3,4,5,6)
+  const [processingScenario, setProcessingScenario] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [polygonValues, setPolygonValues] = useState<Map<string, number>>(
+    new Map()
+  ); // Store value for each polygon
+  const [selectedPolygonId, setSelectedPolygonId] = useState<string | null>(
+    null
+  );
+  const polygonValuesRef = useRef<Map<string, number>>(new Map()); // Ref to access current values in event handlers
+
+  // Update ref when state changes
+  React.useEffect(() => {
+    polygonValuesRef.current = polygonValues;
+  }, [polygonValues]); // Function to update all polygon styles based on their current values
+  const updateAllPolygonStyles = React.useCallback(() => {
+    if (!drawLayer.current) return;
+
+    drawLayer.current.eachLayer((layer: any) => {
+      if (layer instanceof L.Polygon && (layer as any).polygonId) {
+        const polygonId = (layer as any).polygonId;
+        let polygonValue = polygonValues.get(polygonId);
+
+        // If value not found, it might be a newly created polygon, use default
+        if (polygonValue === undefined) {
+          polygonValue = 1; // Default value
+        }
+
+        const baseColor = interpolateColor(polygonValue);
+        const isSelected = polygonId === selectedPolygonId;
+
+        if (isSelected) {
+          layer.setStyle({
+            color: "#ff7800",
+            weight: 5,
+            opacity: 1,
+            fillColor: baseColor,
+            fillOpacity: 0.7,
+          });
+        } else {
+          layer.setStyle({
+            color: baseColor,
+            weight: 3,
+            opacity: 0.8,
+            fillColor: baseColor,
+            fillOpacity: 0.4,
+          });
+        }
+      }
+    });
+  }, [polygonValues, selectedPolygonId]);
+  // Update polygon styles whenever polygonValues or selectedPolygonId changes
+  React.useEffect(() => {
+    updateAllPolygonStyles();
+  }, [polygonValues, selectedPolygonId]);
+
+  // Add keyboard support for polygon selection
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && selectedPolygonId) {
+        setSelectedPolygonId(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [selectedPolygonId]);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const leafletMap = useRef<L.Map | null>(null);
   const drawLayer = useRef<L.FeatureGroup | null>(null);
   const [georaster, setGeoraster] = useState<any>(null);
-
   useEffect(() => {
     if (mapRef.current && !leafletMap.current) {
+      // Inject custom CSS for draw control icons
+      injectCustomIconCSS();
+
       leafletMap.current = L.map(mapRef.current).setView([41.7, 1.7], 7);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
       }).addTo(leafletMap.current);
-
       drawLayer.current = L.featureGroup().addTo(leafletMap.current);
+
       //@ts-ignore
       const drawControl = new L.Control.Draw({
         edit: {
           featureGroup: drawLayer.current,
+          edit: true,
+          remove: true,
         },
         draw: {
           polygon: true,
@@ -491,12 +744,139 @@ const BioConnScenario: React.FC = () => {
           circle: false,
           marker: false,
           polyline: false,
+          circlemarker: false,
         },
       });
-      leafletMap.current.addControl(drawControl);
-      //@ts-ignore
+      leafletMap.current.addControl(drawControl); //@ts-ignore
       leafletMap.current.on(L.Draw.Event.CREATED, (e: any) => {
         const layer = e.layer;
+
+        // Set default value for new polygon using functional state update
+        setPolygonValues((prevValues) => {
+          // Generate unique ID for the polygon
+          const polygonCount = prevValues.size + 1;
+          const polygonId = `Polygon_${polygonCount}`;
+          layer.polygonId = polygonId;
+
+          const newValues = new Map(prevValues);
+          const defaultValue = 1;
+          newValues.set(polygonId, defaultValue);
+          return newValues;
+        });
+        // Function to update polygon style based on its value
+        const updatePolygonStyle = (
+          polygon: any,
+          isSelected: boolean = false
+        ) => {
+          // Get the polygon value with fallback to default
+          const polygonValue = 1; // Use default since we just set it
+          const baseColor = interpolateColor(polygonValue);
+
+          if (isSelected) {
+            polygon.setStyle({
+              color: "#ff7800",
+              weight: 5,
+              opacity: 1,
+              fillColor: baseColor,
+              fillOpacity: 0.7,
+            });
+          } else {
+            polygon.setStyle({
+              color: baseColor,
+              weight: 3,
+              opacity: 0.8,
+              fillColor: baseColor,
+              fillOpacity: 0.4,
+            });
+          }
+        };
+        // Add click event to select polygon (with overlap handling)
+        layer.on("click", (clickEvent: any) => {
+          // Stop event propagation to handle overlapping polygons
+          L.DomEvent.stopPropagation(clickEvent);
+
+          // Find all polygons at this click point for overlap handling
+          const clickLatLng = clickEvent.latlng;
+          const overlappingPolygons: any[] = [];
+
+          drawLayer.current?.eachLayer((checkLayer: any) => {
+            if (
+              checkLayer instanceof L.Polygon &&
+              (checkLayer as any).polygonId
+            ) {
+              // Check if this polygon contains the click point
+              const bounds = checkLayer.getBounds();
+              if (bounds.contains(clickLatLng)) {
+                overlappingPolygons.push(checkLayer);
+              }
+            }
+          });
+
+          // If there are multiple overlapping polygons, cycle through them
+          let targetPolygon = layer;
+          if (overlappingPolygons.length > 1) {
+            const currentIndex = overlappingPolygons.findIndex(
+              (p) => (p as any).polygonId === selectedPolygonId
+            );
+            const nextIndex = (currentIndex + 1) % overlappingPolygons.length;
+            targetPolygon = overlappingPolygons[nextIndex];
+          } // Reset styles for all polygons - just set the selected ID and let useEffect handle styling
+          setSelectedPolygonId((targetPolygon as any).polygonId);
+        }); // Add hover effects and tooltips
+        layer.on("mouseover", () => {
+          // Get current value from ref
+          const currentValue =
+            polygonValuesRef.current.get(layer.polygonId) || 1;
+          const valueLabel =
+            allLandCoverTypes.find((type) => type.value === currentValue)
+              ?.label || `Value ${currentValue}`;
+
+          layer
+            .bindTooltip(
+              `ID: ${layer.polygonId}<br/>Value: ${currentValue} - ${valueLabel}`,
+              {
+                permanent: false,
+                direction: "top",
+                className: "polygon-tooltip",
+              }
+            )
+            .openTooltip();
+
+          // Add subtle hover effect if not selected (keep original color)
+          if (selectedPolygonId !== layer.polygonId) {
+            const baseColor = interpolateColor(currentValue);
+            const currentStyle = layer.options;
+            layer.setStyle({
+              color: baseColor, // Keep the original color
+              weight: currentStyle.weight + 1,
+              opacity: Math.min(currentStyle.opacity + 0.2, 1),
+              fillColor: baseColor, // Keep the original fill color
+              fillOpacity: currentStyle.fillOpacity,
+            });
+          }
+        });
+
+        layer.on("mouseout", () => {
+          layer.closeTooltip();
+
+          // Reset to proper style if not selected
+          if (selectedPolygonId !== layer.polygonId) {
+            const currentValue =
+              polygonValuesRef.current.get(layer.polygonId) || 1;
+            const baseColor = interpolateColor(currentValue);
+            layer.setStyle({
+              color: baseColor,
+              weight: 3,
+              opacity: 0.8,
+              fillColor: baseColor,
+              fillOpacity: 0.4,
+            });
+          }
+        });
+
+        // Set initial style
+        updatePolygonStyle(layer, false);
+
         drawLayer.current?.addLayer(layer);
       });
     }
@@ -517,12 +897,6 @@ const BioConnScenario: React.FC = () => {
       // Fit the map to the raster bounds
       const layerBounds = rasterLayer.getBounds();
       leafletMap.current.fitBounds(layerBounds);
-
-      // L.rectangle(layerBounds, {
-      //   color: "#ff0000",
-      //   fillOpacity: 0,
-      //   weight: 1,
-      // }).addTo(leafletMap.current);
 
       // Add click event to inspect pixel values
       leafletMap.current.on("click", async (e) => {
@@ -551,6 +925,7 @@ const BioConnScenario: React.FC = () => {
       // Call the Parse Cloud Function for MUCSC
       const result = await Parse.Cloud.run("getMucsc", { time });
 
+      console.log("MUCSC API Response:", result);
       if (result.status !== "success" || !result.data) {
         throw new Error("Failed to fetch image data");
       }
@@ -568,6 +943,8 @@ const BioConnScenario: React.FC = () => {
       const georaster = await geoblaze.parse(arrayBuffer);
       setGeoraster(georaster);
 
+      console.log(georaster);
+
       const rasterLayer = await createRaster(georaster);
       updateMap(rasterLayer, georaster);
     } catch (err) {
@@ -584,6 +961,22 @@ const BioConnScenario: React.FC = () => {
 
   return (
     <>
+      <style>
+        {`
+          .polygon-tooltip {
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            padding: 8px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+          }
+          .polygon-tooltip::before {
+            border-top-color: rgba(0, 0, 0, 0.8) !important;
+          }
+        `}
+      </style>
       <Row style={{ width: "100%", height: "100px" }}>
         <WidgetStatic
           style={{ width: "100%", height: "100%" }}
@@ -611,7 +1004,6 @@ const BioConnScenario: React.FC = () => {
             margin: "20px auto",
           }}
         >
-          {/* Left side - Controls (30%) */}
           <div
             style={{
               flex: "0 0 30%",
@@ -619,26 +1011,219 @@ const BioConnScenario: React.FC = () => {
               borderRight: "1px solid #eee",
             }}
           >
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "12px",
+                backgroundColor: "#f0f9ff",
+                borderRadius: "6px",
+                border: "1px solid #bae6fd",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  marginBottom: "8px",
+                  color: "#0284c7",
+                }}
+              >
+                📍 How to use:
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#075985",
+                  lineHeight: "1.4",
+                }}
+              >
+                1. Use the polygon tool to draw areas on the map
+                <br />
+                2. Click on drawn polygons to select them
+                <br />
+                3. Assign values (1-7) to each selected polygon
+                <br />
+                4. Choose an API parameter type (3-6) for processing
+                <br />
+                5. Press ESC to deselect, or click "Clear selection"
+              </div>
+            </div>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px" }}>
-                Land Use Change
+                API Parameter Type
               </label>
               <Select
                 style={{ width: "100%" }}
-                value={drawingValue}
-                onChange={(value) => setDrawingValue(value)}
+                value={apiParameterType}
+                onChange={(value) => setApiParameterType(value)}
               >
-                {landCoverTypes.map((type) => (
-                  <Option key={type.value} value={type.value}>
-                    {type.value} - {type.label}
-                  </Option>
-                ))}
+                {apiParameterTypes.map(
+                  (type: { value: number; label: string }) => (
+                    <Option key={type.value} value={type.value}>
+                      {type.value} - {type.label}
+                    </Option>
+                  )
+                )}{" "}
               </Select>
             </div>
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "5px" }}>
+                Polygon Value Assignment
+              </label>
+              <div
+                style={{ marginBottom: "8px", fontSize: "12px", color: "#666" }}
+              >
+                {polygonValues.size > 0
+                  ? `${polygonValues.size} polygon(s) drawn. Click a polygon to select it.`
+                  : "No polygons drawn yet. Draw polygons on the map first."}
+              </div>
+              <Select
+                style={{ width: "100%" }}
+                value={
+                  selectedPolygonId
+                    ? polygonValues.get(selectedPolygonId)
+                    : undefined
+                }
+                onChange={(value) => {
+                  if (selectedPolygonId) {
+                    const newValues = new Map(polygonValues);
+                    newValues.set(selectedPolygonId, value);
+                    setPolygonValues(newValues);
+                  }
+                }}
+                placeholder={
+                  polygonValues.size > 0
+                    ? "Click a polygon to select it"
+                    : "Draw polygons first"
+                }
+                disabled={!selectedPolygonId}
+              >
+                {allLandCoverTypes.map(
+                  (type: { value: number; label: string }) => (
+                    <Option key={type.value} value={type.value}>
+                      {type.value} - {type.label}
+                    </Option>
+                  )
+                )}
+              </Select>
+              {selectedPolygonId && (
+                <div style={{ marginTop: "8px" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Selected: {selectedPolygonId}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#666" }}>
+                    Current value: {polygonValues.get(selectedPolygonId)}
+                  </div>
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => setSelectedPolygonId(null)}
+                    style={{ padding: "0", fontSize: "11px", height: "auto" }}
+                  >
+                    Clear selection
+                  </Button>
+                </div>
+              )}
+            </div>{" "}
+            {polygonValues.size > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <div
+                  style={{
+                    marginBottom: "10px",
+                    padding: "10px",
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Drawn Polygons Summary:
+                  </div>
+                  {Array.from(polygonValues.entries()).map(([id, value]) => {
+                    const typeLabel =
+                      allLandCoverTypes.find((type) => type.value === value)
+                        ?.label || `Value ${value}`;
+                    return (
+                      <div
+                        key={id}
+                        style={{
+                          fontSize: "12px",
+                          marginBottom: "4px",
+                          padding: "4px 8px",
+                          backgroundColor:
+                            selectedPolygonId === id ? "#e6f7ff" : "white",
+                          borderRadius: "3px",
+                          border:
+                            selectedPolygonId === id
+                              ? "1px solid #1890ff"
+                              : "1px solid #d9d9d9",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          // Find and highlight the polygon
+                          drawLayer.current?.eachLayer((layer: any) => {
+                            if (
+                              layer instanceof L.Polygon &&
+                              (layer as any).polygonId === id
+                            ) {
+                              // Trigger click event to select the polygon
+                              layer.fire("click", {
+                                latlng: layer.getBounds().getCenter(),
+                              });
+                            }
+                          });
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <div
+                            style={{
+                              width: "12px",
+                              height: "12px",
+                              backgroundColor: interpolateColor(value),
+                              marginRight: "8px",
+                              border: "1px solid #999",
+                              borderRadius: "2px",
+                            }}
+                          ></div>
+                          <span>
+                            {id}: {value} - {typeLabel}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
+                <Button
+                  danger
+                  type="dashed"
+                  size="small"
+                  style={{ width: "100%" }}
+                  onClick={() => {
+                    drawLayer.current?.clearLayers();
+                    setPolygonValues(new Map());
+                    setSelectedPolygonId(null);
+                  }}
+                >
+                  Clear All Polygons
+                </Button>
+              </div>
+            )}
             <Button
               type="primary"
               style={{ width: "100%", marginTop: "20px" }}
+              loading={isSaving}
               onClick={async () => {
                 if (drawLayer.current && georaster) {
                   const polygons = drawLayer.current
@@ -653,42 +1238,53 @@ const BioConnScenario: React.FC = () => {
                   }
 
                   try {
-                    // Get the drawing bounds
+                    setProcessingScenario(true);
+                    setIsSaving(true);
                     const drawingBounds = getDrawingBounds(polygons);
 
-                    // Crop the raster
                     const croppedRaster = await cropGeorasterToBounds(
                       georaster,
                       drawingBounds
                     );
 
-                    // Pad the raster
                     const paddedRaster = padRasterPreservePosition(
                       croppedRaster,
                       georaster
                     );
-
-                    // Create the drawing raster with the selected value
                     const drawingRaster = rasterizeDrawing(
                       paddedRaster,
                       polygons,
-                      drawingValue
+                      polygonValues
                     );
 
-                    // Combine the layers
                     const combinedRaster = combineLayers(
                       paddedRaster,
                       drawingRaster
                     );
 
-                    // Export the combined raster
-                    await exportCombinedRaster(combinedRaster);
-                  } catch (error) {
+                    console.log("Combined Raster la cai nay:", combinedRaster);
+
+                    const success = await exportCombinedRaster(
+                      combinedRaster,
+                      navigate
+                    );
+
+                    if (!success) {
+                      setProcessingScenario(false);
+                      setIsSaving(false);
+                    }
+                  } catch (error: any) {
                     console.error("Error in raster processing:", error);
-                    alert(`Error in raster processing: ${error.message}`);
+                    message.error(
+                      `Error in raster processing: ${error.message}`
+                    );
+                    setProcessingScenario(false);
+                    setIsSaving(false);
                   }
                 } else {
-                  alert("Please load a raster and draw a polygon first");
+                  message.warning(
+                    "Please load a raster and draw a polygon first"
+                  );
                 }
               }}
             >
@@ -696,29 +1292,7 @@ const BioConnScenario: React.FC = () => {
             </Button>
           </div>
 
-          {/* Right side - Everything else (70%) */}
           <div style={{ flex: "0 0 70%", padding: "20px" }}>
-            {/* <div style={{ marginBottom: "30px" }}>
-              <Slider
-                min={0}
-                max={availableTimes.length - 1}
-                defaultValue={6}
-                onChange={(value) => setTime(availableTimes[value])}
-                marks={{
-                  0: "1987",
-                  1: "1992",
-                  2: "1997",
-                  3: "2002",
-                  4: "2007",
-                  5: "2012",
-                  6: "2017",
-                  7: "2022",
-                }}
-                step={1}
-                style={{ width: "100%" }}
-              />
-            </div> */}
-
             {/* Map container */}
             <div
               id="map-container"
@@ -745,32 +1319,34 @@ const BioConnScenario: React.FC = () => {
                   gap: "10px",
                 }}
               >
-                {landCoverTypes.map((type) => (
-                  <div
-                    key={type.value}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      margin: "5px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      padding: "5px 10px",
-                    }}
-                  >
+                {allLandCoverTypes.map(
+                  (type: { value: number; label: string }) => (
                     <div
+                      key={type.value}
                       style={{
-                        width: "20px",
-                        height: "20px",
-                        backgroundColor: interpolateColor(type.value),
-                        marginRight: "10px",
-                        border: "1px solid #999",
+                        display: "flex",
+                        alignItems: "center",
+                        margin: "5px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        padding: "5px 10px",
                       }}
-                    ></div>
-                    <span>
-                      {type.value} - {type.label}
-                    </span>
-                  </div>
-                ))}
+                    >
+                      <div
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          backgroundColor: interpolateColor(type.value),
+                          marginRight: "10px",
+                          border: "1px solid #999",
+                        }}
+                      ></div>
+                      <span>
+                        {type.value} - {type.label}
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>
