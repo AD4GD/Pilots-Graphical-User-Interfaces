@@ -29,6 +29,8 @@ import { LakeFavourite } from "./components/lakeFavourite";
 import { NotFound } from "./components/NotFoundPage";
 import { bioConn, geoTiffExplorer } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
+import { bioConnTest } from "./components/bioConnTest";
+import { compareScenario } from "./components/compareScenario";
 import { DataUpload } from "./components/dataUpload";
 
 init("opendash", async (factory) => {
@@ -88,10 +90,21 @@ init("opendash", async (factory) => {
     componentSync: geoTiffExplorer,
     props: {},
   });
-
   factory.registerRoute({
     path: "/bioconnect/scenario",
     componentSync: bioConnScenario,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/bioconnect/compare",
+    componentSync: compareScenario,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/bioconnect/apitest",
+    componentSync: bioConnTest,
     props: {},
   });
 
@@ -170,7 +183,7 @@ init("opendash", async (factory) => {
     group: "ad4gd2",
     place: "frontpage",
     order: 0,
-    label: "ad4gd:home.pilot1",
+    label: "Splashboard",
     icon: "fa:water",
     color: "#96F5D0",
     link: "/splashboard",
@@ -183,7 +196,7 @@ init("opendash", async (factory) => {
     group: "ad4gd",
     place: "frontpage",
     order: 0,
-    label: "ad4gd:home.pilot2",
+    label: "BioConnect",
     icon: "fa:map",
     color: "#96F5D0",
     link: "/bioconnect",
@@ -310,7 +323,7 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(LakeStatss);
   $monitoring.registerWidget(LakePrediction);
   $monitoring.registerWidget(lakeMapWidget);
-  // $monitoring.registerWidget(HeaderBioConnWidget);
+  $monitoring.registerWidget(HeaderBioConnWidget);
   // $monitoring.registerWidget(wqiWidget);
 }).then((app) => {
   console.log("init open.DASH");
