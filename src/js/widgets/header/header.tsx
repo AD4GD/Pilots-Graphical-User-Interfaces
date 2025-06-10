@@ -1,22 +1,23 @@
-import { useTranslation } from "@opendash/core";
-
-import { createWidgetComponent } from "@opendash/plugin-monitoring";
-
 import React from "react";
-import { ConfigInterface } from "./types";
-import { Row, Col, Image, Button, Flex, ConfigProvider } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { useTranslation } from "@opendash/core";
+import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useNavigate } from "@opendash/router";
-import { Icon } from "@opendash/icons";
 import { $framework } from "@opendash/core";
+import i18next from "i18next";
+
+import { Row, Col, Image, Button, Flex, ConfigProvider, Select } from "antd";
+import { UserOutlined, GlobalOutlined } from "@ant-design/icons";
+import { Icon } from "@opendash/icons";
+
+import { ConfigInterface } from "./types";
+import "./header.css";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
     const t = useTranslation();
+    const navigate = useNavigate();
 
     context.setLoading(false);
-
-    const navigate = useNavigate();
 
     const isAdmin =
       $framework.services.UserService.hasPermission("parse-admin");
@@ -43,7 +44,7 @@ export default createWidgetComponent<ConfigInterface>(
               height: "auto",
               margin: "auto",
             }}
-          ></Image>
+          />
         </Col>
 
         <Col span={8}>
@@ -67,9 +68,7 @@ export default createWidgetComponent<ConfigInterface>(
               <Button
                 type="primary"
                 size="large"
-                onClick={() => {
-                  navigate("/splashboard");
-                }}
+                onClick={() => navigate("/splashboard")}
               >
                 Übersicht Seen
               </Button>
@@ -77,9 +76,7 @@ export default createWidgetComponent<ConfigInterface>(
               <Button
                 type="primary"
                 size="large"
-                onClick={() => {
-                  navigate("/splashboard/lake/favourite");
-                }}
+                onClick={() => navigate("/splashboard/lake/favourite")}
               >
                 Favoriten
               </Button>
@@ -87,9 +84,7 @@ export default createWidgetComponent<ConfigInterface>(
               <Button
                 type="primary"
                 size="large"
-                onClick={() => {
-                  navigate("/splashboard/info");
-                }}
+                onClick={() => navigate("/splashboard/info")}
               >
                 Info
               </Button>
@@ -100,11 +95,8 @@ export default createWidgetComponent<ConfigInterface>(
                   size="large"
                   style={{ minWidth: "50px" }}
                   icon={<Icon icon="fa:database" />}
-                  onClick={() => {
-                    // navigate("/admin/ow/sensors");
-                    navigate("/admin/parse/MIAAS_Geographies");
-                  }}
-                ></Button>
+                  onClick={() => navigate("/admin/parse/MIAAS_Geographies")}
+                />
               )}
 
               {isAdmin && (
@@ -113,11 +105,52 @@ export default createWidgetComponent<ConfigInterface>(
                   size="large"
                   style={{ minWidth: "50px" }}
                   icon={<Icon icon="fa:upload" />}
-                  onClick={() => {
-                    navigate("/splashboard/upload");
-                  }}
-                ></Button>
+                  onClick={() => navigate("/splashboard/upload")}
+                />
               )}
+
+              {/* 🌐 Language Switcher - Styled to match header */}
+              <Select
+                value={i18next.language}
+                onChange={(lng) => i18next.changeLanguage(lng)}
+                suffixIcon={
+                  <GlobalOutlined style={{ color: "#000", fontSize: 20 }} />
+                }
+                style={{
+                  background: "#96F5D0",
+                  color: "#000",
+                  fontWeight: 700,
+                  minWidth: 80,
+                  borderRadius: 6,
+                  height: 40,
+                  fontSize: 16,
+                  transition: "border-color 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                dropdownStyle={{
+                  background: "#96F5D0",
+                  color: "#000",
+                  borderRadius: 6,
+                }}
+                className="custom-lang-select"
+                optionLabelProp="label"
+                options={[
+                  {
+                    value: "en",
+                    label: (
+                      <span style={{ color: "#000", fontWeight: 700 }}>EN</span>
+                    ),
+                  },
+                  {
+                    value: "de",
+                    label: (
+                      <span style={{ color: "#000", fontWeight: 700 }}>DE</span>
+                    ),
+                  },
+                ]}
+                popupMatchSelectWidth={false}
+              />
 
               <Button
                 type="primary"
@@ -127,7 +160,7 @@ export default createWidgetComponent<ConfigInterface>(
                 onClick={() => {
                   $framework.services.UserService.logout();
                 }}
-              ></Button>
+              />
             </Flex>
           </ConfigProvider>
         </Col>

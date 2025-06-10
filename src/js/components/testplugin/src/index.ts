@@ -1,1 +1,0 @@
-export { TestPlugin } from "./Plugin";
