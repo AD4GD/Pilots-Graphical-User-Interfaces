@@ -1,0 +1,19 @@
+.custom-lang-select .ant-select-selector {
+  background: #96f5d0 !important;
+  color: #000 !important;
+  border-radius: 6px !important;
+  height: 40px !important;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  border: 2px solid #96f5d0 !important;
+}
+
+.custom-lang-select .ant-select-selection-item {
+  color: #000 !important;
+  font-weight: 700;
+}
+
+.custom-lang-select .ant-select-arrow {
+  color: #000 !important;
+}
