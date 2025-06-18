@@ -27,10 +27,13 @@ import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
 import { LakeFavourite } from "./components/lakeFavourite";
 import { NotFound } from "./components/NotFoundPage";
-import { bioConn, geoTiffExplorer } from "./components/bioConn";
+import {
+  bioConn,
+  geoTiffComparer,
+  geoTiffExplorer,
+} from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
-import { bioConnTest } from "./components/bioConnTest";
-import { compareScenario } from "./components/compareScenario";
+import { CompareScenario } from "./components/compareScenario";
 import { DataUpload } from "./components/dataUpload";
 
 init("opendash", async (factory) => {
@@ -90,6 +93,13 @@ init("opendash", async (factory) => {
     componentSync: geoTiffExplorer,
     props: {},
   });
+
+  factory.registerRoute({
+    path: "/bioconnect/explorer/compare",
+    componentSync: geoTiffComparer,
+    props: {},
+  });
+
   factory.registerRoute({
     path: "/bioconnect/scenario",
     componentSync: bioConnScenario,
@@ -98,13 +108,7 @@ init("opendash", async (factory) => {
 
   factory.registerRoute({
     path: "/bioconnect/compare",
-    componentSync: compareScenario,
-    props: {},
-  });
-
-  factory.registerRoute({
-    path: "/bioconnect/apitest",
-    componentSync: bioConnTest,
+    componentSync: CompareScenario,
     props: {},
   });
 

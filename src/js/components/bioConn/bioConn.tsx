@@ -594,7 +594,6 @@ const BioConn: React.FC = () => {
         layerOption === "connectivity" ? "getConnectivity" : "getMucsc",
         layerOption === "connectivity" ? { time, properties } : { time }
       );
-      console.log(time);
 
       if (result.status !== "success" || !result.data) {
         throw new Error("Failed to fetch image data");

@@ -115,7 +115,9 @@ const allLandCoverTypes = [
 
 const exportCombinedRaster = async (
   combinedRaster: any,
-  navigate: Function
+  navigate: Function,
+  apiParameterType: number,
+  apiMode: "high" | "low"
 ) => {
   try {
     const { values, width, height, xmin, ymin, xmax, ymax } = combinedRaster;
@@ -167,6 +169,10 @@ const exportCombinedRaster = async (
       // Create GeoTIFF using writeArrayBuffer with metadata
       const tiff = await writeArrayBuffer(typedArray, metadata);
 
+      // Create downloadable GeoTIFF ArrayBuffer for the compare scenario
+      const downloadableGeoTiff = new ArrayBuffer(tiff.byteLength);
+      new Uint8Array(downloadableGeoTiff).set(new Uint8Array(tiff));
+
       // Export as blob for API transmission
       const blob = new Blob([tiff], { type: "image/tiff" });
 
@@ -178,15 +184,24 @@ const exportCombinedRaster = async (
       let result;
       let lastError;
       const maxRetries = 3;
-
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           console.log(`API attempt ${attempt}/${maxRetries}...`);
 
-          // Call the Parse Cloud Function with fixed parameters (forest, high)
+          // Map apiParameterType to API type string
+          const typeMapping: { [key: number]: string } = {
+            3: "herbaceous", // Herbaceous cropland
+            4: "woody", // Woody cropland
+            5: "shrublands", // Shrubland and grassland
+            6: "forest", // Forestland
+          };
+
+          const apiType = typeMapping[apiParameterType] || "forest";
+
+          // Call the Parse Cloud Function with dynamic parameters
           result = await Parse.Cloud.run("processBioconnTiff", {
-            type: "forest",
-            mode: "high",
+            type: apiType,
+            mode: apiMode,
             fileData: base64Data,
           });
 
@@ -221,10 +236,13 @@ const exportCombinedRaster = async (
 
       console.log("cai object di tiep vao compare la cai nay:", combinedRaster);
 
-      // Navigate to the compare view with both original raster and API response
+      // Navigate to the compare view with both original raster, API response, and downloadable GeoTIFF
       navigate("/bioconnect/compare", {
         state: {
-          originalRaster: combinedRaster,
+          originalRaster: {
+            ...combinedRaster,
+            downloadableGeoTiff: downloadableGeoTiff, // Add the downloadable GeoTIFF ArrayBuffer
+          },
           apiResponse: result,
         },
       });
@@ -282,8 +300,37 @@ const exportCombinedRaster = async (
 };
 
 const getDrawingBounds = (polygons: L.Polygon[]): L.LatLngBounds => {
+  console.log(`Getting bounds for ${polygons.length} polygons`);
   const bounds = L.latLngBounds([]);
-  polygons.forEach((polygon) => bounds.extend(polygon.getBounds()));
+
+  polygons.forEach((polygon, index) => {
+    const polygonBounds = polygon.getBounds();
+    console.log(
+      `Polygon ${index + 1} bounds:`,
+      `SW(${polygonBounds.getSouthWest().lng.toFixed(5)}, ${polygonBounds
+        .getSouthWest()
+        .lat.toFixed(5)})`,
+      `NE(${polygonBounds.getNorthEast().lng.toFixed(5)}, ${polygonBounds
+        .getNorthEast()
+        .lat.toFixed(5)})`
+    );
+    bounds.extend(polygonBounds);
+  });
+
+  if (polygons.length > 0) {
+    console.log(
+      `Combined bounds:`,
+      `SW(${bounds.getSouthWest().lng.toFixed(5)}, ${bounds
+        .getSouthWest()
+        .lat.toFixed(5)})`,
+      `NE(${bounds.getNorthEast().lng.toFixed(5)}, ${bounds
+        .getNorthEast()
+        .lat.toFixed(5)})`
+    );
+  } else {
+    console.warn("No polygons provided to getDrawingBounds");
+  }
+
   return bounds;
 };
 
@@ -316,7 +363,13 @@ const cropGeorasterToBounds = async (
     bounds.getNorth(),
   ];
 
-  console.log(minLng, minLat, maxLng, maxLat);
+  console.log(
+    `Drawing bounds in WGS84: minLng=${minLng.toFixed(
+      5
+    )}, minLat=${minLat.toFixed(5)}, maxLng=${maxLng.toFixed(
+      5
+    )}, maxLat=${maxLat.toFixed(5)}`
+  );
 
   // Convert WGS84 coordinates to EPSG:32631
   const [minEasting, minNorthing] = proj4(wgs84, epsg32631, [minLng, minLat]);
@@ -383,7 +436,36 @@ const cropGeorasterToBounds = async (
 };
 
 const isPointInPolygon = (point: L.LatLng, polygon: L.Polygon): boolean => {
-  const polygonLatLngs = polygon.getLatLngs()[0] as L.LatLng[];
+  // Get the polygon coordinates
+  // Handle the potential complexity of Leaflet polygon structures
+  let polygonLatLngs: L.LatLng[] = [];
+
+  try {
+    const latLngs = polygon.getLatLngs();
+
+    // Handle different polygon structures
+    if (Array.isArray(latLngs)) {
+      if (latLngs.length === 0) return false;
+
+      // Check if it's a multi-polygon or has holes
+      if (Array.isArray(latLngs[0])) {
+        // It's either a polygon with holes or a multi-polygon
+        if (Array.isArray(latLngs[0][0])) {
+          // It's a multi-polygon, use the first polygon for simplicity
+          polygonLatLngs = latLngs[0][0] as L.LatLng[];
+        } else {
+          // It's a polygon with holes, use the outer ring
+          polygonLatLngs = latLngs[0] as L.LatLng[];
+        }
+      } else {
+        // Simple polygon
+        polygonLatLngs = latLngs as L.LatLng[];
+      }
+    }
+  } catch (error) {
+    console.error("Error processing polygon coordinates:", error);
+    return false;
+  }
 
   if (!polygonLatLngs || polygonLatLngs.length === 0) {
     return false;
@@ -515,21 +597,115 @@ const rasterizeDrawing = (
   const { width, height, xmin, ymin, xmax, ymax, pixelWidth, pixelHeight } =
     croppedRaster;
 
+  console.log(
+    `Rasterizing ${polygons.length} polygons with dimensions: ${width}x${height}`
+  );
+  console.log(
+    `Raster bounds: xmin=${xmin}, ymin=${ymin}, xmax=${xmax}, ymax=${ymax}`
+  );
+  console.log(`Pixel dimensions: width=${pixelWidth}, height=${pixelHeight}`);
+
   // Initialize with value 0 (non-drawn areas)
   const drawingRaster = Array.from({ length: height }, () =>
     Array(width).fill(0)
   );
 
-  // Process polygons in drawing order - each polygon completely overwrites the area it covers
-  // This implements "last drawn wins" behavior
-  for (let i = 0; i < polygons.length; i++) {
-    const polygon = polygons[i] as any;
+  // Create an array of polygon data with their values
+  const polygonData = polygons.map((polygon: any) => {
     const polygonId = polygon.polygonId;
     const value = polygonValues.get(polygonId) || 1;
 
-    // For each pixel, check if it's inside this specific polygon
-    for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
+    // Get the polygon's coordinates in the correct format
+    let coords: L.LatLng[] = [];
+
+    try {
+      const latLngs = polygon.getLatLngs();
+
+      // Handle different polygon structures
+      if (Array.isArray(latLngs)) {
+        if (latLngs.length === 0) return { polygon, value, coords: [] };
+
+        // Check if it's a multi-polygon or has holes
+        if (Array.isArray(latLngs[0])) {
+          // It's either a polygon with holes or a multi-polygon
+          if (Array.isArray(latLngs[0][0])) {
+            // It's a multi-polygon, use the first polygon for simplicity
+            coords = latLngs[0][0] as L.LatLng[];
+          } else {
+            // It's a polygon with holes, use the outer ring
+            coords = latLngs[0] as L.LatLng[];
+          }
+        } else {
+          // Simple polygon
+          coords = latLngs as L.LatLng[];
+        }
+      }
+    } catch (error) {
+      console.error(
+        `Error processing polygon ${polygonId} coordinates:`,
+        error
+      );
+      return { polygon, value, coords: [] };
+    }
+
+    return { polygon, value, polygonId, coords };
+  });
+
+  console.log(`Prepared ${polygonData.length} polygons for rasterization`);
+
+  // Process polygons in drawing order - each polygon completely overwrites the area it covers
+  for (const { polygon, value, polygonId, coords } of polygonData) {
+    if (coords.length === 0) {
+      console.warn(`Skipping polygon ${polygonId} with no valid coordinates`);
+      continue;
+    }
+
+    console.log(
+      `Processing polygon ${polygonId} with value ${value} (${coords.length} points)`
+    );
+
+    // Calculate polygon bounds to optimize scanning only necessary pixels
+    const polygonBounds = polygon.getBounds();
+    const [minLng, minLat, maxLng, maxLat] = [
+      polygonBounds.getWest(),
+      polygonBounds.getSouth(),
+      polygonBounds.getEast(),
+      polygonBounds.getNorth(),
+    ];
+
+    // Convert WGS84 coordinates to EPSG:32631
+    const [minEasting, minNorthing] = proj4(wgs84, epsg32631, [minLng, minLat]);
+    const [maxEasting, maxNorthing] = proj4(wgs84, epsg32631, [maxLng, maxLat]);
+
+    // Calculate pixel range for this polygon (with a small buffer)
+    const buffer = 2; // Buffer of 2 pixels to ensure we don't miss edge cases
+    const startCol = Math.max(
+      0,
+      Math.floor((minEasting - xmin) / pixelWidth) - buffer
+    );
+    const endCol = Math.min(
+      width - 1,
+      Math.ceil((maxEasting - xmin) / pixelWidth) + buffer
+    );
+    const startRow = Math.max(
+      0,
+      Math.floor((ymax - maxNorthing) / pixelHeight) - buffer
+    );
+    const endRow = Math.min(
+      height - 1,
+      Math.ceil((ymax - minNorthing) / pixelHeight) + buffer
+    );
+
+    console.log(
+      `Scanning pixel range: rows ${startRow}-${endRow}, cols ${startCol}-${endCol}`
+    );
+
+    // Track if any pixels were set for this polygon
+    let pixelsSet = 0;
+
+    // Only scan pixels within the polygon's bounds
+    for (let row = startRow; row <= endRow; row++) {
+      for (let col = startCol; col <= endCol; col++) {
         // Convert pixel coordinates to geographic coordinates
         const easting = xmin + col * pixelWidth;
         const northing = ymax - row * pixelHeight;
@@ -539,13 +715,38 @@ const rasterizeDrawing = (
         const point = L.latLng(lat, lng);
 
         // If this pixel is inside the current polygon, set its value
-        // This will overwrite any previous polygon values
         if (isPointInPolygon(point, polygon)) {
           drawingRaster[row][col] = value;
+          pixelsSet++;
         }
       }
     }
+
+    console.log(`Set ${pixelsSet} pixels for polygon ${polygonId}`);
+
+    // Check if any pixels were set
+    if (pixelsSet === 0) {
+      console.warn(
+        `No pixels were set for polygon ${polygonId}. This may indicate an issue with polygon coordinates or rasterization.`
+      );
+    }
   }
+
+  // Count non-zero pixels
+  let nonZeroPixels = 0;
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      if (drawingRaster[row][col] !== 0) {
+        nonZeroPixels++;
+      }
+    }
+  }
+
+  console.log(
+    `Total non-zero pixels in drawing raster: ${nonZeroPixels} out of ${
+      width * height
+    }`
+  );
 
   return drawingRaster;
 };
@@ -566,8 +767,19 @@ const combineLayers = (raster: any, drawingRaster: number[][]) => {
     }`,
   });
 
+  // Check for size mismatch
+  if (
+    raster.height !== drawingRaster.length ||
+    raster.width !== drawingRaster[0]?.length
+  ) {
+    console.warn(
+      `Size mismatch between raster (${raster.height}x${raster.width}) and drawing (${drawingRaster.length}x${drawingRaster[0]?.length})`
+    );
+  }
+
   // Create a new 2D array for the combined values
   const combinedValues = [];
+  let drawnPixelsCount = 0;
 
   for (let y = 0; y < raster.height; y++) {
     const row = [];
@@ -584,14 +796,26 @@ const combineLayers = (raster: any, drawingRaster: number[][]) => {
       }
 
       // Override with drawing value if it exists and is not 0
-      if (drawingRaster && drawingRaster[y] && drawingRaster[y][x] !== 0) {
+      if (
+        drawingRaster &&
+        y < drawingRaster.length &&
+        x < drawingRaster[y]?.length &&
+        drawingRaster[y][x] !== 0
+      ) {
         value = drawingRaster[y][x]; // Value for drawn areas
+        drawnPixelsCount++;
       }
 
       row.push(value);
     }
     combinedValues.push(row);
   }
+
+  console.log(
+    `Combined raster includes ${drawnPixelsCount} pixels from the drawing layer out of ${
+      raster.height * raster.width
+    } total pixels`
+  );
 
   // Return a new object with all properties from the input raster, but with updated values
   return {
@@ -647,7 +871,8 @@ const BioConnScenario: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [time, setTime] = useState(availableTimes[6]);
-  const [apiParameterType, setApiParameterType] = useState(3); // API parameter type (3,4,5,6)
+  const [apiParameterType, setApiParameterType] = useState(6);
+  const [apiMode, setApiMode] = useState<"high" | "low">("high");
   const [processingScenario, setProcessingScenario] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [polygonValues, setPolygonValues] = useState<Map<string, number>>(
@@ -1040,13 +1265,27 @@ const BioConnScenario: React.FC = () => {
                 1. Use the polygon tool to draw areas on the map
                 <br />
                 2. Click on drawn polygons to select them
+                <br /> 3. Assign values (1-7) to each selected polygon
                 <br />
-                3. Assign values (1-7) to each selected polygon
+                4. Choose processing mode (High/Low quality)
                 <br />
-                4. Choose an API parameter type (3-6) for processing
+                5. Choose an API parameter type (3-6) for processing
                 <br />
-                5. Press ESC to deselect, or click "Clear selection"
+                6. Press ESC to deselect, or click "Clear selection"
               </div>
+            </div>
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "5px" }}>
+                Processing Mode
+              </label>
+              <Select
+                style={{ width: "100%" }}
+                value={apiMode}
+                onChange={(value) => setApiMode(value)}
+              >
+                <Option value="high">High Resolution</Option>
+                <Option value="low">Low Resolution</Option>
+              </Select>
             </div>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px" }}>
@@ -1237,41 +1476,213 @@ const BioConnScenario: React.FC = () => {
                     return;
                   }
 
+                  // Check for polygons with missing values
+                  const missingValues = polygons.some((polygon: any) => {
+                    return !polygonValues.has(polygon.polygonId);
+                  });
+
+                  if (missingValues) {
+                    // Set default values for any polygons that don't have them
+                    const newValues = new Map(polygonValues);
+                    polygons.forEach((polygon: any) => {
+                      if (!newValues.has(polygon.polygonId)) {
+                        newValues.set(polygon.polygonId, 1); // Default value
+                        console.log(
+                          `Setting default value for polygon ${polygon.polygonId}`
+                        );
+                      }
+                    });
+                    setPolygonValues(newValues);
+                  }
+
+                  console.log(
+                    `Processing ${polygons.length} polygons with values:`,
+                    [...polygonValues.entries()].map(
+                      ([id, value]) => `${id}: ${value}`
+                    )
+                  );
+
                   try {
                     setProcessingScenario(true);
                     setIsSaving(true);
+
+                    // Log polygon bounds
+                    polygons.forEach((polygon, idx) => {
+                      const bounds = polygon.getBounds();
+                      console.log(
+                        `Polygon ${idx + 1} bounds:`,
+                        `SW(${bounds.getSouthWest().lng.toFixed(5)}, ${bounds
+                          .getSouthWest()
+                          .lat.toFixed(5)})`,
+                        `NE(${bounds.getNorthEast().lng.toFixed(5)}, ${bounds
+                          .getNorthEast()
+                          .lat.toFixed(5)})`
+                      );
+                    });
+
                     const drawingBounds = getDrawingBounds(polygons);
+                    console.log(
+                      `Combined drawing bounds:`,
+                      `SW(${drawingBounds
+                        .getSouthWest()
+                        .lng.toFixed(5)}, ${drawingBounds
+                        .getSouthWest()
+                        .lat.toFixed(5)})`,
+                      `NE(${drawingBounds
+                        .getNorthEast()
+                        .lng.toFixed(5)}, ${drawingBounds
+                        .getNorthEast()
+                        .lat.toFixed(5)})`
+                    );
+
+                    // Check for very small bounds which might indicate a problem
+                    const boundsSizeInDegrees =
+                      (drawingBounds.getNorth() - drawingBounds.getSouth()) *
+                      (drawingBounds.getEast() - drawingBounds.getWest());
+                    if (boundsSizeInDegrees < 1e-10) {
+                      console.warn(
+                        "Drawing bounds are extremely small, which may cause issues"
+                      );
+                      message.warning(
+                        "The drawn area is very small, which may affect processing quality"
+                      );
+                    }
 
                     const croppedRaster = await cropGeorasterToBounds(
                       georaster,
                       drawingBounds
                     );
-
-                    const paddedRaster = padRasterPreservePosition(
-                      croppedRaster,
-                      georaster
-                    );
-                    const drawingRaster = rasterizeDrawing(
-                      paddedRaster,
-                      polygons,
-                      polygonValues
+                    console.log(
+                      `Cropped raster dimensions: ${croppedRaster.width}x${croppedRaster.height}`
                     );
 
-                    const combinedRaster = combineLayers(
-                      paddedRaster,
-                      drawingRaster
-                    );
+                    // Ensure the cropped raster has some minimum size
+                    if (croppedRaster.width < 10 || croppedRaster.height < 10) {
+                      console.warn(
+                        "Cropped raster is very small, expanding bounds"
+                      );
+                      // Expand the bounds slightly
+                      const center = drawingBounds.getCenter();
+                      const expandedBounds = L.latLngBounds(
+                        center.lat -
+                          Math.max(
+                            0.001,
+                            (drawingBounds.getNorth() -
+                              drawingBounds.getSouth()) *
+                              2
+                          ),
+                        center.lng -
+                          Math.max(
+                            0.001,
+                            (drawingBounds.getEast() -
+                              drawingBounds.getWest()) *
+                              2
+                          ),
+                        center.lat +
+                          Math.max(
+                            0.001,
+                            (drawingBounds.getNorth() -
+                              drawingBounds.getSouth()) *
+                              2
+                          ),
+                        center.lng +
+                          Math.max(
+                            0.001,
+                            (drawingBounds.getEast() -
+                              drawingBounds.getWest()) *
+                              2
+                          )
+                      );
 
-                    console.log("Combined Raster la cai nay:", combinedRaster);
+                      console.log(
+                        "Using expanded bounds:",
+                        `SW(${expandedBounds
+                          .getSouthWest()
+                          .lng.toFixed(5)}, ${expandedBounds
+                          .getSouthWest()
+                          .lat.toFixed(5)})`,
+                        `NE(${expandedBounds
+                          .getNorthEast()
+                          .lng.toFixed(5)}, ${expandedBounds
+                          .getNorthEast()
+                          .lat.toFixed(5)})`
+                      );
 
-                    const success = await exportCombinedRaster(
-                      combinedRaster,
-                      navigate
-                    );
+                      // Re-crop with expanded bounds
+                      const recroppedRaster = await cropGeorasterToBounds(
+                        georaster,
+                        expandedBounds
+                      );
+                      console.log(
+                        `Re-cropped raster dimensions: ${recroppedRaster.width}x${recroppedRaster.height}`
+                      );
 
-                    if (!success) {
-                      setProcessingScenario(false);
-                      setIsSaving(false);
+                      // Use the expanded raster instead
+                      const paddedRaster = padRasterPreservePosition(
+                        recroppedRaster,
+                        georaster
+                      );
+                      console.log(
+                        `Padded raster dimensions: ${paddedRaster.width}x${paddedRaster.height}`
+                      );
+
+                      const drawingRaster = rasterizeDrawing(
+                        paddedRaster,
+                        polygons,
+                        polygonValues
+                      );
+
+                      const combinedRaster = combineLayers(
+                        paddedRaster,
+                        drawingRaster
+                      );
+
+                      console.log("Combined Raster:", combinedRaster);
+
+                      const success = await exportCombinedRaster(
+                        combinedRaster,
+                        navigate,
+                        apiParameterType,
+                        apiMode
+                      );
+
+                      if (!success) {
+                        setProcessingScenario(false);
+                        setIsSaving(false);
+                      }
+                    } else {
+                      // Normal flow with sufficient raster size
+                      const paddedRaster = padRasterPreservePosition(
+                        croppedRaster,
+                        georaster
+                      );
+                      console.log(
+                        `Padded raster dimensions: ${paddedRaster.width}x${paddedRaster.height}`
+                      );
+
+                      const drawingRaster = rasterizeDrawing(
+                        paddedRaster,
+                        polygons,
+                        polygonValues
+                      );
+                      const combinedRaster = combineLayers(
+                        paddedRaster,
+                        drawingRaster
+                      );
+
+                      console.log("Combined Raster:", combinedRaster);
+
+                      const success = await exportCombinedRaster(
+                        combinedRaster,
+                        navigate,
+                        apiParameterType,
+                        apiMode
+                      );
+
+                      if (!success) {
+                        setProcessingScenario(false);
+                        setIsSaving(false);
+                      }
                     }
                   } catch (error: any) {
                     console.error("Error in raster processing:", error);
