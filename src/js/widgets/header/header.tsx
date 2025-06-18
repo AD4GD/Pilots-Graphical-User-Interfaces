@@ -110,7 +110,7 @@ export default createWidgetComponent<ConfigInterface>(
               )}
 
               {/* 🌐 Language Switcher - Styled to match header */}
-              <Select
+              {/* <Select
                 value={i18next.language}
                 onChange={(lng) => i18next.changeLanguage(lng)}
                 suffixIcon={
@@ -150,7 +150,7 @@ export default createWidgetComponent<ConfigInterface>(
                   },
                 ]}
                 popupMatchSelectWidth={false}
-              />
+              /> */}
 
               <Button
                 type="primary"
