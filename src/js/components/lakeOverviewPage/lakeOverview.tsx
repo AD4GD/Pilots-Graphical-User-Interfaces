@@ -15,6 +15,7 @@ import {
 } from "antd";
 import { useNavigate } from "@opendash/router";
 import { SearchOutlined } from "@ant-design/icons";
+import { useLakeWQIColors } from "../../hooks/useLakeWQIColors";
 
 const { Title, Text } = Typography;
 
@@ -28,9 +29,11 @@ const LakeOverview: React.FC = () => {
       id: string;
     }[]
   );
-
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
+
+  // Get WQI colors for all lakes
+  const { wqiData, loading: wqiLoading } = useLakeWQIColors(zones);
 
   useEffect(() => {
     init();
@@ -257,7 +260,13 @@ const LakeOverview: React.FC = () => {
                           <Avatar
                             src={
                               <svg width="12" height="12">
-                                <circle cx="6" cy="6" r="6" fill="#55b169" />
+                                {" "}
+                                <circle
+                                  cx="6"
+                                  cy="6"
+                                  r="6"
+                                  fill={wqiData[item.id]?.color || "#8c8c8c"}
+                                />
                               </svg>
                             }
                           />

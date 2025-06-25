@@ -636,11 +636,9 @@ const init = async () => {
 
   Parse.Cloud.define("processBioconnTiff", async (request) => {
     console.log("[BioConn] Function started");
-    const { type, mode, fileData } = request.params;
-
-    // Log parameters without the actual file content
+    const { type, mode, fileData } = request.params; // Log parameters without the actual file content
     console.log(
-      `[BioConn] Params: type=${type}, mode=${mode}, fileData=${
+      `[BioConn] Received params: type='${type}', mode='${mode}', fileData=${
         fileData
           ? `${fileData.substring(0, 20)}... (${fileData.length} bytes)`
           : "undefined"
@@ -656,14 +654,30 @@ const init = async () => {
     }
 
     // Validate type parameter
-    const validTypes = ["forest", "woody", "shrublands", "herbaceous"];
+    const validTypes = [
+      "aquatic",
+      "forest",
+      "woody",
+      "shrublands",
+      "herbaceous",
+    ];
+
+    console.log(
+      `[BioConn] Validating type parameter '${type}' against valid types:`,
+      validTypes
+    );
+
     if (!validTypes.includes(type)) {
       console.log(`[BioConn] Error: Invalid type parameter: ${type}`);
       throw new Parse.Error(
         Parse.Error.INVALID_PARAMETER,
-        `Invalid type parameter. Must be one of: ${validTypes.join(", ")}`
+        `Invalid type parameter '${type}'. Must be one of: ${validTypes.join(
+          ", "
+        )}`
       );
     }
+
+    console.log(`[BioConn] Type parameter '${type}' is valid`);
 
     // Validate mode parameter
     const validModes = ["high", "low"];
@@ -701,9 +715,11 @@ const init = async () => {
       console.log(
         `[BioConn] Request starting at: ${new Date(startTime).toISOString()}`
       );
-
       console.log(
         `[BioConn] Step 2: Sending request to API endpoint (type=${type}, mode=${mode})`
+      );
+      console.log(
+        `[BioConn] Full API URL: https://pilot2api.dashboard-siba.store/bioconn/?type=${type}&mode=${mode}`
       );
 
       // Make the request to the bioconn API with an extended timeout
@@ -855,25 +871,34 @@ const init = async () => {
         errorMessage = `${error.name}: ${error.message}`;
         console.log(`[BioConn] Error type: ${error.name}`);
       }
-
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
         console.log(
           `[BioConn] Server responded with status ${error.response.status}`
         );
+        console.log(`[BioConn] Response headers:`, error.response.headers);
+
         errorMessage = `Server responded with status ${error.response.status}`;
 
         // If we have response data, try to convert it to string for more context
         if (error.response.data) {
           try {
             const dataStr = Buffer.from(error.response.data).toString();
-            // Log only the first 100 chars of the error response to avoid flooding the logs
-            console.log(
-              `[BioConn] Response data: ${dataStr.substring(0, 100)}${
-                dataStr.length > 100 ? "..." : ""
-              }`
-            );
+            // Log the full error response for debugging aquatic parameter issues
+            console.log(`[BioConn] Full error response: ${dataStr}`);
+
+            // Check if the error specifically mentions unsupported type
+            if (
+              dataStr.toLowerCase().includes("aquatic") ||
+              dataStr.toLowerCase().includes("not supported") ||
+              dataStr.toLowerCase().includes("invalid type")
+            ) {
+              console.log(
+                `[BioConn] IMPORTANT: API rejected the 'aquatic' parameter. Error response: ${dataStr}`
+              );
+            }
+
             errorMessage += `: ${dataStr.substring(0, 500)}`; // Include a reasonable amount in the error
           } catch (e) {
             // Ignore conversion errors

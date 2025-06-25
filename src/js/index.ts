@@ -328,7 +328,6 @@ init("opendash", async (factory) => {
   $monitoring.registerWidget(LakePrediction);
   $monitoring.registerWidget(lakeMapWidget);
   $monitoring.registerWidget(HeaderBioConnWidget);
-  // $monitoring.registerWidget(wqiWidget);
 }).then((app) => {
   console.log("init open.DASH");
 });

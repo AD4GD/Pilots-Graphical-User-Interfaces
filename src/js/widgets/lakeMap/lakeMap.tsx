@@ -7,19 +7,56 @@ import L from "leaflet";
 import "leaflet-boundary-canvas";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "@opendash/router";
+import { useLakeWQIColors } from "../../hooks/useLakeWQIColors";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
     const t = useTranslation();
 
     context.setLoading(false);
-
     const [map, setMap] = useState<L.Map | null>(null);
     const [geoData, setGeoData] = useState(null);
+    const [zones, setZones] = useState<{ id: string; label: string }[]>([]);
+
+    // Get WQI colors for all lakes
+    const { wqiData, loading: wqiLoading } = useLakeWQIColors(zones);
 
     const navigate = useNavigate();
 
+    // Fetch zones data
     useEffect(() => {
+      const fetchZonesData = async () => {
+        try {
+          const zonesData = await new Parse.Query("MIAAS_Geographies").find();
+          const zonesInfo = zonesData.map((zone) => ({
+            id: zone.id,
+            label: zone.get("label"),
+          }));
+          setZones(zonesInfo);
+        } catch (error) {
+          console.error("Error fetching zones:", error);
+        }
+      };
+
+      fetchZonesData();
+    }, []);
+
+    useEffect(() => {
+      // Wait for zones data and WQI data to be loaded
+      if (zones.length === 0 || wqiLoading) return;
+
+      // Function to create colored icon based on WQI data
+      const createColoredIcon = (zoneId: string) => {
+        const color = wqiData[zoneId]?.color || "#8c8c8c"; // Default to grey if no WQI data
+        return L.divIcon({
+          className: "custom-div-icon",
+          html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+          popupAnchor: [0, -10],
+        });
+      };
+
       const berlinBoundary = {
         type: "FeatureCollection",
         crs: {
@@ -359,12 +396,11 @@ export default createWidgetComponent<ConfigInterface>(
                 ...feature.properties,
                 objectId,
               };
-            });
-
-            // Add the geoJSON layer to the map
+            }); // Add the geoJSON layer to the map
             L.geoJSON(geoData, {
               pointToLayer: (feature: any, latlng: any) => {
-                return L.marker(latlng, { icon: customIcon });
+                const coloredIcon = createColoredIcon(objectId);
+                return L.marker(latlng, { icon: coloredIcon });
               },
               onEachFeature: (feature: any, layer: any) => {
                 layer.on({
@@ -388,7 +424,7 @@ export default createWidgetComponent<ConfigInterface>(
           initializedMap.remove();
         }
       };
-    }, []);
+    }, [zones, wqiData, wqiLoading]);
 
     return (
       <div style={{ textAlign: "center", height: "100%", width: "100%" }}>

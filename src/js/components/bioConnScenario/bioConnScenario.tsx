@@ -94,8 +94,9 @@ const availableTimes = [
   "2022-01-01T00:00:00.000Z",
 ];
 
-// API parameter types (only 3, 4, 5, 6 as requested)
+// API parameter types (1, 3, 4, 5, 6 as requested)
 const apiParameterTypes = [
+  { value: 1, label: "Aquatic" },
   { value: 3, label: "Herbaceous cropland" },
   { value: 4, label: "Woody cropland" },
   { value: 5, label: "Shrubland and grassland" },
@@ -180,7 +181,6 @@ const exportCombinedRaster = async (
       const base64Data = await blobToBase64(blob);
       console.log("Making request to BioConn API via Cloud Function...");
 
-      // Add retry logic for the API call
       let result;
       let lastError;
       const maxRetries = 3;
@@ -190,6 +190,7 @@ const exportCombinedRaster = async (
 
           // Map apiParameterType to API type string
           const typeMapping: { [key: number]: string } = {
+            1: "aquatic", // Aquatic
             3: "herbaceous", // Herbaceous cropland
             4: "woody", // Woody cropland
             5: "shrublands", // Shrubland and grassland
@@ -197,13 +198,20 @@ const exportCombinedRaster = async (
           };
 
           const apiType = typeMapping[apiParameterType] || "forest";
+          console.log(`[Frontend] Making API call with parameters:`, {
+            type: apiType,
+            mode: apiMode,
+            originalParameterType: apiParameterType,
+            fileDataLength: base64Data.length,
+          });
 
-          // Call the Parse Cloud Function with dynamic parameters
           result = await Parse.Cloud.run("processBioconnTiff", {
             type: apiType,
             mode: apiMode,
             fileData: base64Data,
           });
+
+          console.log(`[Frontend] API call successful for type: ${apiType}`);
 
           console.log("BioConn API Response:", result);
           break; // Success, exit retry loop
@@ -1269,32 +1277,30 @@ const BioConnScenario: React.FC = () => {
                 <br />
                 4. Choose processing mode (High/Low quality)
                 <br />
-                5. Choose an API parameter type (3-6) for processing
+                5. Choose an API parameter type (1,3-6) for processing
                 <br />
                 6. Press ESC to deselect, or click "Clear selection"
-              </div>
-            </div>
-            <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", marginBottom: "5px" }}>
-                Processing Mode
-              </label>
-              <Select
-                style={{ width: "100%" }}
-                value={apiMode}
-                onChange={(value) => setApiMode(value)}
-              >
-                <Option value="high">High Resolution</Option>
-                <Option value="low">Low Resolution</Option>
-              </Select>
-            </div>
+              </div>            </div>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px" }}>
                 API Parameter Type
               </label>
               <Select
                 style={{ width: "100%" }}
-                value={apiParameterType}
-                onChange={(value) => setApiParameterType(value)}
+                value={apiParameterType}                onChange={(value) => {
+                  console.log(
+                    `[Frontend] API Parameter Type changed to: ${value} (${
+                      apiParameterTypes.find((t) => t.value === value)?.label
+                    })`
+                  );
+                  setApiParameterType(value);
+                  
+                  // Automatically switch to low resolution for non-forest types
+                  if (value !== 6 && apiMode === "high") {
+                    console.log("[Frontend] Switching to low resolution - high resolution only available for Forest");
+                    setApiMode("low");
+                  }
+                }}
               >
                 {apiParameterTypes.map(
                   (type: { value: number; label: string }) => (
@@ -1304,6 +1310,48 @@ const BioConnScenario: React.FC = () => {
                   )
                 )}{" "}
               </Select>
+              <div
+                style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}
+              >
+                Current selection: {apiParameterType} -{" "}
+                {
+                  apiParameterTypes.find((t) => t.value === apiParameterType)
+                    ?.label
+                }
+              </div>
+            </div>
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "5px" }}>
+                Processing Mode
+              </label>              <Select
+                style={{ width: "100%" }}
+                value={apiMode}
+                onChange={(value) => {
+                  // Prevent high resolution selection for non-forest types
+                  if (value === "high" && apiParameterType !== 6) {
+                    console.log("[Frontend] High resolution not available for this type, staying on low resolution");
+                    return;
+                  }
+                  setApiMode(value);
+                }}
+              >
+                <Option value="high" disabled={apiParameterType !== 6}>
+                  High Resolution {apiParameterType !== 6 ? "(Forest only)" : ""}
+                </Option>
+                <Option value="low">Low Resolution (All types)</Option>
+              </Select>
+              <div
+                style={{ 
+                  marginTop: "8px", 
+                  fontSize: "12px", 
+                  color: apiParameterType === 6 ? "#52c41a" : "#ff6b6b" 
+                }}
+              >
+                {apiParameterType === 6 
+                  ? "✓ High resolution available for Forestland"
+                  : "⚠ High resolution is only available for Forestland (type 6). Other types support low resolution only."
+                }
+              </div>
             </div>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px" }}>
@@ -1560,39 +1608,22 @@ const BioConnScenario: React.FC = () => {
                     if (croppedRaster.width < 10 || croppedRaster.height < 10) {
                       console.warn(
                         "Cropped raster is very small, expanding bounds"
-                      );
-                      // Expand the bounds slightly
+                      ); // Expand the bounds slightly
                       const center = drawingBounds.getCenter();
-                      const expandedBounds = L.latLngBounds(
-                        center.lat -
-                          Math.max(
-                            0.001,
-                            (drawingBounds.getNorth() -
-                              drawingBounds.getSouth()) *
-                              2
-                          ),
-                        center.lng -
-                          Math.max(
-                            0.001,
-                            (drawingBounds.getEast() -
-                              drawingBounds.getWest()) *
-                              2
-                          ),
-                        center.lat +
-                          Math.max(
-                            0.001,
-                            (drawingBounds.getNorth() -
-                              drawingBounds.getSouth()) *
-                              2
-                          ),
-                        center.lng +
-                          Math.max(
-                            0.001,
-                            (drawingBounds.getEast() -
-                              drawingBounds.getWest()) *
-                              2
-                          )
+                      const latExtension = Math.max(
+                        0.001,
+                        (drawingBounds.getNorth() - drawingBounds.getSouth()) *
+                          2
                       );
+                      const lngExtension = Math.max(
+                        0.001,
+                        (drawingBounds.getEast() - drawingBounds.getWest()) * 2
+                      );
+
+                      const expandedBounds = L.latLngBounds([
+                        [center.lat - latExtension, center.lng - lngExtension],
+                        [center.lat + latExtension, center.lng + lngExtension],
+                      ]);
 
                       console.log(
                         "Using expanded bounds:",

@@ -185,7 +185,6 @@ const LakeStats: React.FC = ({}) => {
     value: 0,
     trend: 0,
   });
-
   const getWQI = async () => {
     if (lakeId) {
       // Query to get the maximum value
@@ -222,33 +221,31 @@ const LakeStats: React.FC = ({}) => {
 
       const maxValue =
         maxResults.length > 0
-          ? round(maxResults[0].get("WQI_status"), 2)
+          ? round(maxResults[0].get("WQI_status"), 5)
           : null;
 
       const minValue =
         minResults.length > 0
-          ? round(minResults[0].get("WQI_status"), 2)
+          ? round(minResults[0].get("WQI_status"), 5)
           : null;
 
       const maxTrend =
         maxResultsTrend.length > 0
-          ? round(maxResultsTrend[0].get("WQI_trend"), 2)
+          ? round(maxResultsTrend[0].get("WQI_trend"), 5)
           : null;
 
       const minTrend =
         minResultsTrend.length > 0
-          ? round(minResultsTrend[0].get("WQI_trend"), 2)
-          : null;
-
-      // Query to get the value of current lake
+          ? round(minResultsTrend[0].get("WQI_trend"), 5)
+          : null; // Query to get the value of current lake
       const query = new Parse.Query("AD4GD_Lake_Quality_Index");
       query.equalTo("lake", currentLakeMeta.name);
       const results = await query.find();
 
       if (results.length > 0) {
         const lakeObject = results[0];
-        const wqiStatus = round(lakeObject.get("WQI_status"), 2);
-        const wqiTrend = round(lakeObject.get("WQI_trend"), 2);
+        const wqiStatus = round(lakeObject.get("WQI_status"), 5);
+        const wqiTrend = round(lakeObject.get("WQI_trend"), 5);
 
         // Set the state with the rounded values
         setWqiValues({
@@ -260,9 +257,92 @@ const LakeStats: React.FC = ({}) => {
           trend: wqiTrend || 0,
         });
       } else {
-        console.log(`No lake found with the name: ${currentLakeMeta.name}`);
+        // Try fuzzy matching
+        const fuzzyQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
+        const allLakes = await fuzzyQuery.find();
+
+        const currentName = currentLakeMeta.name.toLowerCase().trim();
+        const possibleMatches = allLakes.filter((lake) => {
+          const lakeName = lake.get("lake")?.toLowerCase().trim();
+          return (
+            lakeName?.includes(currentName) || currentName.includes(lakeName)
+          );
+        });
+
+        if (possibleMatches.length > 0) {
+          const lakeObject = possibleMatches[0];
+          const wqiStatus = round(lakeObject.get("WQI_status"), 5);
+          const wqiTrend = round(lakeObject.get("WQI_trend"), 5);
+
+          setWqiValues({
+            minVal: minValue || 0,
+            maxVal: maxValue || 100,
+            minTrend: minTrend || 0,
+            maxTrend: maxTrend || 100,
+            value: wqiStatus || 0,
+            trend: wqiTrend || 0,
+          });
+        }
       }
     }
+  };
+  // Function to calculate WQI color (same logic as multicolorbar)
+  const getWQIColor = (
+    value: number,
+    minValue: number,
+    maxValue: number
+  ): string => {
+    // If no valid WQI data, return grey color
+    if (value === 0 && minValue === 0 && maxValue === 100) {
+      return "#8c8c8c"; // Grey for no data
+    }
+
+    // Clamp the value within the min and max range
+    const clampedValue = Math.max(minValue, Math.min(value, maxValue));
+
+    // Calculate the percentage position
+    const percentage =
+      ((clampedValue - minValue) / (maxValue - minValue)) * 100;
+
+    // Gradient color stops (same as multicolorbar)
+    const gradientColors = [
+      { stop: 0, color: "#dc3545" }, // Red
+      { stop: 30, color: "#f2d261" }, // Yellow
+      { stop: 70, color: "#6fa053" }, // Green
+    ];
+
+    // Find the appropriate color range
+    for (let i = 0; i < gradientColors.length - 1; i++) {
+      const start = gradientColors[i];
+      const end = gradientColors[i + 1];
+
+      if (percentage >= start.stop && percentage <= end.stop) {
+        const ratio = (percentage - start.stop) / (end.stop - start.stop);
+        return interpolateColor(start.color, end.color, ratio);
+      }
+    }
+    return gradientColors[gradientColors.length - 1].color;
+  };
+
+  const interpolateColor = (
+    color1: string,
+    color2: string,
+    ratio: number
+  ): string => {
+    const hex = (color: string) => parseInt(color.slice(1), 16);
+    const r1 = (hex(color1) >> 16) & 255;
+    const g1 = (hex(color1) >> 8) & 255;
+    const b1 = hex(color1) & 255;
+
+    const r2 = (hex(color2) >> 16) & 255;
+    const g2 = (hex(color2) >> 8) & 255;
+    const b2 = hex(color2) & 255;
+
+    const r = Math.round(r1 + ratio * (r2 - r1));
+    const g = Math.round(g1 + ratio * (g2 - g1));
+    const b = Math.round(b1 + ratio * (b2 - b1));
+
+    return `rgb(${r}, ${g}, ${b})`;
   };
 
   useEffect(() => {
@@ -386,8 +466,18 @@ const LakeStats: React.FC = ({}) => {
                   paddingLeft: "1rem",
                 }}
               >
+                {" "}
                 <svg width="12" height="12">
-                  <circle cx="6" cy="6" r="6" fill="#55b169" />
+                  <circle
+                    cx="6"
+                    cy="6"
+                    r="6"
+                    fill={getWQIColor(
+                      wqiValues.value,
+                      wqiValues.minVal,
+                      wqiValues.maxVal
+                    )}
+                  />
                 </svg>
                 <Text
                   strong
@@ -519,7 +609,7 @@ const LakeStats: React.FC = ({}) => {
                             <span
                               style={{ fontSize: "20px", fontWeight: "bold" }}
                             >
-                              WQI State: {wqiValues.value}
+                              NDTrI State: {wqiValues.value}
                             </span>
                           </div>
                         </div>
@@ -530,7 +620,7 @@ const LakeStats: React.FC = ({}) => {
                         />
                       </>
                     ) : (
-                      <p>Loading WQI data...</p>
+                      <p>Loading NDTrI data...</p>
                     )}
                   </div>
                 </div>
@@ -583,7 +673,7 @@ const LakeStats: React.FC = ({}) => {
                             <span
                               style={{ fontSize: "20px", fontWeight: "bold" }}
                             >
-                              WQI Trend: {wqiValues.trend}
+                              NDTrI Trend: {wqiValues.trend}
                             </span>
                           </div>
                         </div>
@@ -594,7 +684,7 @@ const LakeStats: React.FC = ({}) => {
                         />
                       </>
                     ) : (
-                      <p>Loading WQI data...</p>
+                      <p>Loading NDTrI data...</p>
                     )}
                   </div>
                 </div>

@@ -526,7 +526,7 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
       let originalRasterArrayBuffer: ArrayBuffer | null = null;
 
       try {
-        parsedOriginalRaster = await convertToGeoblazeRaster(originalRaster);        // Check for downloadable GeoTIFF from bioConnScenario first
+        parsedOriginalRaster = await convertToGeoblazeRaster(originalRaster); // Check for downloadable GeoTIFF from bioConnScenario first
         if (originalRaster.downloadableGeoTiff) {
           // Use the downloadable GeoTIFF ArrayBuffer created in bioConnScenario
           originalRasterArrayBuffer = originalRaster.downloadableGeoTiff;
@@ -548,7 +548,7 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
           console.warn(
             "Original raster ArrayBuffer not available for comparison"
           );
-        }// Store the ArrayBuffer for download purposes
+        } // Store the ArrayBuffer for download purposes
         if (originalRasterArrayBuffer) {
           setOriginalRasterDownloadData(originalRasterArrayBuffer);
           setIsOriginalRasterFromFile(true);
@@ -1069,7 +1069,9 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
               marginBottom: "20px",
               gap: "15px",
             }}
-          >            {/* Left Map - Connectivity Index */}
+          >
+            {" "}
+            {/* Left Map - Connectivity Index */}
             <div style={{ width: "50%" }}>
               <div
                 style={{
@@ -1115,7 +1117,6 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
                 }}
               />
             </div>
-
             {/* Hidden Middle Map - Still needed for red rectangle calculation */}
             <div style={{ display: "none" }}>
               <div
@@ -1129,7 +1130,6 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
                 }}
               />
             </div>
-
             {/* Right Map - API Response */}
             <div style={{ width: "50%" }}>
               <div
