@@ -1,0 +1,133 @@
+/* Lake Map Widget Styles */
+
+/* Tooltip styling */
+.lake-tooltip {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px);
+}
+
+.lake-tooltip::before {
+  border-top-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Smooth hover effects for marker content (not the marker itself) */
+.custom-div-icon div {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.3s ease !important;
+  transform-origin: center center !important;
+}
+
+/* Hover effect on the inner div only */
+.leaflet-marker-icon:hover .custom-div-icon div,
+.leaflet-marker-icon:hover div {
+  transform: scale(1.2) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Make sure marker container has pointer cursor */
+.leaflet-marker-icon {
+  cursor: pointer !important;
+}
+
+/* Tooltip animation - simple fade in */
+.leaflet-tooltip {
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* NDTrI Legend Styles */
+.ndtri-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 200px;
+  z-index: 1000;
+}
+
+.legend-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.legend-subtitle {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+  text-align: center;
+  font-style: italic;
+}
+
+.legend-gradient {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #dc3545 0%, #f2d261 50%, #6fa053 100%);
+  margin-bottom: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #555;
+}
+
+.legend-label-left,
+.legend-label-center,
+.legend-label-right {
+  font-weight: 500;
+}
+
+.legend-label-center {
+  text-align: center;
+}
+
+.legend-label-right {
+  text-align: right;
+}
+
+/* Responsive legend for smaller screens */
+@media (max-width: 768px) {
+  .ndtri-legend {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
+
+  .legend-title {
+    font-size: 14px;
+  }
+
+  .legend-subtitle {
+    font-size: 11px;
+  }
+
+  .legend-labels {
+    font-size: 10px;
+  }
+}

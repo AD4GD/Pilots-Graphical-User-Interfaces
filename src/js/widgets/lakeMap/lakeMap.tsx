@@ -6,6 +6,7 @@ import Parse from "parse";
 import L from "leaflet";
 import "leaflet-boundary-canvas";
 import "leaflet/dist/leaflet.css";
+import "./lakeMap.css";
 import { useNavigate } from "@opendash/router";
 import { useLakeWQIColors } from "../../hooks/useLakeWQIColors";
 
@@ -385,16 +386,17 @@ export default createWidgetComponent<ConfigInterface>(
       const fetchZones = async () => {
         try {
           const zones = await new Parse.Query("MIAAS_Geographies").find();
-
           zones.forEach((zone) => {
             const geoData = zone.get("geo");
             const objectId = zone.id;
+            const zoneName = zone.get("label");
 
-            // Inject objectId into the GeoJSON properties
+            // Inject objectId and zoneName into the GeoJSON properties
             geoData.features.forEach((feature: any) => {
               feature.properties = {
                 ...feature.properties,
                 objectId,
+                zoneName,
               };
             }); // Add the geoJSON layer to the map
             L.geoJSON(geoData, {
@@ -403,8 +405,24 @@ export default createWidgetComponent<ConfigInterface>(
                 return L.marker(latlng, { icon: coloredIcon });
               },
               onEachFeature: (feature: any, layer: any) => {
+                // Bind tooltip with lake name - fixed positioning
+                layer.bindTooltip(feature.properties.zoneName, {
+                  permanent: false,
+                  direction: "top",
+                  offset: [0, -20],
+                  className: "lake-tooltip",
+                });
+
                 layer.on({
                   click: onFeatureClick,
+                  mouseover: (e: any) => {
+                    // Show tooltip
+                    e.target.openTooltip();
+                  },
+                  mouseout: (e: any) => {
+                    // Hide tooltip
+                    e.target.closeTooltip();
+                  },
                 });
                 if (feature.properties && feature.properties.popupContent) {
                   layer.bindPopup(feature.properties.popupContent);
@@ -425,10 +443,29 @@ export default createWidgetComponent<ConfigInterface>(
         }
       };
     }, [zones, wqiData, wqiLoading]);
-
     return (
-      <div style={{ textAlign: "center", height: "100%", width: "100%" }}>
+      <div
+        style={{
+          textAlign: "center",
+          height: "100%",
+          width: "100%",
+          position: "relative",
+        }}
+      >
         <div id="map" style={{ height: "100%", width: "100%" }}></div>
+        {/* NDTrI Legend */}
+        <div className="ndtri-legend">
+          <div className="legend-title">NDTrI</div>
+          <div className="legend-subtitle">
+            Normalized Difference Trophic Index
+          </div>
+          <div className="legend-gradient"></div>
+          <div className="legend-labels">
+            <span className="legend-label-left">Schlecht</span>
+            <span className="legend-label-center">Mäßig</span>
+            <span className="legend-label-right">Gut</span>
+          </div>
+        </div>
       </div>
     );
   }

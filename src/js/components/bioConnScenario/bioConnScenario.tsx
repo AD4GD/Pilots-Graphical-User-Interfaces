@@ -1280,24 +1280,28 @@ const BioConnScenario: React.FC = () => {
                 5. Choose an API parameter type (1,3-6) for processing
                 <br />
                 6. Press ESC to deselect, or click "Clear selection"
-              </div>            </div>
+              </div>{" "}
+            </div>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px" }}>
                 API Parameter Type
               </label>
               <Select
                 style={{ width: "100%" }}
-                value={apiParameterType}                onChange={(value) => {
+                value={apiParameterType}
+                onChange={(value) => {
                   console.log(
                     `[Frontend] API Parameter Type changed to: ${value} (${
                       apiParameterTypes.find((t) => t.value === value)?.label
                     })`
                   );
                   setApiParameterType(value);
-                  
+
                   // Automatically switch to low resolution for non-forest types
                   if (value !== 6 && apiMode === "high") {
-                    console.log("[Frontend] Switching to low resolution - high resolution only available for Forest");
+                    console.log(
+                      "[Frontend] Switching to low resolution - high resolution only available for Forest"
+                    );
                     setApiMode("low");
                   }
                 }}
@@ -1323,34 +1327,37 @@ const BioConnScenario: React.FC = () => {
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px" }}>
                 Processing Mode
-              </label>              <Select
+              </label>{" "}
+              <Select
                 style={{ width: "100%" }}
                 value={apiMode}
                 onChange={(value) => {
                   // Prevent high resolution selection for non-forest types
                   if (value === "high" && apiParameterType !== 6) {
-                    console.log("[Frontend] High resolution not available for this type, staying on low resolution");
+                    console.log(
+                      "[Frontend] High resolution not available for this type, staying on low resolution"
+                    );
                     return;
                   }
                   setApiMode(value);
                 }}
               >
                 <Option value="high" disabled={apiParameterType !== 6}>
-                  High Resolution {apiParameterType !== 6 ? "(Forest only)" : ""}
+                  High Resolution{" "}
+                  {apiParameterType !== 6 ? "(Forest only)" : ""}
                 </Option>
                 <Option value="low">Low Resolution (All types)</Option>
               </Select>
               <div
-                style={{ 
-                  marginTop: "8px", 
-                  fontSize: "12px", 
-                  color: apiParameterType === 6 ? "#52c41a" : "#ff6b6b" 
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  color: apiParameterType === 6 ? "#52c41a" : "#ff6b6b",
                 }}
               >
-                {apiParameterType === 6 
+                {apiParameterType === 6
                   ? "✓ High resolution available for Forestland"
-                  : "⚠ High resolution is only available for Forestland (type 6). Other types support low resolution only."
-                }
+                  : "⚠ High resolution is only available for Forestland (type 6). Other types support low resolution only."}
               </div>
             </div>
             <div style={{ marginBottom: "20px" }}>
