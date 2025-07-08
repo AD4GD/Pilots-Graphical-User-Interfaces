@@ -12,9 +12,11 @@ import {
   Typography,
   AutoComplete,
   ConfigProvider,
+  Tooltip,
+  Modal,
 } from "antd";
 import { useNavigate } from "@opendash/router";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useLakeWQIColors } from "../../hooks/useLakeWQIColors";
 
 const { Title, Text } = Typography;
@@ -31,6 +33,8 @@ const LakeOverview: React.FC = () => {
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [isWQIModalVisible, setIsWQIModalVisible] = useState<boolean>(false);
 
   // Get WQI colors for all lakes
   const { wqiData, loading: wqiLoading } = useLakeWQIColors(zones);
@@ -113,6 +117,30 @@ const LakeOverview: React.FC = () => {
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
+  };
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleModalOk = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleModalCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const showWQIModal = () => {
+    setIsWQIModalVisible(true);
+  };
+
+  const handleWQIModalOk = () => {
+    setIsWQIModalVisible(false);
+  };
+
+  const handleWQIModalCancel = () => {
+    setIsWQIModalVisible(false);
   };
 
   return (
@@ -210,9 +238,20 @@ const LakeOverview: React.FC = () => {
                   marginBottom: "1rem",
                   fontFamily: "Josefin Sans",
                   paddingTop: "1rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
                 }}
               >
                 Wasserqualitätindex
+                <InfoCircleOutlined
+                  style={{
+                    color: "#42A456",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                  }}
+                  onClick={showWQIModal}
+                />
               </Title>
 
               <Text style={{ marginBottom: "1rem", display: "block" }}>
@@ -235,7 +274,7 @@ const LakeOverview: React.FC = () => {
                     textDecoration: "underline",
                     padding: 0,
                   }}
-                  onClick={fetchData}
+                  onClick={showModal}
                 >
                   Mehr zur Datenerhebung
                 </Button>
@@ -291,6 +330,137 @@ const LakeOverview: React.FC = () => {
             </Flex>
           </Flex>
         </Row>
+
+        <Modal
+          title="Mehr zur Datenerhebung"
+          open={isModalVisible}
+          onOk={handleModalOk}
+          onCancel={handleModalCancel}
+          centered
+          width={500}
+          footer={[
+            <Button key="ok" type="primary" onClick={handleModalOk}>
+              OK
+            </Button>,
+          ]}
+          styles={{
+            header: {
+              backgroundColor: "#f5f5f5",
+              borderBottom: "1px solid #e8e8e8",
+            },
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 0",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              color: "#333",
+              textAlign: "left",
+            }}
+          >
+            Der Datensatz wurde am 25.05.25 mit den Daten der Copernicus
+            Sentinel-2 Mission aus den Jahren 2018 bis 2024 erstellt.
+          </div>
+        </Modal>
+
+        <Modal
+          title="Wasserqualitätsindex"
+          open={isWQIModalVisible}
+          onOk={handleWQIModalOk}
+          onCancel={handleWQIModalCancel}
+          centered
+          width={700}
+          footer={[
+            <Button key="ok" type="primary" onClick={handleWQIModalOk}>
+              OK
+            </Button>,
+          ]}
+          styles={{
+            header: {
+              backgroundColor: "#f5f5f5",
+              borderBottom: "1px solid #e8e8e8",
+            },
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 0",
+              lineHeight: "1.6",
+              color: "#333",
+              textAlign: "left",
+            }}
+          >
+            <div style={{ marginBottom: "24px" }}>
+              <h3
+                style={{
+                  color: "#42A456",
+                  fontSize: "18px",
+                  marginBottom: "12px",
+                }}
+              >
+                Was ist der Wasserqualitätsindex?
+              </h3>
+              <div style={{ fontSize: "16px", lineHeight: "1.6" }}>
+                Der Wasserqualitätsindex beschreibt die Trophie eines Gewässers.
+                Er basiert auf der Auswertung von Satellitendaten der{" "}
+                <a
+                  href="https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                  }}
+                >
+                  ESA Copernicus Sentinel-2 Mission
+                </a>{" "}
+                und wird als ein jährlicher Kennwert pro Gewässer berechnet. Der
+                Index ist definiert für einen Bereich zwischen -1 und 1, wobei
+                Gewässer in der Regel zwischen -0,5 (oligotroph) und 0,4
+                (hypertroph) liegen, d.h. je geringer der Wasserqualitätsindex
+                ist, desto geringer wird die Trophie eingeschätzt. Ein positiver
+                Trend der Wasserqualität bedeutet gleichermaßen, dass das
+                Gewässer eutrophiert und somit die Wasserqualität abnimmt.
+              </div>
+            </div>
+            <div>
+              <h3
+                style={{
+                  color: "#42A456",
+                  fontSize: "18px",
+                  marginBottom: "12px",
+                }}
+              >
+                Wie richtig ist der Wasserqualitätsindex?
+              </h3>
+              <div style={{ fontSize: "16px", lineHeight: "1.6" }}>
+                Der Wasserqualitätsindex wurde mithilfe von durch das{" "}
+                <a
+                  href="https://lfu.brandenburg.de/lfu/de/aufgaben/wasser/fliessgewaesser-und-seen/gewaesserzustandsbewertung/seensteckbriefe/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Landesamt für Umwelt Brandenburg (LfU) gemessenen
+                  Trophiewerten
+                </a>{" "}
+                entwickelt. Für 294 Brandenburger Seen konnte ein starker
+                Zusammenhang zwischen Messwerten und berechnetem
+                Wasserqualitätsindex in den Jahren 2018 bis 2023 beschrieben
+                werden. Für jedes dieser Jahre betrug die Korrelation (Pearson)
+                beider Methoden zwischen 0.83 und 0.92. Der Wasserqualitätsindex
+                ist nicht gedacht, um die Trophi direkt zu bestimmen. Vielmehr
+                soll er eine Rangordnung der Trophie zwischen Seen und eine
+                Trendanalyse ermöglichen, um problematische Entwicklungen zu
+                identifizieren oder Wasserqualitätsmaßnahmen zu bewerten.
+              </div>
+            </div>
+          </div>
+        </Modal>
       </ConfigProvider>
     </>
   );

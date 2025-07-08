@@ -9,6 +9,8 @@ import "leaflet/dist/leaflet.css";
 import "./lakeMap.css";
 import { useNavigate } from "@opendash/router";
 import { useLakeWQIColors } from "../../hooks/useLakeWQIColors";
+import { Modal, Button } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
 
 export default createWidgetComponent<ConfigInterface>(
   ({ config, ...context }) => {
@@ -18,11 +20,26 @@ export default createWidgetComponent<ConfigInterface>(
     const [map, setMap] = useState<L.Map | null>(null);
     const [geoData, setGeoData] = useState(null);
     const [zones, setZones] = useState<{ id: string; label: string }[]>([]);
+    const [isNDTrIModalVisible, setIsNDTrIModalVisible] =
+      useState<boolean>(false);
 
     // Get WQI colors for all lakes
     const { wqiData, loading: wqiLoading } = useLakeWQIColors(zones);
 
     const navigate = useNavigate();
+
+    // Modal control functions
+    const showNDTrIModal = () => {
+      setIsNDTrIModalVisible(true);
+    };
+
+    const handleNDTrIModalOk = () => {
+      setIsNDTrIModalVisible(false);
+    };
+
+    const handleNDTrIModalCancel = () => {
+      setIsNDTrIModalVisible(false);
+    };
 
     // Fetch zones data
     useEffect(() => {
@@ -455,7 +472,20 @@ export default createWidgetComponent<ConfigInterface>(
         <div id="map" style={{ height: "100%", width: "100%" }}></div>
         {/* NDTrI Legend */}
         <div className="ndtri-legend">
-          <div className="legend-title">NDTrI</div>
+          <div
+            className="legend-title"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            NDTrI
+            <InfoCircleOutlined
+              style={{
+                color: "#42A456",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+              onClick={showNDTrIModal}
+            />
+          </div>
           <div className="legend-subtitle">
             Normalized Difference Trophic Index
           </div>
@@ -466,6 +496,135 @@ export default createWidgetComponent<ConfigInterface>(
             <span className="legend-label-right">Gut</span>
           </div>
         </div>
+
+        <Modal
+          title="NDTrI - Normalized Difference Trophic Index"
+          open={isNDTrIModalVisible}
+          onOk={handleNDTrIModalOk}
+          onCancel={handleNDTrIModalCancel}
+          centered
+          width={800}
+          footer={[
+            <Button key="ok" type="primary" onClick={handleNDTrIModalOk}>
+              OK
+            </Button>,
+          ]}
+          styles={{
+            header: {
+              backgroundColor: "#f5f5f5",
+              borderBottom: "1px solid #e8e8e8",
+            },
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 0",
+              lineHeight: "1.6",
+              color: "#333",
+              textAlign: "left",
+            }}
+          >
+            <div style={{ marginBottom: "24px" }}>
+              <h3
+                style={{
+                  color: "#42A456",
+                  fontSize: "18px",
+                  marginBottom: "12px",
+                }}
+              >
+                Wie wird der Index genau berechnet und welche Daten liegen ihm
+                zugrunde?
+              </h3>
+              <div
+                style={{
+                  fontSize: "16px",
+                  lineHeight: "1.6",
+                  marginBottom: "16px",
+                }}
+              >
+                Der Wasserqualitätsindex (Normalized Difference Trophic Index:
+                NDTrI) basiert auf den Bändern 2 (Wellenlänge 490 nm) für blaues
+                Licht und 5 (Wellenlänge 705 nm) für den Übergangsbereich
+                zwischen rotem Licht und nahem Infrarot der Sentinel-2 Mission
+                und ist definiert als:
+              </div>
+              <div
+                style={{
+                  fontSize: "20px",
+                  fontFamily: "serif",
+                  backgroundColor: "#f8f9fa",
+                  padding: "20px",
+                  borderRadius: "6px",
+                  textAlign: "center",
+                  margin: "16px 0",
+                  border: "1px solid #e9ecef",
+                  letterSpacing: "1px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "12px",
+                  }}
+                >
+                  <span>
+                    NDTrI<sub>image</sub> =
+                  </span>
+                  <div style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        borderBottom: "2px solid #333",
+                        paddingBottom: "4px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      B5 - B2
+                    </div>
+                    <div>B5 + B2</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: "16px", lineHeight: "1.6" }}>
+                Er wird zuerst pro Satellitenbild berechnet und anschließend
+                über eine gesamte Saison von Anfang April bis Ende Oktober
+                gemittelt. Es werden nur solche Pixel des Satellitenbildes
+                verwendet werden, die 1) innerhalb des betrachten Sees liegen
+                und 2) als Wasserpixel durch durch den Scene Classification
+                (SCL) Algorithmus der Sentinel-2 Daten identifiziert werden. Im
+                AD4GD GitHub Repository steht im Bereich{" "}
+                <a
+                  href="https://github.com/AD4GD/Component-openEO-harvester"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Sentinal-2 Trophic State Estimation
+                </a>{" "}
+                ein Jupyter Notebook zur Verfügung, mit dem der
+                Wasserqualitätsindex direkt auf der{" "}
+                <a
+                  href="https://openeo.cloud/about/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                  }}
+                >
+                  openEO Plattform
+                </a>{" "}
+                berechnet und anschließend heruntergeladen werden kann.
+              </div>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
