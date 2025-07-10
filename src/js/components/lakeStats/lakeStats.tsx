@@ -8,11 +8,12 @@ import {
   Collapse,
   CollapseProps,
   message,
+  Modal,
 } from "antd";
 import { WidgetStatic } from "@opendash/plugin-monitoring";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "@opendash/router";
-import { StarFilled } from "@ant-design/icons";
+import { StarFilled, InfoCircleOutlined } from "@ant-design/icons";
 import { IconBaseProps } from "@ant-design/icons/lib/components/Icon";
 import { useLakeMetaData } from "../../hooks/useLakeMetaData";
 import Parse from "parse";
@@ -93,6 +94,7 @@ const LakeStats: React.FC = ({}) => {
   const [isAddingFavorite, setIsAddingFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
   const {
     item: { sensors },
   } = location.state || {};
@@ -553,52 +555,84 @@ const LakeStats: React.FC = ({}) => {
               marginTop: "1%",
             }}
           >
+            {/* Water Quality Index Container */}
             <div
               style={{
-                display: "flex",
-                flexDirection: "row",
                 width: "100%",
-                height: "100%",
-                gap: "1%",
+                borderRadius: "20px",
+                backgroundColor: "white",
+                marginBottom: "1%",
+                padding: "1% 2%",
               }}
             >
+              {/* Parent headline for Water Quality Index */}
               <div
                 style={{
-                  width: "100%",
-                  height: "40%",
-                  marginBottom: "1%",
-                  borderRadius: "20px",
-                  backgroundColor: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: "1.5rem",
                 }}
               >
                 <Typography.Title
                   level={4}
                   style={{
                     fontWeight: "bold",
-                    paddingTop: "2%",
-                    paddingLeft: "4%",
+                    margin: 0,
+                    marginRight: "0.5rem",
                   }}
                 >
-                  Earth Observation Trophic State
-                </Typography.Title>
+                  Water Quality Index (NDTrI)
+                </Typography.Title>{" "}
+                <InfoCircleOutlined
+                  style={{
+                    fontSize: "18px",
+                    color: "#42A456",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setIsInfoModalVisible(true)}
+                />
+              </div>
+
+              {/* Two columns for State and Trend */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  width: "100%",
+                  gap: "2%",
+                }}
+              >
+                {/* Earth Observation Trophic State */}
                 <div
-                  style={{ width: "100%", height: "100%", margin: "0 auto" }}
+                  style={{
+                    width: "48%",
+                    border: "2px solid #96F5D0",
+                    borderRadius: "16px",
+                    marginBottom: "1rem",
+                  }}
                 >
                   <div
                     style={{
-                      padding: "5% 15% 15% 15%",
+                      padding: "1rem 1rem 2.5rem 1rem",
                     }}
                   >
-                    {wqiValues.value !== 0 ? (
-                      <>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "10px",
-                          }}
-                        >
+                    <Typography.Title
+                      level={5}
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: "1rem",
+                        margin: 0,
+                      }}
+                    >
+                      Earth Observation Trophic State
+                    </Typography.Title>
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                      }}
+                    >
+                      {wqiValues.value !== 0 ? (
+                        <>
                           <div
                             style={{
                               display: "flex",
@@ -607,62 +641,55 @@ const LakeStats: React.FC = ({}) => {
                             }}
                           >
                             <span
-                              style={{ fontSize: "20px", fontWeight: "bold" }}
+                              style={{ fontSize: "16px", fontWeight: "bold" }}
                             >
                               NDTrI State: {wqiValues.value}
                             </span>
                           </div>
-                        </div>
-                        <MultiColorBar
-                          minValue={wqiValues.minVal}
-                          maxValue={wqiValues.maxVal}
-                          value={wqiValues.value}
-                        />
-                      </>
-                    ) : (
-                      <p>Loading NDTrI data...</p>
-                    )}
+                          <MultiColorBar
+                            minValue={wqiValues.minVal}
+                            maxValue={wqiValues.maxVal}
+                            value={wqiValues.value}
+                          />
+                        </>
+                      ) : (
+                        <p>Loading NDTrI data...</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div
-                style={{
-                  width: "100%",
-                  height: "40%",
-                  marginBottom: "1%",
-                  borderRadius: "20px",
-                  backgroundColor: "white",
-                }}
-              >
-                <Typography.Title
-                  level={4}
-                  style={{
-                    fontWeight: "bold",
-                    paddingTop: "2%",
-                    paddingLeft: "4%",
-                  }}
-                >
-                  Earth Observation Trophic Trend
-                </Typography.Title>
+                {/* Earth Observation Trophic Trend */}
                 <div
-                  style={{ width: "100%", height: "100%", margin: "0 auto" }}
+                  style={{
+                    width: "48%",
+                    border: "2px solid #96F5D0",
+                    borderRadius: "16px",
+                    marginBottom: "1rem",
+                  }}
                 >
                   <div
                     style={{
-                      padding: "5% 15% 15% 15%",
+                      padding: "1rem 1rem 2.5rem 1rem",
                     }}
                   >
-                    {wqiValues.value !== 0 ? (
-                      <>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "10px",
-                          }}
-                        >
+                    <Typography.Title
+                      level={5}
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: "1rem",
+                        margin: 0,
+                      }}
+                    >
+                      Earth Observation Trophic Trend
+                    </Typography.Title>
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                      }}
+                    >
+                      {wqiValues.value !== 0 ? (
+                        <>
                           <div
                             style={{
                               display: "flex",
@@ -671,21 +698,21 @@ const LakeStats: React.FC = ({}) => {
                             }}
                           >
                             <span
-                              style={{ fontSize: "20px", fontWeight: "bold" }}
+                              style={{ fontSize: "16px", fontWeight: "bold" }}
                             >
                               NDTrI Trend: {wqiValues.trend}
                             </span>
                           </div>
-                        </div>
-                        <MultiColorBar
-                          minValue={wqiValues.minTrend}
-                          maxValue={wqiValues.maxTrend}
-                          value={wqiValues.trend}
-                        />
-                      </>
-                    ) : (
-                      <p>Loading NDTrI data...</p>
-                    )}
+                          <MultiColorBar
+                            minValue={wqiValues.minTrend}
+                            maxValue={wqiValues.maxTrend}
+                            value={wqiValues.trend}
+                          />
+                        </>
+                      ) : (
+                        <p>Loading NDTrI data...</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -743,6 +770,139 @@ const LakeStats: React.FC = ({}) => {
             </div>
           </div>
         </Row>
+
+        {/* Info Modal for NDTrI */}
+        <Modal
+          title="NDTrI - Normalized Difference Trophic Index"
+          open={isInfoModalVisible}
+          onCancel={() => setIsInfoModalVisible(false)}
+          centered
+          width={800}
+          footer={[
+            <Button
+              key="ok"
+              type="primary"
+              onClick={() => setIsInfoModalVisible(false)}
+            >
+              OK
+            </Button>,
+          ]}
+          styles={{
+            header: {
+              backgroundColor: "#f5f5f5",
+              borderBottom: "1px solid #e8e8e8",
+            },
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 0",
+              lineHeight: "1.6",
+              color: "#333",
+              textAlign: "left",
+            }}
+          >
+            <div style={{ marginBottom: "24px" }}>
+              <h3
+                style={{
+                  color: "#42A456",
+                  fontSize: "18px",
+                  marginBottom: "12px",
+                }}
+              >
+                Wie wird der Index genau berechnet und welche Daten liegen ihm
+                zugrunde?
+              </h3>
+              <div
+                style={{
+                  fontSize: "16px",
+                  lineHeight: "1.6",
+                  marginBottom: "16px",
+                }}
+              >
+                Der Wasserqualitätsindex (Normalized Difference Trophic Index:
+                NDTrI) basiert auf den Bändern 2 (Wellenlänge 490 nm) für blaues
+                Licht und 5 (Wellenlänge 705 nm) für den Übergangsbereich
+                zwischen rotem Licht und nahem Infrarot der Sentinel-2 Mission
+                und ist definiert als:
+              </div>
+              <div
+                style={{
+                  fontSize: "20px",
+                  fontFamily: "serif",
+                  backgroundColor: "#f8f9fa",
+                  padding: "20px",
+                  borderRadius: "6px",
+                  textAlign: "center",
+                  margin: "16px 0",
+                  border: "1px solid #e9ecef",
+                  letterSpacing: "1px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "12px",
+                  }}
+                >
+                  <span>
+                    NDTrI<sub>image</sub> =
+                  </span>
+                  <div style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        borderBottom: "2px solid #333",
+                        paddingBottom: "4px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      B5 - B2
+                    </div>
+                    <div>B5 + B2</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: "16px", lineHeight: "1.6" }}>
+                Er wird zuerst pro Satellitenbild berechnet und anschließend
+                über eine gesamte Saison von Anfang April bis Ende Oktober
+                gemittelt. Es werden nur solche Pixel des Satellitenbildes
+                verwendet werden, die 1) innerhalb des betrachten Sees liegen
+                und 2) als Wasserpixel durch durch den Scene Classification
+                (SCL) Algorithmus der Sentinel-2 Daten identifiziert werden. Im
+                AD4GD GitHub Repository steht im Bereich{" "}
+                <a
+                  href="https://github.com/AD4GD/Component-openEO-harvester"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Sentinal-2 Trophic State Estimation
+                </a>{" "}
+                ein Jupyter Notebook zur Verfügung, mit dem der
+                Wasserqualitätsindex direkt auf der{" "}
+                <a
+                  href="https://openeo.cloud/about/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#42A456",
+                    textDecoration: "underline",
+                  }}
+                >
+                  openEO Plattform
+                </a>{" "}
+                berechnet und anschließend heruntergeladen werden kann.
+              </div>
+            </div>
+          </div>
+        </Modal>
       </ConfigProvider>
     </>
   );
