@@ -16,7 +16,6 @@ import {
   createFallbackGeoraster,
   type GeoTiffAnalysis,
 } from "../bioConn/geoTiffAnalysis";
-import DiagnosticDisplay from "../bioConn/DiagnosticDisplay";
 
 // Utility function to download an ArrayBuffer as a file
 const downloadArrayBufferAsFile = (

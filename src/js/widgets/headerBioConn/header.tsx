@@ -77,7 +77,7 @@ export default createWidgetComponent<ConfigInterface>(
                 type="primary"
                 size="large"
                 onClick={() => {
-                  navigate("/bioconnect/info");
+                  navigate("/bioconnect/saved");
                 }}
               >
                 Saved Scenario

@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Button, Select, Row, ConfigProvider, Spin, message } from "antd";
+import {
+  Button,
+  Select,
+  Row,
+  ConfigProvider,
+  Spin,
+  message,
+  Input,
+  Modal,
+  Space,
+  Tooltip,
+  Typography,
+} from "antd";
 import geoblaze from "geoblaze";
 import GeoRasterLayer from "georaster-layer-for-leaflet";
 import proj4 from "proj4";
@@ -13,6 +25,7 @@ import Parse from "parse";
 import { useNavigate } from "@opendash/router";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const epsg32631 = "+proj=utm +zone=31 +datum=WGS84 +units=m +no_defs";
 const wgs84 = "+proj=longlat +datum=WGS84 +no_defs";
@@ -53,7 +66,7 @@ const injectCustomIconCSS = () => {
 
     /* Custom cancel icon */
     .leaflet-draw-actions-cancel {
-      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNEwxNiAxNk00IDE2TDE2IDQiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg==') !important;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNEwxNiAxNk00IDE2TDE2IDQiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg==') !important;
       background-size: 16px 16px !important;
       background-repeat: no-repeat !important;
       background-position: center !important;
@@ -198,12 +211,6 @@ const exportCombinedRaster = async (
           };
 
           const apiType = typeMapping[apiParameterType] || "forest";
-          console.log(`[Frontend] Making API call with parameters:`, {
-            type: apiType,
-            mode: apiMode,
-            originalParameterType: apiParameterType,
-            fileDataLength: base64Data.length,
-          });
 
           result = await Parse.Cloud.run("processBioconnTiff", {
             type: apiType,
@@ -211,9 +218,6 @@ const exportCombinedRaster = async (
             fileData: base64Data,
           });
 
-          console.log(`[Frontend] API call successful for type: ${apiType}`);
-
-          console.log("BioConn API Response:", result);
           break; // Success, exit retry loop
         } catch (error) {
           lastError = error;
@@ -889,6 +893,9 @@ const BioConnScenario: React.FC = () => {
   const [selectedPolygonId, setSelectedPolygonId] = useState<string | null>(
     null
   );
+  const [scenarioName, setScenarioName] = useState("");
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [savingToDisk, setSavingToDisk] = useState(false);
   const polygonValuesRef = useRef<Map<string, number>>(new Map()); // Ref to access current values in event handlers
 
   // Update ref when state changes
@@ -969,7 +976,7 @@ const BioConnScenario: React.FC = () => {
         edit: {
           featureGroup: drawLayer.current,
           edit: true,
-          remove: true,
+          remove: false,
         },
         draw: {
           polygon: true,
@@ -1192,6 +1199,199 @@ const BioConnScenario: React.FC = () => {
     fetchImage();
   }, [time]);
 
+  // Function to save scenario to Parse class AD4GD_Scenario
+  const saveScenarioToDatabase = async (
+    combinedRaster: any,
+    scenarioName: string
+  ): Promise<boolean> => {
+    try {
+      console.log("Saving scenario to database...");
+
+      // Get current user
+      const currentUser = Parse.User.current();
+      if (!currentUser) {
+        message.error("You must be logged in to save a scenario");
+        return false;
+      }
+
+      // Store the raw combinedRaster structure as JSON instead of converting to GeoTIFF
+      // This preserves the exact structure that works with the API
+      const scenarioData = {
+        ...combinedRaster,
+        // Ensure values are stored as regular arrays (not typed arrays)
+        values: combinedRaster.values.map((band: any) =>
+          band.map((row: any) => Array.from(row))
+        ),
+        // Store metadata for identification
+        _scenarioMetadata: {
+          type: "combinedRaster",
+          createdAt: new Date().toISOString(),
+          version: "1.0",
+        },
+      };
+
+      // Convert to JSON string for storage
+      const jsonData = JSON.stringify(scenarioData);
+
+      // Create Parse File from the JSON data
+      const fileName = `${scenarioName.replace(
+        /[^a-zA-Z0-9]/g,
+        "_"
+      )}_scenario.json`;
+      const parseFile = new Parse.File(
+        fileName,
+        Array.from(new TextEncoder().encode(jsonData)),
+        "application/json"
+      );
+
+      // Save the file first
+      await parseFile.save();
+
+      // Create new scenario object
+      const ScenarioClass = Parse.Object.extend("AD4GD_Scenario");
+      const scenario = new ScenarioClass();
+
+      scenario.set("name", scenarioName);
+      scenario.set("user", currentUser);
+      scenario.set("scenario", parseFile);
+      scenario.set("dataType", "combinedRaster"); // Add data type for future compatibility
+
+      // Save to database
+      await scenario.save();
+
+      console.log("Scenario saved successfully:", scenario.id);
+      message.success(`Scenario "${scenarioName}" saved successfully!`);
+
+      return true;
+    } catch (error: any) {
+      console.error("Error saving scenario:", error);
+      message.error(`Failed to save scenario: ${error.message}`);
+      return false;
+    }
+  };
+
+  // Function to download scenario as GeoTIFF file
+  const downloadScenarioAsGeoTIFF = async (
+    combinedRaster: any,
+    scenarioName: string
+  ): Promise<void> => {
+    try {
+      console.log("Preparing scenario download...");
+
+      // Extract raster data and create GeoTIFF
+      const { width, height, values, xmin, ymin, xmax, ymax } = combinedRaster;
+
+      // Flatten the values array for GeoTIFF creation
+      let flattenedValues;
+      if (Array.isArray(values) && values.length > 0) {
+        if (Array.isArray(values[0])) {
+          // It's a multi-band array, take the first band
+          if (Array.isArray(values[0][0])) {
+            // 3D array [band][row][col]
+            flattenedValues = values[0].reduce(
+              (acc, row) => acc.concat(row),
+              []
+            );
+          } else {
+            // 2D array [band][pixel]
+            flattenedValues = values[0];
+          }
+        } else {
+          // It's already a 1D array of pixels
+          flattenedValues = values;
+        }
+      }
+
+      // Calculate pixel scale (resolution in both directions)
+      const pixelScaleX = (xmax - xmin) / width;
+      const pixelScaleY = (ymax - ymin) / height;
+
+      // Create metadata object for GeoTIFF
+      const metadata = {
+        width,
+        height,
+        GeographicTypeGeoKey: 32631, // WGS 84 / UTM zone 31N
+        ModelPixelScale: [pixelScaleX, Math.abs(pixelScaleY), 0],
+        ModelTiepoint: [0, 0, 0, xmin, ymax, 0],
+      };
+
+      // Convert to appropriate array if needed
+      const typedArray =
+        flattenedValues instanceof Uint8Array
+          ? flattenedValues
+          : new Uint8Array(flattenedValues);
+
+      // Create GeoTIFF
+      const tiff = await writeArrayBuffer(typedArray, metadata);
+
+      // Create blob and download
+      const blob = new Blob([tiff], { type: "image/tiff" });
+      const url = URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${scenarioName.replace(
+        /[^a-zA-Z0-9]/g,
+        "_"
+      )}_scenario.tif`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up
+      URL.revokeObjectURL(url);
+
+      message.success(`Scenario "${scenarioName}" downloaded successfully!`);
+    } catch (error: any) {
+      console.error("Error downloading scenario:", error);
+      message.error(`Failed to download scenario: ${error.message}`);
+    }
+  };
+
+  // Helper function to generate combined raster from current drawing
+  const generateCombinedRaster = async (
+    polygons: L.Polygon[],
+    polygonValues: Map<string, number>,
+    georaster: any
+  ) => {
+    const drawingBounds = getDrawingBounds(polygons);
+
+    const croppedRaster = await cropGeorasterToBounds(georaster, drawingBounds);
+
+    let finalRaster = croppedRaster;
+
+    // Handle small rasters by expanding bounds
+    if (croppedRaster.width < 10 || croppedRaster.height < 10) {
+      const center = drawingBounds.getCenter();
+      const latExtension = Math.max(
+        0.001,
+        (drawingBounds.getNorth() - drawingBounds.getSouth()) * 2
+      );
+      const lngExtension = Math.max(
+        0.001,
+        (drawingBounds.getEast() - drawingBounds.getWest()) * 2
+      );
+
+      const expandedBounds = L.latLngBounds([
+        [center.lat - latExtension, center.lng - lngExtension],
+        [center.lat + latExtension, center.lng + lngExtension],
+      ]);
+
+      finalRaster = await cropGeorasterToBounds(georaster, expandedBounds);
+    }
+
+    const paddedRaster = padRasterPreservePosition(finalRaster, georaster);
+    const drawingRaster = rasterizeDrawing(
+      paddedRaster,
+      polygons,
+      polygonValues
+    );
+    const combinedRaster = combineLayers(paddedRaster, drawingRaster);
+
+    return combinedRaster;
+  };
+
   return (
     <>
       <style>
@@ -1280,6 +1480,12 @@ const BioConnScenario: React.FC = () => {
                 5. Choose an API parameter type (1,3-6) for processing
                 <br />
                 6. Press ESC to deselect, or click "Clear selection"
+                <br />
+                7. <strong>Save scenarios for future use</strong> or download
+                them directly
+                <br />
+                8. <strong>Important:</strong> Saving scenarios allows you to
+                reuse them later from the Saved Scenarios page
               </div>{" "}
             </div>
             <div style={{ marginBottom: "20px" }}>
@@ -1479,20 +1685,68 @@ const BioConnScenario: React.FC = () => {
                           });
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
                           <div
+                            style={{ display: "flex", alignItems: "center" }}
+                          >
+                            <div
+                              style={{
+                                width: "12px",
+                                height: "12px",
+                                backgroundColor: interpolateColor(value),
+                                marginRight: "8px",
+                                border: "1px solid #999",
+                                borderRadius: "2px",
+                              }}
+                            ></div>
+                            <span>
+                              {id}: {value} - {typeLabel}
+                            </span>
+                          </div>
+                          <Button
+                            type="text"
+                            size="small"
+                            danger
                             style={{
-                              width: "12px",
-                              height: "12px",
-                              backgroundColor: interpolateColor(value),
-                              marginRight: "8px",
-                              border: "1px solid #999",
-                              borderRadius: "2px",
+                              padding: "0",
+                              width: "16px",
+                              height: "16px",
+                              minWidth: "16px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              lineHeight: "1",
                             }}
-                          ></div>
-                          <span>
-                            {id}: {value} - {typeLabel}
-                          </span>
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent polygon selection
+                              // Find and remove the specific polygon
+                              drawLayer.current?.eachLayer((layer: any) => {
+                                if (
+                                  layer instanceof L.Polygon &&
+                                  (layer as any).polygonId === id
+                                ) {
+                                  drawLayer.current?.removeLayer(layer);
+                                }
+                              });
+                              // Remove from polygonValues
+                              const newValues = new Map(polygonValues);
+                              newValues.delete(id);
+                              setPolygonValues(newValues);
+                              // Clear selection if this was the selected polygon
+                              if (selectedPolygonId === id) {
+                                setSelectedPolygonId(null);
+                              }
+                            }}
+                          >
+                            ×
+                          </Button>
                         </div>
                       </div>
                     );
@@ -1694,9 +1948,6 @@ const BioConnScenario: React.FC = () => {
                         croppedRaster,
                         georaster
                       );
-                      console.log(
-                        `Padded raster dimensions: ${paddedRaster.width}x${paddedRaster.height}`
-                      );
 
                       const drawingRaster = rasterizeDrawing(
                         paddedRaster,
@@ -1707,8 +1958,6 @@ const BioConnScenario: React.FC = () => {
                         paddedRaster,
                         drawingRaster
                       );
-
-                      console.log("Combined Raster:", combinedRaster);
 
                       const success = await exportCombinedRaster(
                         combinedRaster,
@@ -1737,9 +1986,135 @@ const BioConnScenario: React.FC = () => {
                 }
               }}
             >
-              Save Scenario
+              Process Scenario
             </Button>
+            <Space
+              direction="vertical"
+              style={{ width: "100%", marginTop: "10px" }}
+            >
+              <Button
+                type="default"
+                style={{ width: "100%" }}
+                onClick={() => setShowSaveModal(true)}
+                disabled={!drawLayer.current?.getLayers().length || !georaster}
+              >
+                Save Scenario
+              </Button>
+
+              <Button
+                type="default"
+                style={{ width: "100%" }}
+                loading={savingToDisk}
+                onClick={async () => {
+                  if (drawLayer.current && georaster) {
+                    const polygons = drawLayer.current
+                      .getLayers()
+                      .filter(
+                        (layer) => layer instanceof L.Polygon
+                      ) as L.Polygon[];
+
+                    if (polygons.length === 0) {
+                      message.warning("Please draw a polygon first");
+                      return;
+                    }
+
+                    const defaultName = `scenario_${new Date()
+                      .toISOString()
+                      .slice(0, 19)
+                      .replace(/:/g, "-")}`;
+
+                    try {
+                      setSavingToDisk(true);
+                      const combinedRaster = await generateCombinedRaster(
+                        polygons,
+                        polygonValues,
+                        georaster
+                      );
+                      await downloadScenarioAsGeoTIFF(
+                        combinedRaster,
+                        defaultName
+                      );
+                    } catch (error: any) {
+                      console.error("Error downloading scenario:", error);
+                      message.error(
+                        `Error downloading scenario: ${error.message}`
+                      );
+                    } finally {
+                      setSavingToDisk(false);
+                    }
+                  } else {
+                    message.warning(
+                      "Please load a raster and draw a polygon first"
+                    );
+                  }
+                }}
+                disabled={!drawLayer.current?.getLayers().length || !georaster}
+              >
+                Download Scenario as GeoTIFF
+              </Button>
+            </Space>
           </div>
+
+          {/* Save Scenario Modal */}
+          <Modal
+            title="Save Scenario"
+            open={showSaveModal}
+            okText="Save"
+            cancelText="Cancel"
+            onOk={async () => {
+              if (!scenarioName.trim()) {
+                message.warning("Please enter a scenario name");
+                return;
+              }
+
+              if (drawLayer.current && georaster) {
+                const polygons = drawLayer.current
+                  .getLayers()
+                  .filter((layer) => layer instanceof L.Polygon) as L.Polygon[];
+
+                if (polygons.length === 0) {
+                  message.warning("Please draw a polygon first");
+                  return;
+                }
+
+                try {
+                  const combinedRaster = await generateCombinedRaster(
+                    polygons,
+                    polygonValues,
+                    georaster
+                  );
+                  const success = await saveScenarioToDatabase(
+                    combinedRaster,
+                    scenarioName.trim()
+                  );
+
+                  if (success) {
+                    setShowSaveModal(false);
+                    setScenarioName("");
+                  }
+                } catch (error: any) {
+                  console.error("Error saving scenario:", error);
+                  message.error(`Error saving scenario: ${error.message}`);
+                }
+              } else {
+                message.warning(
+                  "Please load a raster and draw a polygon first"
+                );
+              }
+            }}
+            onCancel={() => {
+              setShowSaveModal(false);
+              setScenarioName("");
+            }}
+            confirmLoading={isSaving}
+          >
+            <Input
+              placeholder="Enter scenario name"
+              value={scenarioName}
+              onChange={(e) => setScenarioName(e.target.value)}
+              maxLength={100}
+            />
+          </Modal>
 
           <div style={{ flex: "0 0 70%", padding: "20px" }}>
             {/* Map container */}
@@ -1752,7 +2127,28 @@ const BioConnScenario: React.FC = () => {
                 margin: "0 auto 30px auto",
               }}
             >
-              {loading && <p>Loading image...</p>}
+              {loading && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    zIndex: 1000,
+                  }}
+                >
+                  <Spin size="large" />
+                  <span style={{ marginLeft: "10px", fontSize: "16px" }}>
+                    Loading layers...
+                  </span>
+                </div>
+              )}
               {error && <p style={{ color: "red" }}>{error}</p>}
               <div ref={mapRef} style={{ height: "100%", width: "100%" }}></div>
             </div>
