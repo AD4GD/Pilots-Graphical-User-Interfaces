@@ -52,7 +52,14 @@ export default createWidgetComponent(({ ...context }) => {
     []
   );
 
-  const data = useSensorData(items, selectedFilter, startDate, endDate);
+  const data = useSensorData(
+    items,
+    selectedFilter,
+    startDate,
+    endDate,
+    "month",
+    1
+  );
 
   // Memoize selectedProperties copy for immutability
   const selectedPropsMemo = useMemo(

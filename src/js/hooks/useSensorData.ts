@@ -8,7 +8,9 @@ export const useSensorData = (
   items: any[],
   selectedFilter: FilterType,
   startDate: number | null,
-  endDate: number | null
+  endDate: number | null,
+  unitType: import("@opendash/plugin-timeseries").DateUnitInterface = "month",
+  numberOfvalues: number = 1000
 ): SensorData[] => {
   const [data, setData] = useState<SensorData[]>([]);
   const DataService = useDataService();
@@ -74,10 +76,10 @@ export const useSensorData = (
 
     const result = await DataService.fetchDimensionValuesMultiItem(items, {
       historyType: startDate && endDate ? "absolute" : "relative",
-      unit: "month",
+      unit: unitType,
       start: startDate ?? undefined,
       end: endDate ?? undefined,
-      value: 1000,
+      value: numberOfvalues,
       aggregation: true,
       aggregationOperation: aggregationOperation,
       aggregationDateUnit: filterUnitMap[filter],
