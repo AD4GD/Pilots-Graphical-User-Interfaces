@@ -33,6 +33,7 @@ import {
   geoTiffExplorer,
 } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
+import bioConnScenarioSaved from "./components/bioConnScenarioSaved";
 import { CompareScenario } from "./components/compareScenario";
 import { DataUpload } from "./components/dataUpload";
 
@@ -103,6 +104,12 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/bioconnect/scenario",
     componentSync: bioConnScenario,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/bioconnect/saved",
+    componentSync: bioConnScenarioSaved,
     props: {},
   });
 
