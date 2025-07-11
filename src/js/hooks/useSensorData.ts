@@ -1,22 +1,25 @@
-// useSensorData.ts
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDataService } from "@opendash/plugin-timeseries";
 import { FilterType, SensorData } from "../types/Lake_Stats";
+import { DateUnitInterface } from "@opendash/plugin-timeseries";
 
-// The hook will return the transformed sensor data based on the filter and date range
 export const useSensorData = (
   items: any[],
   selectedFilter: FilterType,
   startDate: number | null,
   endDate: number | null,
-  unitType: import("@opendash/plugin-timeseries").DateUnitInterface = "month",
+  unitType: DateUnitInterface = "month",
   numberOfvalues: number = 1000
 ): SensorData[] => {
   const [data, setData] = useState<SensorData[]>([]);
   const DataService = useDataService();
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
+
     const separateSensors = async () => {
+      // Don't clear data immediately, keep old data until new arrives
       const targetIds = [
         "sensor_halensee_precipitation",
         "sensor_halensee_evaporation",
@@ -40,6 +43,7 @@ export const useSensorData = (
           endDate,
           "sum"
         );
+
         const remainingData = await fetchData(
           remaining,
           selectedFilter,
@@ -49,22 +53,40 @@ export const useSensorData = (
         );
 
         const combinedData = [...matchedData, ...remainingData];
-        setData(combinedData);
+
+        if (isMounted.current) {
+          setData(combinedData);
+        }
       } catch (error) {
-        console.error("Error fetching sensor data", error);
+        if (isMounted.current) {
+          console.error("Error fetching sensor data", error);
+          // Keep old data on error (no reset)
+        }
       }
     };
 
     separateSensors();
-  }, [items, selectedFilter, startDate, endDate, DataService]);
 
-  // Fetch data based on selected filter and date range
+    return () => {
+      isMounted.current = false;
+    };
+  }, [
+    items,
+    selectedFilter,
+    startDate,
+    endDate,
+    unitType,
+    numberOfvalues,
+    DataService,
+  ]);
+
+  // fetchData and transformData unchanged
   const fetchData = async (
     items: any[],
     filter: FilterType,
     startDate?: number | null,
     endDate?: number | null,
-    aggregationOperation?: string
+    aggregationOperation: string = "avg"
   ): Promise<SensorData[]> => {
     const filterUnitMap: Record<FilterType, "day" | "week" | "month" | "year"> =
       {
@@ -84,15 +106,15 @@ export const useSensorData = (
       aggregationOperation: aggregationOperation,
       aggregationDateUnit: filterUnitMap[filter],
     });
+
     return transformData(result);
   };
 
-  // Transform raw data into usable format
   const transformData = (data: any[]): SensorData[] => {
     return data.map((item: any[]) => {
       const { id, name: lake, valueTypes } = item[0];
-      const propertyName = valueTypes[0].name;
-      const unit = valueTypes[0].unit;
+      const propertyName = valueTypes[0]?.name ?? "Unknown";
+      const unit = valueTypes[0]?.unit ?? "";
       const dataPoints = item[2];
 
       return { id, lake, propertyName, unit, data: dataPoints };
