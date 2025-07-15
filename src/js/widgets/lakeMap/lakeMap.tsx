@@ -476,7 +476,7 @@ export default createWidgetComponent<ConfigInterface>(
             className="legend-title"
             style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
-            NDTrI
+            Wasserqualitätsindex{" "}
             <InfoCircleOutlined
               style={{
                 color: "#42A456",
@@ -487,7 +487,7 @@ export default createWidgetComponent<ConfigInterface>(
             />
           </div>
           <div className="legend-subtitle">
-            Normalized Difference Trophic Index
+            Normalized Difference Trophic Index (NDTrI)
           </div>
           <div className="legend-gradient"></div>
           <div className="legend-labels">

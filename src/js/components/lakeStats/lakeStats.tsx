@@ -568,29 +568,45 @@ const LakeStats: React.FC = ({}) => {
               {/* Parent headline for Water Quality Index */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
                   marginBottom: "1.5rem",
                 }}
               >
-                <Typography.Title
-                  level={4}
+                <div
                   style={{
-                    fontWeight: "bold",
-                    margin: 0,
-                    marginRight: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "0.5rem",
                   }}
                 >
-                  Water Quality Index (NDTrI)
-                </Typography.Title>{" "}
-                <InfoCircleOutlined
+                  <Typography.Title
+                    level={4}
+                    style={{
+                      fontWeight: "bold",
+                      margin: 0,
+                      marginRight: "0.5rem",
+                    }}
+                  >
+                    Wasserqualitätsindex
+                  </Typography.Title>
+                  <InfoCircleOutlined
+                    style={{
+                      fontSize: "18px",
+                      color: "#42A456",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => setIsInfoModalVisible(true)}
+                  />
+                </div>
+                <Typography.Title
+                  level={5}
                   style={{
-                    fontSize: "18px",
-                    color: "#42A456",
-                    cursor: "pointer",
+                    fontWeight: "normal",
+                    margin: 0,
+                    color: "#666",
                   }}
-                  onClick={() => setIsInfoModalVisible(true)}
-                />
+                >
+                  Normalized Difference Trophic Index (NDTrI)
+                </Typography.Title>
               </div>
 
               {/* Two columns for State and Trend */}
@@ -636,7 +652,7 @@ const LakeStats: React.FC = ({}) => {
                           <div
                             style={{
                               display: "flex",
-                              alignItems: "center",
+                              alignItems: "flex-start",
                               marginBottom: "1rem",
                             }}
                           >
@@ -693,7 +709,7 @@ const LakeStats: React.FC = ({}) => {
                           <div
                             style={{
                               display: "flex",
-                              alignItems: "center",
+                              alignItems: "flex-start",
                               marginBottom: "1rem",
                             }}
                           >
