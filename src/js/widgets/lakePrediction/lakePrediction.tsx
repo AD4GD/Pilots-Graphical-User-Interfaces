@@ -2,12 +2,11 @@ import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useNavigate } from "@opendash/router";
-import { Row, Typography } from "antd";
-import React, { useRef, useState, useMemo } from "react";
+import { Col, Row, Typography } from "antd";
+import React, { useMemo, useRef, useState } from "react";
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
 import CollapseWrapper from "../../components/CollapseWrapper/CollapseWrapper";
-import { DatePicker } from "../../components/datePicker";
 import {
   CustomDropdown,
   SingleSelectDropdown,
@@ -23,11 +22,10 @@ import {
 
 const { Title } = Typography;
 
-export default createWidgetComponent(({ ...context }) => {
+export default createWidgetComponent((context) => {
   const navigate = useNavigate();
   const t = useTranslation();
-  context["setLoading"](false);
-  const items = context["useItemDimensionConfig"]();
+  const items = context.useItemDimensionConfig();
   const chartRef = useRef<HTMLDivElement>(null);
 
   // State
@@ -36,48 +34,34 @@ export default createWidgetComponent(({ ...context }) => {
   );
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("daily");
-  const [startDate, setStartDate] = useState<number | null>(null);
-  const [endDate, setEndDate] = useState<number | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [selectedFrequency, setSelectedFrequency] = useState<string>("1");
 
   // Hooks
   const properties = useProperties(items);
-  const timeFilter = useMemo(
-    () => [
-      { key: "daily", label: "Daily" },
-      { key: "weekly", label: "Weekly" },
-      { key: "monthly", label: "Monthly" },
-      { key: "yearly", label: "Yearly" },
-    ],
-    []
-  );
 
-  const data = useSensorData(
+  const sensorData = useSensorData(
     items,
     selectedFilter,
-    startDate,
-    endDate,
-    "month",
-    1
+    null,
+    null,
+    "week",
+    Number(selectedFrequency)
   );
 
-  // Memoize selectedProperties copy for immutability
   const selectedPropsMemo = useMemo(
     () => [...selectedProperties],
     [selectedProperties]
   );
-
-  const chartData = useChartDataTransform(data, selectedPropsMemo);
+  const chartData = useChartDataTransform(sensorData, selectedPropsMemo);
 
   const toggleMinimize = () => setIsMinimized((prev) => !prev);
 
-  // Handle Main Sensor Selection
   const handleMainSensorSelect = (key: string) => {
     setSelectedMainSensor(key);
-    setSelectedProperties([key]); // Reset selection to main sensor only
+    setSelectedProperties([key]);
   };
 
-  // Handle Prediction Sensor Selection (toggle)
   const handlePredictionSelect = (e: any) => {
     const value = e.key;
     setSelectedProperties((prev) =>
@@ -85,24 +69,17 @@ export default createWidgetComponent(({ ...context }) => {
     );
   };
 
-  // Handle filter and date changes
-  const handleStartDateChange = (timestamp: number | null) =>
-    setStartDate(timestamp);
-  const handleEndDateChange = (timestamp: number | null) =>
-    setEndDate(timestamp);
-
-  // Downloads
   const downloadGraph = () =>
-    downloadGraphAsPng(chartRef, data, selectedFilter);
-  const downloadData = () => downloadDataAsCsv(data);
+    downloadGraphAsPng(chartRef, sensorData, selectedFilter);
+  const downloadData = () => downloadDataAsCsv(sensorData);
 
-  // Prediction items exclude the main sensor
-  const predictionItems =
-    selectedMainSensor && properties[selectedMainSensor]
+  const predictionItems = useMemo(() => {
+    return selectedMainSensor && properties[selectedMainSensor]
       ? properties[selectedMainSensor].filter(
           (p) => p.key !== selectedMainSensor
         )
       : [];
+  }, [selectedMainSensor, properties]);
 
   return (
     <>
@@ -130,7 +107,7 @@ export default createWidgetComponent(({ ...context }) => {
       <CollapseWrapper isCollapsed={isMinimized}>
         <Row
           gutter={[16, 16]}
-          style={{ marginTop: "2%", justifyContent: "space-evenly" }}
+          style={{ marginTop: "2%", justifyContent: "space-around" }}
         >
           <SingleSelectDropdown
             items={properties["MainWithPrediction"]}
@@ -139,29 +116,30 @@ export default createWidgetComponent(({ ...context }) => {
             handleClick={handleMainSensorSelect}
           />
 
-          {selectedMainSensor && (
-            <CustomDropdown
-              items={predictionItems}
-              selectedValues={selectedProperties}
-              placeholder="Select Prediction Sensor"
-              handleClick={handlePredictionSelect}
-            />
-          )}
-
-          <DatePicker
-            onDateChange={handleStartDateChange}
-            placeholder="Start Date"
+          <CustomDropdown
+            items={predictionItems}
+            selectedValues={selectedProperties}
+            placeholder="Select Prediction Sensor"
+            handleClick={handlePredictionSelect}
           />
-          <DatePicker
-            onDateChange={handleEndDateChange}
-            placeholder="End Date"
+
+          <SingleSelectDropdown
+            items={[
+              { key: "1", label: "1 week" },
+              { key: "2", label: "2 weeks" },
+              { key: "3", label: "3 weeks" },
+              { key: "4", label: "4 weeks" },
+            ]}
+            selectedValue={selectedFrequency}
+            placeholder="Select Frequency"
+            handleClick={setSelectedFrequency}
           />
         </Row>
 
         <CustomChart
           data={chartData}
           filter={selectedFilter}
-          properties={selectedPropsMemo} // Pass memoized copy for safety
+          properties={selectedPropsMemo}
           ref={chartRef}
           multipleAxis={false}
         />

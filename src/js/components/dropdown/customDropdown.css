@@ -4,7 +4,8 @@
   padding-top: 20px;
   padding-bottom: 20px;
   display: flex;
-  flex: 0.23;
+  flex: 0.3;
+  height: 40px;
   align-items: center;
   justify-content: space-between;
   transition: border-color 0.3s;
