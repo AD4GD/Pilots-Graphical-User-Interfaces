@@ -243,7 +243,7 @@ const LakeOverview: React.FC = () => {
                   gap: "8px",
                 }}
               >
-                Wasserqualitätindex
+                Wasserqualitätsindex
                 <InfoCircleOutlined
                   style={{
                     color: "#42A456",
@@ -453,7 +453,7 @@ const LakeOverview: React.FC = () => {
                 Wasserqualitätsindex in den Jahren 2018 bis 2023 beschrieben
                 werden. Für jedes dieser Jahre betrug die Korrelation (Pearson)
                 beider Methoden zwischen 0.83 und 0.92. Der Wasserqualitätsindex
-                ist nicht gedacht, um die Trophi direkt zu bestimmen. Vielmehr
+                ist nicht gedacht, um die Trophie direkt zu bestimmen. Vielmehr
                 soll er eine Rangordnung der Trophie zwischen Seen und eine
                 Trendanalyse ermöglichen, um problematische Entwicklungen zu
                 identifizieren oder Wasserqualitätsmaßnahmen zu bewerten.
