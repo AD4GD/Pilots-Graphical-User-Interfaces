@@ -14,12 +14,18 @@ import {
   ConfigProvider,
   Tooltip,
   Modal,
+  Select,
 } from "antd";
 import { useNavigate } from "@opendash/router";
-import { SearchOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  InfoCircleOutlined,
+  SortAscendingOutlined,
+} from "@ant-design/icons";
 import { useLakeWQIColors } from "../../hooks/useLakeWQIColors";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const LakeOverview: React.FC = () => {
   const navigate = useNavigate();
@@ -29,15 +35,114 @@ const LakeOverview: React.FC = () => {
       type: string;
       label: string;
       id: string;
+      sensors?: any;
+    }[]
+  );
+  const [lakes, setLakes] = useState(
+    [] as {
+      type: string;
+      label: string;
+      id: string;
+      sensors?: any;
+      wqiColor?: string;
+      realWQI?: number;
     }[]
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isWQIModalVisible, setIsWQIModalVisible] = useState<boolean>(false);
+  const [sortOrder, setSortOrder] = useState<
+    "best-to-worst" | "worst-to-best" | "none"
+  >("none");
 
   // Get WQI colors for all lakes
   const { wqiData, loading: wqiLoading } = useLakeWQIColors(zones);
+
+  // Function to fetch real WQI values from Parse
+  const fetchRealWQIValues = async (lakesArray: typeof lakes) => {
+    const updatedLakes = await Promise.all(
+      lakesArray.map(async (lake) => {
+        try {
+          // Query to get the WQI value for this specific lake
+          const query = new Parse.Query("AD4GD_Lake_Quality_Index");
+          query.equalTo("lake", lake.label);
+          const results = await query.find();
+
+          let realWQI: number | undefined;
+
+          if (results.length > 0) {
+            const lakeObject = results[0];
+            const wqiStatus = lakeObject.get("WQI_status");
+            realWQI = wqiStatus ? parseFloat(wqiStatus.toFixed(5)) : undefined;
+          } else {
+            // Try fuzzy matching as fallback
+            const fuzzyQuery = new Parse.Query("AD4GD_Lake_Quality_Index");
+            const allLakes = await fuzzyQuery.find();
+
+            const currentName = lake.label.toLowerCase().trim();
+            const possibleMatches = allLakes.filter((wqiLake) => {
+              const lakeName = wqiLake.get("lake")?.toLowerCase().trim();
+              return (
+                lakeName?.includes(currentName) ||
+                currentName.includes(lakeName)
+              );
+            });
+
+            if (possibleMatches.length > 0) {
+              const lakeObject = possibleMatches[0];
+              const wqiStatus = lakeObject.get("WQI_status");
+              realWQI = wqiStatus
+                ? parseFloat(wqiStatus.toFixed(5))
+                : undefined;
+            }
+          }
+
+          return {
+            ...lake,
+            realWQI,
+          };
+        } catch (error) {
+          // Silently handle errors for individual lakes
+          return {
+            ...lake,
+            realWQI: undefined,
+          };
+        }
+      })
+    );
+
+    return updatedLakes;
+  };
+
+  // Update lakes array when zones or wqiData changes
+  useEffect(() => {
+    const updateLakesWithWQI = async () => {
+      const lakesOnly = zones.filter((zone) => zone.type === "lake");
+
+      // First, create lakes with color data
+      const lakesWithColors = lakesOnly.map((zone) => {
+        const wqiInfo = wqiData[zone.id];
+        return {
+          ...zone,
+          wqiColor: wqiInfo?.color,
+          realWQI: undefined,
+        };
+      });
+
+      // Then fetch real WQI values
+      if (lakesWithColors.length > 0) {
+        const lakesWithRealWQI = await fetchRealWQIValues(lakesWithColors);
+        setLakes(lakesWithRealWQI);
+      } else {
+        setLakes(lakesWithColors);
+      }
+    };
+
+    if (zones.length > 0) {
+      updateLakesWithWQI();
+    }
+  }, [zones, wqiData]);
 
   useEffect(() => {
     init();
@@ -76,13 +181,9 @@ const LakeOverview: React.FC = () => {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    const filteredOptions = zones
-      .filter(
-        (zone) =>
-          zone.type === "lake" &&
-          zone.label.toLowerCase().includes(value.toLowerCase())
-      )
-      .map((zone) => ({ value: zone.label }));
+    const filteredOptions = lakes
+      .filter((lake) => lake.label.toLowerCase().includes(value.toLowerCase()))
+      .map((lake) => ({ value: lake.label }));
 
     setOptions(filteredOptions);
   };
@@ -92,22 +193,44 @@ const LakeOverview: React.FC = () => {
   };
 
   const filteredZones = useMemo(() => {
-    const selectedZone = zones.find(
-      (zone) =>
-        zone.type === "lake" &&
-        zone.label.toLowerCase() === searchQuery.toLowerCase()
+    // Check if we have a specific search that matches exactly
+    const selectedLake = lakes.find(
+      (lake) => lake.label.toLowerCase() === searchQuery.toLowerCase()
     );
 
-    if (selectedZone) {
-      return [selectedZone];
+    if (selectedLake) {
+      return [selectedLake];
     }
 
-    return zones.filter(
-      (zone) =>
-        zone.type === "lake" &&
-        zone.label.toLowerCase().includes(searchQuery.toLowerCase())
+    // Filter lakes based on search query
+    let filtered = lakes.filter((lake) =>
+      lake.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [zones, searchQuery]);
+
+    // Apply sorting if selected
+    if (sortOrder !== "none" && filtered.length > 0) {
+      filtered = filtered.sort((a, b) => {
+        // Use real WQI values for sorting, with fallback handling
+        const valueA = a.realWQI;
+        const valueB = b.realWQI;
+
+        // Handle cases where WQI values might not be available
+        if (valueA == null && valueB == null) return 0; // Both null, equal
+        if (valueA == null) return 1; // A is null, B comes first
+        if (valueB == null) return -1; // B is null, A comes first
+
+        if (sortOrder === "best-to-worst") {
+          // For WQI, higher values typically mean better water quality
+          return valueB - valueA; // Higher values (better quality) first
+        } else {
+          // worst-to-best
+          return valueA - valueB; // Lower values (worse quality) first
+        }
+      });
+    }
+
+    return filtered;
+  }, [lakes, searchQuery, sortOrder]);
 
   // test cloud function on server
   const fetchData = async () => {
@@ -263,7 +386,9 @@ const LakeOverview: React.FC = () => {
               <div
                 style={{
                   width: "100%",
-                  textAlign: "left",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginBottom: "1rem",
                 }}
               >
@@ -278,6 +403,31 @@ const LakeOverview: React.FC = () => {
                 >
                   Mehr zur Datenerhebung
                 </Button>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <SortAscendingOutlined
+                    style={{ color: "#42A456", fontSize: "16px" }}
+                  />
+                  <Text style={{ marginRight: "8px", fontSize: "14px" }}>
+                    Sortieren:
+                  </Text>
+                  <Select
+                    value={sortOrder}
+                    onChange={setSortOrder}
+                    style={{ width: 170, fontSize: "14px" }}
+                    size="small"
+                  >
+                    <Option value="none">Keine Sortierung</Option>
+                    <Option value="best-to-worst">Beste WQI</Option>
+                    <Option value="worst-to-best">Schlechte WQI</Option>
+                  </Select>
+                </div>
               </div>
 
               <div
@@ -304,7 +454,7 @@ const LakeOverview: React.FC = () => {
                                   cx="6"
                                   cy="6"
                                   r="6"
-                                  fill={wqiData[item.id]?.color || "#8c8c8c"}
+                                  fill={item.wqiColor || "#8c8c8c"}
                                 />
                               </svg>
                             }
