@@ -124,20 +124,15 @@ const geoToPixel = (
   }
 };
 
-// Function to check if a point is within Catalonia using polygon geometry
+// Function to check if a point is within Catalonia using bounding box
 const isPointInCatalonia = (lat: number, lng: number): boolean => {
-  // Use a simple bounding box check first for performance
-  if (
-    lng < CATALONIA_BBOX[0] ||
-    lng > CATALONIA_BBOX[2] ||
-    lat < CATALONIA_BBOX[1] ||
-    lat > CATALONIA_BBOX[3]
-  ) {
-    return false;
-  }
-
-  // For now the bounding box provides a good approximation
-  return true;
+  // Use a simple bounding box check
+  return (
+    lng >= CATALONIA_BBOX[0] &&
+    lng <= CATALONIA_BBOX[2] &&
+    lat >= CATALONIA_BBOX[1] &&
+    lat <= CATALONIA_BBOX[3]
+  );
 };
 
 const BioConn: React.FC = () => {
@@ -210,26 +205,22 @@ const BioConn: React.FC = () => {
       );
 
       const data = await response.json();
-      setOccurrenceData(data.results);
-      plotOccurrences(data.results);
 
-      // Show success message with count
-      const filteredCount = data.results.filter((occ: GbifOccurrence) => {
+      // Filter occurrences to only include those within Catalonia borders
+      const filteredOccurrences = data.results.filter((occ: GbifOccurrence) => {
         if (!occ.decimalLatitude || !occ.decimalLongitude) return false;
         return isPointInCatalonia(occ.decimalLatitude, occ.decimalLongitude);
-      }).length;
+      });
+
+      // Store the filtered occurrences
+      setOccurrenceData(filteredOccurrences);
+      plotOccurrences(filteredOccurrences);
 
       console.log(
-        `Loaded ${filteredCount} occurrences within Catalonia from ${data.results.length} total for ${gbifQuery}`
+        `Loaded ${filteredOccurrences.length} occurrences within Catalonia from ${data.results.length} total for ${gbifQuery}`
       );
 
-      // Zoom to Catalonia bounds
-      if (leafletMap.current) {
-        leafletMap.current.fitBounds([
-          [CATALONIA_BBOX[1], CATALONIA_BBOX[0]], // SW
-          [CATALONIA_BBOX[3], CATALONIA_BBOX[2]], // NE
-        ]);
-      }
+      // Don't automatically zoom to Catalonia bounds - maintain user's current view
     } catch (error) {
       console.error("GBIF occurrence fetch error:", error);
       setError("Failed to load species data");
@@ -247,18 +238,10 @@ const BioConn: React.FC = () => {
       }
     });
 
-    // Filter occurrences to only those within Catalonia bounds
-    const filteredOccurrences = occurrences.filter((occ) => {
-      if (!occ.decimalLatitude || !occ.decimalLongitude) return false;
-      return isPointInCatalonia(occ.decimalLatitude, occ.decimalLongitude);
-    });
+    console.log(`Plotting ${occurrences.length} occurrences within Catalonia`);
 
-    console.log(
-      `Filtered ${filteredOccurrences.length} occurrences from ${occurrences.length} total within Catalonia bounds`
-    );
-
-    // Add new occurrences with clickable popups (only those within Catalonia)
-    filteredOccurrences.forEach((occ: GbifOccurrence) => {
+    // Plot all occurrences (they are already filtered to be within Catalonia)
+    occurrences.forEach((occ: GbifOccurrence) => {
       if (occ.decimalLatitude && occ.decimalLongitude && leafletMap.current) {
         const marker = L.circleMarker(
           [occ.decimalLatitude, occ.decimalLongitude],
@@ -374,8 +357,29 @@ const BioConn: React.FC = () => {
     });
   };
 
+  // Function to reset species selection and clear occurrences
+  const resetSpeciesSelection = () => {
+    // Clear species selection
+    setSelectedTaxonKey(null);
+    setGbifQuery("");
+    setGbifSuggestions([]);
+    setOccurrenceData([]);
+
+    // Clear occurrences from map
+    if (leafletMap.current) {
+      leafletMap.current.eachLayer((layer) => {
+        if (layer instanceof L.CircleMarker) {
+          leafletMap.current!.removeLayer(layer);
+        }
+      });
+    }
+
+    console.log("Species selection and occurrences cleared");
+  };
+
   useEffect(() => {
     if (!leafletMap.current) return;
+
     const cataloniaLayer = L.geoJSON(
       cataloniaBounds.objects.municipis.geometries as any,
       {
@@ -443,6 +447,17 @@ const BioConn: React.FC = () => {
       setSelectedTaxonKey(null);
       setGbifQuery("");
       setGbifSuggestions([]);
+      setOccurrenceData([]);
+
+      // Clear occurrences from map
+      if (leafletMap.current) {
+        leafletMap.current.eachLayer((layer) => {
+          if (layer instanceof L.CircleMarker) {
+            leafletMap.current!.removeLayer(layer);
+          }
+        });
+      }
+
       fetchAllSpeciesOccurrences();
     }
   };
@@ -1567,41 +1582,22 @@ const BioConn: React.FC = () => {
                     <div style={{ marginTop: 8 }}>
                       <div style={{ marginBottom: 4 }}>
                         Selected: <strong>{gbifQuery}</strong>
-                        {occurrenceData.length > 0 &&
-                          (() => {
-                            const filteredCount = occurrenceData.filter(
-                              (occ) => {
-                                if (
-                                  !occ.decimalLatitude ||
-                                  !occ.decimalLongitude
-                                )
-                                  return false;
-                                return isPointInCatalonia(
-                                  occ.decimalLatitude,
-                                  occ.decimalLongitude
-                                );
-                              }
-                            ).length;
-                            return (
-                              <span
-                                style={{
-                                  color: "#52c41a",
-                                  fontSize: "12px",
-                                  marginLeft: "8px",
-                                }}
-                              >
-                                ({filteredCount} occurrences in Catalonia)
-                              </span>
-                            );
-                          })()}
                       </div>
-                      <Button
-                        type="primary"
-                        onClick={fetchGbifOccurrences}
-                        loading={loading}
-                      >
-                        Load Occurrences
-                      </Button>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <Button
+                          type="primary"
+                          onClick={fetchGbifOccurrences}
+                          loading={loading}
+                        >
+                          Load Occurrences
+                        </Button>
+                        <Button
+                          onClick={resetSpeciesSelection}
+                          disabled={loading}
+                        >
+                          Reset
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </>

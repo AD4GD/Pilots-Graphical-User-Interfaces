@@ -12,11 +12,16 @@ import {
   Typography,
   ConfigProvider,
   Tooltip,
+  Input,
+  Upload,
 } from "antd";
 import {
   DeleteOutlined,
   EyeOutlined,
   PlayCircleOutlined,
+  EditOutlined,
+  DownloadOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import Parse from "parse";
 import { useNavigate } from "@opendash/router";
@@ -35,6 +40,23 @@ const apiParameterTypes = [
   { value: 5, label: "Shrubland and grassland" },
   { value: 6, label: "Forestland" },
 ];
+
+// Helper function to get file extension and type
+const getFileInfo = (fileName: string, contentType: string) => {
+  const extension = fileName.split(".").pop()?.toLowerCase() || "";
+
+  if (extension === "json" || contentType.includes("application/json")) {
+    return { extension: ".json", type: "JSON" };
+  } else if (
+    extension === "tiff" ||
+    extension === "tif" ||
+    contentType.includes("image/tiff")
+  ) {
+    return { extension: ".tiff", type: "GeoTIFF" };
+  }
+
+  return { extension: ".json", type: "JSON" }; // Default fallback
+};
 
 // Function to interpolate colors based on land cover values
 const interpolateColor = (value: number): string => {
@@ -397,6 +419,32 @@ const BioConnScenarioSaved: React.FC = () => {
     processing: false,
   });
 
+  const [renameModal, setRenameModal] = useState<{
+    visible: boolean;
+    scenario: SavedScenario | null;
+    newName: string;
+    saving: boolean;
+  }>({
+    visible: false,
+    scenario: null,
+    newName: "",
+    saving: false,
+  });
+
+  const [uploadModal, setUploadModal] = useState<{
+    visible: boolean;
+    file: File | null;
+    apiParameterType: number;
+    apiMode: "high" | "low";
+    processing: boolean;
+  }>({
+    visible: false,
+    file: null,
+    apiParameterType: 6,
+    apiMode: "high",
+    processing: false,
+  });
+
   // Load scenarios from Parse
   const loadScenarios = async () => {
     try {
@@ -450,6 +498,205 @@ const BioConnScenarioSaved: React.FC = () => {
     } catch (error: any) {
       console.error("Error deleting scenario:", error);
       message.error(`Failed to delete scenario: ${error.message}`);
+    }
+  };
+
+  // Rename scenario
+  const renameScenario = async () => {
+    if (!renameModal.scenario || !renameModal.newName.trim()) return;
+
+    try {
+      setRenameModal((prev) => ({ ...prev, saving: true }));
+
+      message.loading({
+        content: "Renaming scenario and updating file...",
+        key: "rename",
+      });
+
+      const ScenarioClass = Parse.Object.extend("AD4GD_Scenario");
+      const query = new Parse.Query(ScenarioClass);
+      const scenario = await query.get(renameModal.scenario.id);
+
+      // Get the current scenario file
+      const currentFile = scenario.get("scenario") as Parse.File;
+
+      if (currentFile) {
+        try {
+          // Download the current file content
+          const response = await fetch(currentFile.url());
+
+          if (!response.ok) {
+            throw new Error(`Failed to download file: ${response.status}`);
+          }
+
+          const blob = await response.blob();
+
+          // Determine the file extension from the original file
+          const contentType = response.headers.get("content-type") || "";
+          const originalName = currentFile.name() || "";
+          const { extension } = getFileInfo(originalName, contentType);
+
+          // Create a new file with the updated name
+          const newFileName = `${renameModal.newName.trim()}${extension}`;
+          const newFile = new Parse.File(newFileName, blob);
+
+          // Save the new file
+          await newFile.save();
+
+          // Update the scenario with the new name and new file
+          scenario.set("name", renameModal.newName.trim());
+          scenario.set("scenario", newFile);
+          await scenario.save();
+
+          console.log(
+            `Scenario renamed: "${
+              renameModal.scenario.name
+            }" -> "${renameModal.newName.trim()}", File: "${originalName}" -> "${newFileName}"`
+          );
+        } catch (fileError: any) {
+          console.warn("Error updating file, updating name only:", fileError);
+          // Fallback: just update the name if file operations fail
+          scenario.set("name", renameModal.newName.trim());
+          await scenario.save();
+
+          message.warning(
+            "Scenario name updated, but file name could not be changed"
+          );
+        }
+      } else {
+        // If no file exists, just update the name
+        scenario.set("name", renameModal.newName.trim());
+        await scenario.save();
+      }
+
+      // Update local state with new file reference
+      setScenarios(
+        scenarios.map((s) =>
+          s.id === renameModal.scenario!.id
+            ? {
+                ...s,
+                name: renameModal.newName.trim(),
+                scenarioFile: scenario.get("scenario"), // Update with new file reference
+              }
+            : s
+        )
+      );
+
+      message.success({
+        content: "Scenario and file renamed successfully",
+        key: "rename",
+      });
+
+      setRenameModal({
+        visible: false,
+        scenario: null,
+        newName: "",
+        saving: false,
+      });
+    } catch (error: any) {
+      console.error("Error renaming scenario:", error);
+      message.error({
+        content: `Failed to rename scenario: ${error.message}`,
+        key: "rename",
+      });
+      setRenameModal((prev) => ({ ...prev, saving: false }));
+    }
+  };
+
+  // Download scenario
+  const downloadScenario = async (scenario: SavedScenario) => {
+    try {
+      message.loading({
+        content: "Preparing download...",
+        key: "download",
+      });
+
+      // Download the scenario file
+      const response = await fetch(scenario.scenarioFile.url());
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Determine file extension using helper function
+      const contentType = response.headers.get("content-type") || "";
+      const originalName = scenario.scenarioFile.name() || "";
+      const { extension } = getFileInfo(originalName, contentType);
+
+      link.download = `${scenario.name}${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success({ content: "Download started", key: "download" });
+    } catch (error: any) {
+      console.error("Error downloading scenario:", error);
+      message.error(`Failed to download scenario: ${error.message}`);
+    }
+  };
+
+  // Upload and process scenario
+  const handleUploadAndProcess = async () => {
+    if (!uploadModal.file) return;
+
+    try {
+      setUploadModal((prev) => ({ ...prev, processing: true }));
+
+      message.loading({
+        content: "Processing uploaded scenario...",
+        key: "upload",
+      });
+
+      const fileInfo = getFileInfo(uploadModal.file.name, "");
+      let combinedRaster;
+
+      if (fileInfo.type === "JSON") {
+        // JSON format
+        const text = await uploadModal.file.text();
+        combinedRaster = JSON.parse(text);
+        console.log("Processing uploaded JSON scenario:", combinedRaster);
+
+        // Remove metadata if present
+        delete combinedRaster._scenarioMetadata;
+      } else if (fileInfo.type === "GeoTIFF") {
+        // GeoTIFF format
+        const arrayBuffer = await uploadModal.file.arrayBuffer();
+        combinedRaster = await geoblaze.parse(arrayBuffer);
+        console.log("Processing uploaded GeoTIFF scenario:", combinedRaster);
+      } else {
+        throw new Error(
+          "Unsupported file format. Please upload a .json or .tiff file."
+        );
+      }
+
+      // Process with API
+      await processScenarioWithAPI(
+        combinedRaster,
+        uploadModal.apiParameterType,
+        uploadModal.apiMode,
+        navigate,
+        uploadModal.file.name.split(".")[0] // Use filename as scenario name
+      );
+
+      setUploadModal({
+        visible: false,
+        file: null,
+        apiParameterType: 6,
+        apiMode: "high",
+        processing: false,
+      });
+
+      message.success({
+        content: "Upload and processing completed",
+        key: "upload",
+      });
+    } catch (error: any) {
+      console.error("Error processing uploaded file:", error);
+      message.error(`Failed to process uploaded file: ${error.message}`);
+      setUploadModal((prev) => ({ ...prev, processing: false }));
     }
   };
 
@@ -616,13 +863,29 @@ const BioConnScenarioSaved: React.FC = () => {
             </Text>
           </div>
 
-          <Button
-            type="primary"
-            onClick={() => navigate("/bioconnect/scenario")}
-            style={{ marginBottom: "20px" }}
-          >
-            Create New Scenario
-          </Button>
+          <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+            <Button
+              type="primary"
+              onClick={() => navigate("/bioconnect/scenario")}
+            >
+              Create New Scenario
+            </Button>
+            <Button
+              type="default"
+              icon={<UploadOutlined />}
+              onClick={() =>
+                setUploadModal({
+                  visible: true,
+                  file: null,
+                  apiParameterType: 6,
+                  apiMode: "high",
+                  processing: false,
+                })
+              }
+            >
+              Upload & Process Scenario
+            </Button>
+          </div>
 
           {loading ? (
             <div style={{ textAlign: "center", padding: "50px" }}>
@@ -677,8 +940,9 @@ const BioConnScenarioSaved: React.FC = () => {
                   <div
                     style={{
                       display: "flex",
-                      gap: "12px",
+                      gap: "8px",
                       alignItems: "center",
+                      flexWrap: "wrap",
                     }}
                   >
                     <Tooltip title="Preview scenario">
@@ -686,6 +950,27 @@ const BioConnScenarioSaved: React.FC = () => {
                         type="default"
                         icon={<EyeOutlined />}
                         onClick={() => previewScenario(scenario)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Rename scenario">
+                      <Button
+                        type="default"
+                        icon={<EditOutlined />}
+                        onClick={() =>
+                          setRenameModal({
+                            visible: true,
+                            scenario,
+                            newName: scenario.name,
+                            saving: false,
+                          })
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip title="Download scenario">
+                      <Button
+                        type="default"
+                        icon={<DownloadOutlined />}
+                        onClick={() => downloadScenario(scenario)}
                       />
                     </Tooltip>
                     <Tooltip title="Process scenario">
@@ -823,6 +1108,169 @@ const BioConnScenarioSaved: React.FC = () => {
                 }}
               >
                 {processModal.apiParameterType === 6
+                  ? "✓ High resolution available for Forestland"
+                  : "⚠ High resolution is only available for Forestland (type 6)"}
+              </div>
+            </Space>
+          </Modal>
+
+          {/* Rename Modal */}
+          <Modal
+            title="Rename Scenario"
+            open={renameModal.visible}
+            onOk={renameScenario}
+            onCancel={() =>
+              setRenameModal({
+                visible: false,
+                scenario: null,
+                newName: "",
+                saving: false,
+              })
+            }
+            confirmLoading={renameModal.saving}
+            okText="Rename"
+            cancelText="Cancel"
+          >
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px" }}>
+                Scenario Name
+              </label>
+              <Input
+                value={renameModal.newName}
+                onChange={(e) =>
+                  setRenameModal((prev) => ({
+                    ...prev,
+                    newName: e.target.value,
+                  }))
+                }
+                placeholder="Enter new scenario name"
+                maxLength={100}
+              />
+            </div>
+          </Modal>
+
+          {/* Upload and Process Modal */}
+          <Modal
+            title="Upload & Process Scenario"
+            open={uploadModal.visible}
+            onOk={handleUploadAndProcess}
+            onCancel={() =>
+              setUploadModal({
+                visible: false,
+                file: null,
+                apiParameterType: 6,
+                apiMode: "high",
+                processing: false,
+              })
+            }
+            confirmLoading={uploadModal.processing}
+            okText="Process"
+            cancelText="Cancel"
+            okButtonProps={{ disabled: !uploadModal.file }}
+          >
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px" }}>
+                  Upload Scenario File
+                </label>
+                <Upload
+                  beforeUpload={(file) => {
+                    const fileExtension = file.name
+                      .split(".")
+                      .pop()
+                      ?.toLowerCase();
+                    if (
+                      fileExtension !== "json" &&
+                      fileExtension !== "tiff" &&
+                      fileExtension !== "tif"
+                    ) {
+                      message.error("Please upload a .json or .tiff file");
+                      return false;
+                    }
+                    setUploadModal((prev) => ({ ...prev, file }));
+                    return false; // Prevent automatic upload
+                  }}
+                  fileList={
+                    uploadModal.file
+                      ? [
+                          {
+                            uid: "1",
+                            name: uploadModal.file.name,
+                            status: "done",
+                          },
+                        ]
+                      : []
+                  }
+                  onRemove={() =>
+                    setUploadModal((prev) => ({ ...prev, file: null }))
+                  }
+                  accept=".json,.tiff,.tif"
+                  maxCount={1}
+                >
+                  <Button icon={<UploadOutlined />}>
+                    {uploadModal.file ? "Change File" : "Select File"}
+                  </Button>
+                </Upload>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
+                >
+                  Supported formats: .json
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "5px" }}>
+                  API Parameter Type
+                </label>
+                <Select
+                  style={{ width: "100%" }}
+                  value={uploadModal.apiParameterType}
+                  onChange={(value) =>
+                    setUploadModal((prev) => ({
+                      ...prev,
+                      apiParameterType: value,
+                      apiMode: value !== 6 ? "low" : prev.apiMode,
+                    }))
+                  }
+                >
+                  {apiParameterTypes.map((type) => (
+                    <Option key={type.value} value={type.value}>
+                      {type.value} - {type.label}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "5px" }}>
+                  Processing Mode
+                </label>
+                <Select
+                  style={{ width: "100%" }}
+                  value={uploadModal.apiMode}
+                  onChange={(value) =>
+                    setUploadModal((prev) => ({ ...prev, apiMode: value }))
+                  }
+                >
+                  <Option
+                    value="high"
+                    disabled={uploadModal.apiParameterType !== 6}
+                  >
+                    High Resolution{" "}
+                    {uploadModal.apiParameterType !== 6 ? "(Forest only)" : ""}
+                  </Option>
+                  <Option value="low">Low Resolution (All types)</Option>
+                </Select>
+              </div>
+
+              <div
+                style={{
+                  fontSize: "12px",
+                  color:
+                    uploadModal.apiParameterType === 6 ? "#52c41a" : "#ff6b6b",
+                }}
+              >
+                {uploadModal.apiParameterType === 6
                   ? "✓ High resolution available for Forestland"
                   : "⚠ High resolution is only available for Forestland (type 6)"}
               </div>

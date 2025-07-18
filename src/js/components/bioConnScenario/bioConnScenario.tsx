@@ -882,7 +882,7 @@ const BioConnScenario: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [time, setTime] = useState(availableTimes[6]);
+  const [time, setTime] = useState(availableTimes[7]);
   const [apiParameterType, setApiParameterType] = useState(6);
   const [apiMode, setApiMode] = useState<"high" | "low">("high");
   const [processingScenario, setProcessingScenario] = useState(false);
@@ -1486,6 +1486,42 @@ const BioConnScenario: React.FC = () => {
                 <br />
                 8. <strong>Important:</strong> Saving scenarios allows you to
                 reuse them later from the Saved Scenarios page
+              </div>
+              <div
+                style={{
+                  marginTop: "10px",
+                  padding: "8px",
+                  backgroundColor: "#fff7e6",
+                  borderRadius: "4px",
+                  border: "1px solid #ffd591",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    marginBottom: "4px",
+                    color: "#d46b08",
+                  }}
+                >
+                  ⚠️ Performance Tips:
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "#ad6800",
+                    lineHeight: "1.3",
+                  }}
+                >
+                  • <strong>Please zoom in close</strong> before drawing
+                  polygons
+                  <br />• Draw <strong>smaller, focused areas</strong> rather
+                  than large regions
+                  <br />• Keep polygons <strong>close together</strong> to
+                  minimize processing area
+                  <br />• Large or distant polygons may cause slow processing or
+                  browser freezing
+                </div>
               </div>{" "}
             </div>
             <div style={{ marginBottom: "20px" }}>
