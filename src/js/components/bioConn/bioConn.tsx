@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -12,8 +12,13 @@ import {
   ConfigProvider,
   Collapse,
   Divider,
+  Modal,
 } from "antd";
-import { PlusOutlined, DownOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  DownOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons";
 import geoblaze from "geoblaze";
 import GeoRasterLayer from "georaster-layer-for-leaflet";
 import proj4 from "proj4";
@@ -23,6 +28,52 @@ import { Spin } from "antd";
 import { useNavigate } from "@opendash/router";
 import Parse from "parse";
 import cataloniaBounds from "./cataloniaBounds.json";
+
+// Type definitions
+interface GbifSpecies {
+  key: number;
+  scientificName: string;
+  commonName?: string;
+}
+
+interface GbifOccurrence {
+  decimalLatitude?: number;
+  decimalLongitude?: number;
+  key: number;
+  scientificName?: string;
+  vernacularName?: string;
+  eventDate?: string;
+  recordedBy?: string;
+  institutionCode?: string;
+  collectionCode?: string;
+  catalogNumber?: string;
+  basisOfRecord?: string;
+  occurrenceStatus?: string;
+  country?: string;
+  stateProvince?: string;
+  locality?: string;
+}
+
+interface GeoRaster {
+  xmin: number;
+  ymin: number;
+  xmax: number;
+  ymax: number;
+  width: number;
+  height: number;
+}
+
+interface CheckboxOptions {
+  satellite: boolean;
+  roads: boolean;
+  protectedAreas: boolean;
+  natura2000: boolean;
+  enpe: boolean;
+  pein: boolean;
+  aquaticProtected: boolean;
+  riversWaterBodies: boolean;
+  cadastral: boolean;
+}
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -52,7 +103,11 @@ const propertyOptions = [
   "Shrublands",
 ];
 
-const geoToPixel = (georaster, easting, northing) => {
+const geoToPixel = (
+  georaster: GeoRaster,
+  easting: number,
+  northing: number
+) => {
   const { xmin, ymin, xmax, ymax, width, height } = georaster;
 
   const xResolution = (xmax - xmin) / width;
@@ -69,24 +124,42 @@ const geoToPixel = (georaster, easting, northing) => {
   }
 };
 
+// Function to check if a point is within Catalonia using polygon geometry
+const isPointInCatalonia = (lat: number, lng: number): boolean => {
+  // Use a simple bounding box check first for performance
+  if (
+    lng < CATALONIA_BBOX[0] ||
+    lng > CATALONIA_BBOX[2] ||
+    lat < CATALONIA_BBOX[1] ||
+    lat > CATALONIA_BBOX[3]
+  ) {
+    return false;
+  }
+
+  // For now the bounding box provides a good approximation
+  return true;
+};
+
 const BioConn: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [properties, setProperties] = useState("Forest");
-  const [time, setTime] = useState(availableTimes[6]);
+  const [time, setTime] = useState(availableTimes[7]);
   const [xCoord, setXCoord] = useState<string | null>(null);
   const [yCoord, setYCoord] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const leafletMap = useRef<L.Map | null>(null);
   const [speciesOption, setSpeciesOption] = useState<"all" | "specific">("all");
   const [gbifQuery, setGbifQuery] = useState("");
-  const [gbifSuggestions, setGbifSuggestions] = useState([]);
-  const [selectedTaxonKey, setSelectedTaxonKey] = useState(null);
-  const [occurrenceData, setOccurrenceData] = useState([]);
+  const [gbifSuggestions, setGbifSuggestions] = useState<GbifSpecies[]>([]);
+  const [selectedTaxonKey, setSelectedTaxonKey] = useState<number | null>(null);
+  const [occurrenceData, setOccurrenceData] = useState<GbifOccurrence[]>([]);
   const [hasLoadedAnyLayer, setHasLoadedAnyLayer] = useState(false);
+  const [showingAllSpecies, setShowingAllSpecies] = useState(true);
+  const [isInfoModalVisible, setIsInfoModalVisible] = useState<boolean>(false);
 
-  const searchGbifSpecies = async (query) => {
+  const searchGbifSpecies = async (query: string) => {
     try {
       const response = await fetch(
         `https://api.gbif.org/v1/species/suggest?q=${query}&limit=5`
@@ -98,12 +171,29 @@ const BioConn: React.FC = () => {
     }
   };
 
+  const fetchAllSpeciesOccurrences = async () => {
+    // This function would load aggregated connectivity data for all species
+    // Implementation depends on your data source
+    console.log("Loading aggregated species data...");
+    setLoading(true);
+    try {
+      // Add your implementation here
+      setOccurrenceData([]);
+    } catch (error) {
+      console.error("Error loading aggregated species data:", error);
+      setError("Failed to load aggregated species data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchGbifOccurrences = async () => {
     if (!selectedTaxonKey) return;
 
     setLoading(true);
     try {
-      // Convert polygon to WKT format
+      // Use the bounding box for GBIF API query (simpler and more reliable)
+      // The precise filtering will happen client-side
       const wkt = `POLYGON((
         ${CATALONIA_BBOX[0]} ${CATALONIA_BBOX[1]},
         ${CATALONIA_BBOX[2]} ${CATALONIA_BBOX[1]},
@@ -123,11 +213,23 @@ const BioConn: React.FC = () => {
       setOccurrenceData(data.results);
       plotOccurrences(data.results);
 
+      // Show success message with count
+      const filteredCount = data.results.filter((occ: GbifOccurrence) => {
+        if (!occ.decimalLatitude || !occ.decimalLongitude) return false;
+        return isPointInCatalonia(occ.decimalLatitude, occ.decimalLongitude);
+      }).length;
+
+      console.log(
+        `Loaded ${filteredCount} occurrences within Catalonia from ${data.results.length} total for ${gbifQuery}`
+      );
+
       // Zoom to Catalonia bounds
-      leafletMap.current.fitBounds([
-        [CATALONIA_BBOX[1], CATALONIA_BBOX[0]], // SW
-        [CATALONIA_BBOX[3], CATALONIA_BBOX[2]], // NE
-      ]);
+      if (leafletMap.current) {
+        leafletMap.current.fitBounds([
+          [CATALONIA_BBOX[1], CATALONIA_BBOX[0]], // SW
+          [CATALONIA_BBOX[3], CATALONIA_BBOX[2]], // NE
+        ]);
+      }
     } catch (error) {
       console.error("GBIF occurrence fetch error:", error);
       setError("Failed to load species data");
@@ -135,35 +237,147 @@ const BioConn: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const plotOccurrences = (occurrences) => {
+  const plotOccurrences = (occurrences: GbifOccurrence[]) => {
     // Clear previous occurrences
+    if (!leafletMap.current) return;
+
     leafletMap.current.eachLayer((layer) => {
       if (layer instanceof L.CircleMarker) {
-        leafletMap.current.removeLayer(layer);
+        leafletMap.current!.removeLayer(layer);
       }
     });
 
-    // Add new occurrences
-    occurrences.forEach((occ) => {
-      if (occ.decimalLatitude && occ.decimalLongitude) {
-        L.circleMarker([occ.decimalLatitude, occ.decimalLongitude], {
-          radius: 5,
-          fillColor: "#ff7800",
-          color: "#000",
-          weight: 1,
-          opacity: 1,
-          fillOpacity: 0.8,
-        }).addTo(leafletMap.current);
+    // Filter occurrences to only those within Catalonia bounds
+    const filteredOccurrences = occurrences.filter((occ) => {
+      if (!occ.decimalLatitude || !occ.decimalLongitude) return false;
+      return isPointInCatalonia(occ.decimalLatitude, occ.decimalLongitude);
+    });
+
+    console.log(
+      `Filtered ${filteredOccurrences.length} occurrences from ${occurrences.length} total within Catalonia bounds`
+    );
+
+    // Add new occurrences with clickable popups (only those within Catalonia)
+    filteredOccurrences.forEach((occ: GbifOccurrence) => {
+      if (occ.decimalLatitude && occ.decimalLongitude && leafletMap.current) {
+        const marker = L.circleMarker(
+          [occ.decimalLatitude, occ.decimalLongitude],
+          {
+            radius: 6,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8,
+          }
+        );
+
+        // Create comprehensive popup content with occurrence details
+        let popupContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 350px; line-height: 1.2;">
+            <h4 style="margin: 0 0 8px 0; color: #1890ff; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
+              ${occ.scientificName || gbifQuery || "Species Occurrence"}
+            </h4>
+        `;
+
+        // Add vernacular name if available
+        if (occ.vernacularName) {
+          popupContent += `<p style="margin: 2px 0; font-style: italic; color: #666; font-size: 13px;">
+            Common name: ${occ.vernacularName}
+          </p>`;
+        }
+
+        // Location information
+        popupContent += `
+          <div style="margin: 6px 0;">
+            <strong>📍 Location:</strong><br>
+            <span style="font-size: 11px;">
+              Lat: ${occ.decimalLatitude.toFixed(
+                6
+              )}, Lng: ${occ.decimalLongitude.toFixed(6)}
+            </span>
+        `;
+
+        if (occ.locality) {
+          popupContent += `<br><span style="font-size: 11px;">${occ.locality}</span>`;
+        }
+        if (occ.stateProvince) {
+          popupContent += `<br><span style="font-size: 11px;">${occ.stateProvince}</span>`;
+        }
+        if (occ.country) {
+          popupContent += `<br><span style="font-size: 11px;">${occ.country}</span>`;
+        }
+        popupContent += `</div>`;
+
+        // Record information
+        if (occ.eventDate) {
+          const date = new Date(occ.eventDate).toLocaleDateString();
+          popupContent += `<p style="margin: 2px 0;"><strong>📅 Date:</strong> ${date}</p>`;
+        }
+
+        if (occ.basisOfRecord) {
+          popupContent += `<p style="margin: 2px 0;"><strong>📋 Basis:</strong> ${occ.basisOfRecord}</p>`;
+        }
+
+        if (occ.recordedBy) {
+          popupContent += `<p style="margin: 2px 0;"><strong>👤 Recorded by:</strong> ${occ.recordedBy}</p>`;
+        }
+
+        // Institution information
+        if (occ.institutionCode || occ.collectionCode) {
+          popupContent += `<div style="margin: 6px 0; font-size: 11px; color: #666;">`;
+          if (occ.institutionCode) {
+            popupContent += `<strong>Institution:</strong> ${occ.institutionCode}<br>`;
+          }
+          if (occ.collectionCode) {
+            popupContent += `<strong>Collection:</strong> ${occ.collectionCode}<br>`;
+          }
+          if (occ.catalogNumber) {
+            popupContent += `<strong>Catalog #:</strong> ${occ.catalogNumber}`;
+          }
+          popupContent += `</div>`;
+        }
+
+        // GBIF link
+        popupContent += `
+          <div style="margin-top: 8px; text-align: center; border-top: 1px solid #ddd; padding-top: 6px;">
+            <a href="https://www.gbif.org/occurrence/${occ.key}" target="_blank" 
+               style="color: #1890ff; text-decoration: none; font-weight: bold; font-size: 12px;">
+              🔗 View full record on GBIF
+            </a>
+          </div>
+        </div>`;
+
+        marker.bindPopup(popupContent, {
+          maxWidth: 400,
+          closeButton: true,
+          autoPan: true,
+        });
+
+        // Add hover effect
+        marker.on("mouseover", function (this: L.CircleMarker) {
+          this.setStyle({
+            radius: 8,
+            fillOpacity: 1,
+          });
+        });
+
+        marker.on("mouseout", function (this: L.CircleMarker) {
+          this.setStyle({
+            radius: 6,
+            fillOpacity: 0.8,
+          });
+        });
+
+        marker.addTo(leafletMap.current);
       }
     });
   };
 
   useEffect(() => {
     if (!leafletMap.current) return;
-
     const cataloniaLayer = L.geoJSON(
-      cataloniaBounds.objects.municipis.geometries,
+      cataloniaBounds.objects.municipis.geometries as any,
       {
         style: {
           color: "#3388ff",
@@ -182,6 +396,14 @@ const BioConn: React.FC = () => {
   const roadsLayerRef = useRef<L.TileLayer.WMS | null>(null);
   const satelliteLayerRef = useRef<L.TileLayer.WMS | null>(null);
   const baseMapLayerRef = useRef<L.TileLayer | null>(null);
+  const riversWaterBodiesLayerRef = useRef<L.TileLayer.WMS | null>(null);
+  const cadastralLayerRef = useRef<L.ImageOverlay | L.TileLayer.WMS | null>(
+    null
+  );
+  const cadastralLayersRef = useRef<(L.ImageOverlay | L.TileLayer.WMS)[]>([]);
+  const cadastralUpdateTimeoutRef = useRef<NodeJS.Timeout | undefined>(
+    undefined
+  );
   const protectedAreaLayersRef = useRef<{
     natura2000: L.TileLayer.WMS | null;
     enpe: L.TileLayer.WMS | null;
@@ -198,18 +420,17 @@ const BioConn: React.FC = () => {
   const [layerOption, setLayerOption] = useState<"connectivity" | "muscsc">(
     "connectivity"
   );
-
   // State for checkboxes
-  const [checkboxOptions, setCheckboxOptions] = useState({
+  const [checkboxOptions, setCheckboxOptions] = useState<CheckboxOptions>({
     satellite: false,
     roads: false,
-    rivers: false,
-    waterBodies: false,
     protectedAreas: false,
     natura2000: false,
     enpe: false,
     pein: false,
     aquaticProtected: false,
+    riversWaterBodies: false,
+    cadastral: false,
   });
 
   // Handle species radio button change
@@ -230,9 +451,8 @@ const BioConn: React.FC = () => {
   const handleLayerChange = (e: any) => {
     setLayerOption(e.target.value);
   };
-
   // Handle checkbox changes
-  const handleCheckboxChange = (option: string) => {
+  const handleCheckboxChange = (option: keyof CheckboxOptions) => {
     const newValue = !checkboxOptions[option];
 
     setCheckboxOptions((prev) => ({
@@ -259,6 +479,12 @@ const BioConn: React.FC = () => {
         break;
       case "aquaticProtected":
         newValue ? addAquaticProtectedLayer() : removeAquaticProtectedLayer();
+        break;
+      case "riversWaterBodies":
+        newValue ? addRiversWaterBodiesLayer() : removeRiversWaterBodiesLayer();
+        break;
+      case "cadastral":
+        newValue ? addCadastralLayer() : removeCadastralLayer();
         break;
     }
   };
@@ -491,6 +717,165 @@ const BioConn: React.FC = () => {
     protectedAreaLayersRef.current.aquatic = null;
   };
 
+  // Add Rivers and Water Bodies layer
+  const addRiversWaterBodiesLayer = async () => {
+    if (!leafletMap.current) return;
+
+    try {
+      if (riversWaterBodiesLayerRef.current) {
+        leafletMap.current.removeLayer(riversWaterBodiesLayerRef.current);
+        riversWaterBodiesLayerRef.current = null;
+      }
+
+      riversWaterBodiesLayerRef.current = L.tileLayer.wms(
+        "https://geoserveis.ide.cat/servei/catalunya/inspire-hidrografia/wms",
+        {
+          layers: "HY.PhysicalWaters.Waterbodies",
+          format: "image/png",
+          transparent: true,
+          version: "1.3.0",
+          styles: "HY.PhysicalWaters.Waterbodies.Default",
+          opacity: 0.7,
+        }
+      );
+
+      riversWaterBodiesLayerRef.current.addTo(leafletMap.current);
+    } catch (err) {
+      console.error("Error adding Rivers and Water Bodies layer:", err);
+      setError("Failed to load Rivers and Water Bodies layer");
+    }
+  };
+
+  // Remove Rivers and Water Bodies layer
+  const removeRiversWaterBodiesLayer = () => {
+    if (!leafletMap.current || !riversWaterBodiesLayerRef.current) return;
+
+    leafletMap.current.removeLayer(riversWaterBodiesLayerRef.current);
+    riversWaterBodiesLayerRef.current = null;
+  };
+
+  // Add Cadastral Information layer using Parse Cloud Function
+  const addCadastralLayer = async () => {
+    if (!leafletMap.current) return;
+
+    try {
+      // Always remove all existing layers first to prevent stacking
+      removeCadastralLayer();
+
+      console.log("Adding cadastral layer using Parse Cloud Function...");
+
+      // Get current map bounds
+      const bounds = leafletMap.current.getBounds();
+      const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
+
+      // Call Parse Cloud Function to get cadastral data
+      const result = await Parse.Cloud.run("getCadastralWMS", {
+        bbox: bbox,
+        width: 512,
+        height: 512,
+      });
+
+      if (result.status !== "success" || !result.data) {
+        throw new Error("Failed to fetch cadastral data");
+      }
+
+      // Convert base64 to blob for image overlay
+      const binaryString = atob(result.data);
+      const arrayBuffer = new ArrayBuffer(binaryString.length);
+      const uintArray = new Uint8Array(arrayBuffer);
+
+      for (let i = 0; i < binaryString.length; i++) {
+        uintArray[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([arrayBuffer], { type: "image/png" });
+      const imageUrl = URL.createObjectURL(blob);
+
+      // Create image overlay without attribution to avoid changing map attribution
+      const cadastralOverlay = L.imageOverlay(
+        imageUrl,
+        [
+          [bounds.getSouth(), bounds.getWest()],
+          [bounds.getNorth(), bounds.getEast()],
+        ],
+        {
+          opacity: 0.7,
+          // Don't add attribution to prevent changing map attribution text
+        }
+      );
+
+      cadastralOverlay.addTo(leafletMap.current);
+      cadastralLayerRef.current = cadastralOverlay;
+
+      // Also add to our tracking array for comprehensive cleanup
+      cadastralLayersRef.current.push(cadastralOverlay);
+
+      console.log("Cadastral overlay added successfully");
+
+      // Clean up blob URL after a delay to ensure image is loaded
+      setTimeout(() => {
+        URL.revokeObjectURL(imageUrl);
+      }, 5000);
+    } catch (err) {
+      console.error("Error adding Cadastral layer:", err);
+      setError(
+        `Failed to load Cadastral layer: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
+  // Remove all Cadastral Information layers
+  const removeCadastralLayer = () => {
+    if (!leafletMap.current) return;
+
+    console.log("Removing all cadastral layers");
+
+    // Remove the current layer if it exists
+    if (cadastralLayerRef.current) {
+      leafletMap.current.removeLayer(cadastralLayerRef.current);
+      cadastralLayerRef.current = null;
+    }
+
+    // Remove all layers from the array (in case any got orphaned)
+    cadastralLayersRef.current.forEach((layer) => {
+      try {
+        if (leafletMap.current && leafletMap.current.hasLayer(layer)) {
+          leafletMap.current.removeLayer(layer);
+        }
+      } catch (error) {
+        console.warn("Error removing cadastral layer:", error);
+      }
+    });
+
+    // Clear the array
+    cadastralLayersRef.current = [];
+
+    // Also remove any image overlays that might be cadastral layers
+    leafletMap.current.eachLayer((layer) => {
+      if (layer instanceof L.ImageOverlay) {
+        // Check if this might be a cadastral layer by looking at attribution
+        if (layer.options.attribution?.includes("Catastro")) {
+          leafletMap.current?.removeLayer(layer);
+        }
+      }
+    });
+
+    console.log("All cadastral layers removed");
+  };
+
+  // Function to update cadastral layer when map view changes
+  const updateCadastralLayer = useCallback(async () => {
+    if (!checkboxOptions.cadastral || !leafletMap.current) return;
+
+    console.log("Updating cadastral layer for new map bounds");
+    // Remove all existing layers first to prevent stacking
+    removeCadastralLayer();
+    // Add new layer with current bounds
+    await addCadastralLayer();
+  }, [checkboxOptions.cadastral]);
+
   useEffect(() => {
     if (mapRef.current && !leafletMap.current) {
       leafletMap.current = L.map(mapRef.current).setView([41.7, 1.7], 7);
@@ -574,13 +959,13 @@ const BioConn: React.FC = () => {
         // }</p>`;
         //     }
 
-        popupContent += "</div>";
-
-        // Create and open a popup at the clicked location
-        L.popup()
-          .setLatLng(e.latlng)
-          .setContent(popupContent)
-          .openOn(leafletMap.current);
+        popupContent += "</div>"; // Create and open a popup at the clicked location
+        if (leafletMap.current) {
+          L.popup()
+            .setLatLng(e.latlng)
+            .setContent(popupContent)
+            .openOn(leafletMap.current);
+        }
       });
     }
   };
@@ -688,6 +1073,23 @@ const BioConn: React.FC = () => {
     } else {
       removeAquaticProtectedLayer();
     }
+
+    if (checkboxOptions.riversWaterBodies) {
+      addRiversWaterBodiesLayer();
+    } else {
+      removeRiversWaterBodiesLayer();
+    }
+
+    if (checkboxOptions.cadastral) {
+      addCadastralLayer();
+    } else {
+      removeCadastralLayer();
+      // Also clear any pending timeouts when unchecking
+      if (cadastralUpdateTimeoutRef.current) {
+        clearTimeout(cadastralUpdateTimeoutRef.current);
+        cadastralUpdateTimeoutRef.current = undefined;
+      }
+    }
   }, [
     checkboxOptions.roads,
     checkboxOptions.satellite,
@@ -695,7 +1097,232 @@ const BioConn: React.FC = () => {
     checkboxOptions.enpe,
     checkboxOptions.pein,
     checkboxOptions.aquaticProtected,
+    checkboxOptions.riversWaterBodies,
+    checkboxOptions.cadastral,
   ]);
+
+  // Effect to add map event listeners for cadastral layer
+  useEffect(() => {
+    if (!leafletMap.current) return;
+
+    const handleMapMove = () => {
+      if (!checkboxOptions.cadastral) return;
+
+      console.log("Map moved, scheduling cadastral layer update");
+      // Clear existing timeout
+      if (cadastralUpdateTimeoutRef.current) {
+        clearTimeout(cadastralUpdateTimeoutRef.current);
+      }
+
+      // Debounce the update to avoid too many requests
+      cadastralUpdateTimeoutRef.current = setTimeout(() => {
+        updateCadastralLayer();
+      }, 500);
+    };
+
+    if (checkboxOptions.cadastral) {
+      console.log("Adding cadastral layer event listeners");
+      leafletMap.current.on("moveend", handleMapMove);
+      leafletMap.current.on("zoomend", handleMapMove);
+    } else {
+      console.log("Removing cadastral layer event listeners");
+      leafletMap.current.off("moveend", handleMapMove);
+      leafletMap.current.off("zoomend", handleMapMove);
+
+      // Clear any pending timeouts when checkbox is unchecked
+      if (cadastralUpdateTimeoutRef.current) {
+        clearTimeout(cadastralUpdateTimeoutRef.current);
+        cadastralUpdateTimeoutRef.current = undefined;
+      }
+    }
+
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.off("moveend", handleMapMove);
+        leafletMap.current.off("zoomend", handleMapMove);
+      }
+
+      // Cleanup any timeouts if they exist
+      if (cadastralUpdateTimeoutRef.current) {
+        clearTimeout(cadastralUpdateTimeoutRef.current);
+        cadastralUpdateTimeoutRef.current = undefined;
+      }
+    };
+  }, [checkboxOptions.cadastral, updateCadastralLayer]);
+
+  // Legend component
+  const LegendComponent = ({
+    layerOption,
+  }: {
+    layerOption: "connectivity" | "muscsc";
+  }) => {
+    if (layerOption === "muscsc") {
+      const muscscItems = [
+        { value: 1, color: "rgb(153, 247, 245)", label: "Aquatic" },
+        { value: 2, color: "rgb(164, 0, 0)", label: "Built area" },
+        { value: 3, color: "rgb(255, 255, 140)", label: "Herbaceous cropland" },
+        { value: 4, color: "rgb(255, 200, 145)", label: "Woody cropland" },
+        {
+          value: 5,
+          color: "rgb(145, 134, 0)",
+          label: "Shrubland and grassland",
+        },
+        { value: 6, color: "rgb(0, 132, 0)", label: "Forestland" },
+        {
+          value: 7,
+          color: "rgb(184, 201, 189)",
+          label: "Bare/sparse vegetation",
+        },
+      ];
+
+      return (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            right: "20px",
+            background: "white",
+            padding: "12px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            zIndex: 999, // Slightly lower than toggle button
+            maxWidth: "250px",
+            border: "1px solid #d9d9d9",
+          }}
+        >
+          <h4
+            style={{
+              margin: "0 0 10px 0",
+              fontSize: "14px",
+              fontWeight: "bold",
+            }}
+          >
+            MUCSC Land Cover
+          </h4>
+          {muscscItems.map((item) => (
+            <div
+              key={item.value}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "6px",
+              }}
+            >
+              <div
+                style={{
+                  width: "20px",
+                  height: "15px",
+                  backgroundColor: item.color,
+                  marginRight: "8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "2px",
+                }}
+              />
+              <span style={{ fontSize: "12px", color: "#333" }}>
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    } else {
+      // Connectivity index legend - create a gradient using actual colorRamp colors
+      const createConnectivityGradient = () => {
+        // Sample key points from the colorRamp
+        const keyPoints = [
+          colorRamp["0"], // 0
+          colorRamp["51"], // 0.5
+          colorRamp["102"], // 1.0
+          colorRamp["153"], // 1.5
+          colorRamp["204"], // 2.0
+          colorRamp["255"], // 2.5
+        ];
+
+        return `linear-gradient(to right, ${keyPoints.join(", ")})`;
+      };
+
+      return (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            right: "20px",
+            background: "white",
+            padding: "12px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            zIndex: 999, // Slightly lower than toggle button
+            maxWidth: "200px",
+            border: "1px solid #d9d9d9",
+          }}
+        >
+          {" "}
+          <h4
+            style={{
+              margin: "0 0 10px 0",
+              fontSize: "14px",
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            Connectivity Index
+            <InfoCircleOutlined
+              style={{
+                fontSize: "14px",
+                color: "#42A456",
+                cursor: "pointer",
+              }}
+              onClick={() => setIsInfoModalVisible(true)}
+            />
+          </h4>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {/* Gradient bar using actual colorRamp */}
+            <div
+              style={{
+                width: "150px",
+                height: "20px",
+                background: createConnectivityGradient(),
+                border: "1px solid #ccc",
+                borderRadius: "2px",
+                marginBottom: "8px",
+              }}
+            />
+            {/* Labels */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "150px",
+                fontSize: "11px",
+              }}
+            >
+              <span>0</span>
+              <span style={{ textAlign: "center" }}>1.25</span>
+              <span>2.5</span>
+            </div>
+            <div
+              style={{
+                fontSize: "10px",
+                color: "#666",
+                marginTop: "4px",
+                textAlign: "center",
+              }}
+            >
+              Higher values indicate better connectivity
+            </div>
+          </div>
+        </div>
+      );
+    }
+  };
 
   const interpolateColor = (
     value: number,
@@ -734,7 +1361,9 @@ const BioConn: React.FC = () => {
       const clampedValue = Math.min(Math.max(normalizedValue, 0), 255);
 
       // Get the corresponding color from the colorRamp.json
-      const color = colorRamp[clampedValue.toString()];
+      const color = (colorRamp as Record<string, string>)[
+        clampedValue.toString()
+      ];
 
       // Return the color in RGB format
       return color || "rgba(0, 0, 0, 0)"; // Default to transparent if color is not found
@@ -764,6 +1393,35 @@ const BioConn: React.FC = () => {
 
   return (
     <>
+      <style>
+        {`
+          .protected-areas-collapse .ant-collapse-item {
+            border: none !important;
+          }
+          .protected-areas-collapse .ant-collapse-header {
+            padding: 4px 0 4px 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            line-height: 1.5715 !important;
+            display: flex !important;
+            align-items: center !important;
+          }
+          .protected-areas-collapse .ant-collapse-arrow {
+            position: static !important;
+            margin-right: 8px !important;
+            line-height: 1 !important;
+          }
+          .protected-areas-collapse .ant-collapse-content {
+            border: none !important;
+            background: transparent !important;
+          }
+          .protected-areas-collapse .ant-collapse-content-box {
+            padding: 0 !important;
+            padding-top: 8px !important;
+          }
+        `}
+      </style>
       <Row style={{ width: "100%", height: "100px" }}>
         <WidgetStatic
           style={{ width: "100%", height: "100%" }}
@@ -787,7 +1445,24 @@ const BioConn: React.FC = () => {
         <Row style={{ width: "100%", display: "flex" }}>
           <div style={{ width: "30%", padding: "16px" }}>
             {/* Map Settings Heading */}
-            <h2>Connectivity Calculation</h2>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "24px",
+              }}
+            >
+              <h2 style={{ margin: 0 }}>Connectivity Calculation</h2>
+              <InfoCircleOutlined
+                style={{
+                  fontSize: "18px",
+                  color: "#42A456",
+                  cursor: "pointer",
+                }}
+                onClick={() => setIsInfoModalVisible(true)}
+              />
+            </div>
 
             {/* Layers Section */}
             <div style={{ marginBottom: "24px" }}>
@@ -868,7 +1543,12 @@ const BioConn: React.FC = () => {
                             padding: 8,
                             cursor: "pointer",
                             borderBottom: "1px solid #f0f0f0",
-                            ":hover": { backgroundColor: "#f5f5f5" },
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#f5f5f5";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "";
                           }}
                           onClick={() => {
                             setSelectedTaxonKey(species.key);
@@ -887,6 +1567,33 @@ const BioConn: React.FC = () => {
                     <div style={{ marginTop: 8 }}>
                       <div style={{ marginBottom: 4 }}>
                         Selected: <strong>{gbifQuery}</strong>
+                        {occurrenceData.length > 0 &&
+                          (() => {
+                            const filteredCount = occurrenceData.filter(
+                              (occ) => {
+                                if (
+                                  !occ.decimalLatitude ||
+                                  !occ.decimalLongitude
+                                )
+                                  return false;
+                                return isPointInCatalonia(
+                                  occ.decimalLatitude,
+                                  occ.decimalLongitude
+                                );
+                              }
+                            ).length;
+                            return (
+                              <span
+                                style={{
+                                  color: "#52c41a",
+                                  fontSize: "12px",
+                                  marginLeft: "8px",
+                                }}
+                              >
+                                ({filteredCount} occurrences in Catalonia)
+                              </span>
+                            );
+                          })()}
                       </div>
                       <Button
                         type="primary"
@@ -920,22 +1627,15 @@ const BioConn: React.FC = () => {
               </Checkbox>
               <br />
               <Checkbox
-                checked={checkboxOptions.rivers}
-                onChange={() => handleCheckboxChange("rivers")}
+                checked={checkboxOptions.riversWaterBodies}
+                onChange={() => handleCheckboxChange("riversWaterBodies")}
               >
-                Rivers
+                Rivers and Water Bodies
               </Checkbox>
               <br />
               <Checkbox
-                checked={checkboxOptions.waterBodies}
-                onChange={() => handleCheckboxChange("waterBodies")}
-              >
-                Water bodies
-              </Checkbox>
-              <br />
-              <Checkbox
-                checked={checkboxOptions.waterBodies}
-                onChange={() => handleCheckboxChange("waterBodies")}
+                checked={checkboxOptions.cadastral}
+                onChange={() => handleCheckboxChange("cadastral")}
               >
                 Cadastral Information
               </Checkbox>
@@ -948,6 +1648,7 @@ const BioConn: React.FC = () => {
                   <DownOutlined rotate={isActive ? 180 : 0} />
                 )}
                 style={{ background: "transparent" }}
+                className="protected-areas-collapse"
               >
                 <Panel
                   header="Protected Areas"
@@ -1026,14 +1727,14 @@ const BioConn: React.FC = () => {
             >
               <Input
                 placeholder="Easting (X)"
-                value={xCoord}
-                onChange={(e) => setXCoord(e.target.value)}
+                value={xCoord || ""}
+                onChange={(e) => setXCoord(e.target.value || null)}
                 style={{ width: "120px" }}
               />
               <Input
                 placeholder="Northing (Y)"
-                value={yCoord}
-                onChange={(e) => setYCoord(e.target.value)}
+                value={yCoord || ""}
+                onChange={(e) => setYCoord(e.target.value || null)}
                 style={{ width: "120px" }}
               />
               <Button
@@ -1072,6 +1773,8 @@ const BioConn: React.FC = () => {
               }}
             >
               <div ref={mapRef} style={{ height: "100%", width: "100%" }}></div>
+              {/* Legend Component - Always visible */}
+              <LegendComponent layerOption={layerOption} />
             </div>
 
             {/* Slider under the map */}
@@ -1079,7 +1782,7 @@ const BioConn: React.FC = () => {
               <Slider
                 min={0}
                 max={availableTimes.length - 1}
-                defaultValue={6}
+                defaultValue={7}
                 onChange={(value) => setTime(availableTimes[value])}
                 marks={{
                   0: "1987",
@@ -1093,10 +1796,46 @@ const BioConn: React.FC = () => {
                 }}
                 step={1}
                 style={{ width: "90%" }}
+                tooltip={{ formatter: null }}
               />
             </div>
           </div>
         </Row>
+
+        {/* Info Modal for Connectivity */}
+        <Modal
+          title="Connectivity Calculation Information"
+          open={isInfoModalVisible}
+          onCancel={() => setIsInfoModalVisible(false)}
+          centered
+          width={800}
+          footer={[
+            <Button
+              key="ok"
+              type="primary"
+              onClick={() => setIsInfoModalVisible(false)}
+            >
+              OK
+            </Button>,
+          ]}
+          styles={{
+            header: {
+              backgroundColor: "#f5f5f5",
+              borderBottom: "1px solid #e8e8e8",
+            },
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 0",
+              lineHeight: "1.6",
+              color: "#333",
+              textAlign: "left",
+            }}
+          >
+            tbd
+          </div>
+        </Modal>
       </ConfigProvider>
     </>
   );

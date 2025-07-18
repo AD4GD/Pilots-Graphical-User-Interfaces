@@ -11,6 +11,37 @@ const init = async () => {
     return results.map((item) => item.toJSON());
   });
 
+  // Function to clear cache manually if needed
+  Parse.Cloud.define("clearCache", async (request) => {
+    const { cacheKey } = request.params;
+
+    if (cacheKey) {
+      // Clear specific cache entry
+      if (cache.has(cacheKey)) {
+        cache.delete(cacheKey);
+        console.log(`[Cache] Cleared specific cache entry: ${cacheKey}`);
+        return {
+          status: "success",
+          message: `Cleared cache entry: ${cacheKey}`,
+        };
+      } else {
+        return {
+          status: "info",
+          message: `Cache entry not found: ${cacheKey}`,
+        };
+      }
+    } else {
+      // Clear all cache
+      const cacheSize = cache.size;
+      cache.clear();
+      console.log(`[Cache] Cleared all cache entries (${cacheSize} entries)`);
+      return {
+        status: "success",
+        message: `Cleared all cache (${cacheSize} entries)`,
+      };
+    }
+  });
+
   Parse.Cloud.define("getConnectivity", async (request) => {
     const { time, properties } = request.params;
     const defaultTime = "2022-01-01";
@@ -28,6 +59,9 @@ const init = async () => {
 
     // If not cached, fetch the image from the WMS server
     try {
+      console.log(
+        `[Connectivity] Fetching data for ${timeValue}, ${propertiesValue}`
+      );
       const response = await axios.get(
         `https://callus.ddns.net/cgi-bin/mmdc.py/collections/TerrestrialConnectivityIndex/coverage?subset=E(260000:528000),N(4488000:4748000),time("${timeValue}")&subset-crs=[EPSG:32631]&crs=[EPSG:32631]&properties=${propertiesValue}&f=TIFF`,
         {
@@ -36,13 +70,27 @@ const init = async () => {
               "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
           },
           responseType: "arraybuffer",
+          timeout: 30000, // 30 second timeout
         }
       );
 
+      // Validate response before caching
+      if (!response.data || response.data.byteLength < 1000) {
+        console.log(
+          `[Connectivity] Response too small (${
+            response.data?.byteLength || 0
+          } bytes), not caching`
+        );
+        throw new Error("Invalid or incomplete response from server");
+      }
+
       // Convert arraybuffer to base64 string for transmission
       const base64Data = Buffer.from(response.data).toString("base64");
+      console.log(
+        `[Connectivity] Successfully fetched ${response.data.byteLength} bytes`
+      );
 
-      // Cache the response
+      // Only cache successful responses
       cache.set(cacheKey, base64Data);
 
       return {
@@ -51,10 +99,19 @@ const init = async () => {
         contentType: "image/tiff",
       };
     } catch (error) {
-      console.error("Error fetching or processing GeoTIFF:", error);
+      console.error("Error fetching or processing connectivity data:", error);
+
+      // Clear any potentially bad cache entry
+      if (cache.has(cacheKey)) {
+        console.log(
+          `[Connectivity] Clearing potentially bad cache entry for ${cacheKey}`
+        );
+        cache.delete(cacheKey);
+      }
+
       throw new Parse.Error(
         Parse.Error.INTERNAL_SERVER_ERROR,
-        "Error fetching or processing GeoTIFF"
+        "Error fetching or processing connectivity GeoTIFF"
       );
     }
   });
@@ -74,6 +131,7 @@ const init = async () => {
 
     // If not cached, fetch the image from the WMS server
     try {
+      console.log(`[MUCSC] Fetching data for ${timeValue}`);
       const response = await axios.get(
         `https://callus.ddns.net/cgi-bin/mmdc.py/collections/MUCSC/coverage?subset=E(260000:528000),N(4488000:4748000),time("${timeValue}")&subset-crs=[EPSG:32631]&crs=[EPSG:32631]&properties=classification&f=TIFF`,
         {
@@ -82,13 +140,27 @@ const init = async () => {
               "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
           },
           responseType: "arraybuffer",
+          timeout: 30000, // 30 second timeout
         }
       );
 
+      // Validate response before caching
+      if (!response.data || response.data.byteLength < 1000) {
+        console.log(
+          `[MUCSC] Response too small (${
+            response.data?.byteLength || 0
+          } bytes), not caching`
+        );
+        throw new Error("Invalid or incomplete response from server");
+      }
+
       // Convert arraybuffer to base64 string for transmission
       const base64Data = Buffer.from(response.data).toString("base64");
+      console.log(
+        `[MUCSC] Successfully fetched ${response.data.byteLength} bytes`
+      );
 
-      // Cache the response
+      // Only cache successful responses
       cache.set(cacheKey, base64Data);
 
       return {
@@ -97,10 +169,19 @@ const init = async () => {
         contentType: "image/tiff",
       };
     } catch (error) {
-      console.error("Error fetching or processing GeoTIFF:", error);
+      console.error("Error fetching or processing MUCSC data:", error);
+
+      // Clear any potentially bad cache entry
+      if (cache.has(cacheKey)) {
+        console.log(
+          `[MUCSC] Clearing potentially bad cache entry for ${cacheKey}`
+        );
+        cache.delete(cacheKey);
+      }
+
       throw new Parse.Error(
         Parse.Error.INTERNAL_SERVER_ERROR,
-        "Error fetching or processing GeoTIFF"
+        "Error fetching or processing MUCSC GeoTIFF"
       );
     }
   });
