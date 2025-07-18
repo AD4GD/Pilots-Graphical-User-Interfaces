@@ -27,11 +27,7 @@ import { Information } from "./components/InformationPage";
 import { LakeStats } from "./components/lakeStats";
 import { LakeFavourite } from "./components/lakeFavourite";
 import { NotFound } from "./components/NotFoundPage";
-import {
-  bioConn,
-  geoTiffComparer,
-  geoTiffExplorer,
-} from "./components/bioConn";
+import { bioConn } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
 import bioConnScenarioSaved from "./components/bioConnScenarioSaved";
 import { CompareScenario } from "./components/compareScenario";
@@ -86,18 +82,6 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/bioconnect",
     componentSync: bioConn,
-    props: {},
-  });
-
-  factory.registerRoute({
-    path: "/bioconnect/explorer",
-    componentSync: geoTiffExplorer,
-    props: {},
-  });
-
-  factory.registerRoute({
-    path: "/bioconnect/explorer/compare",
-    componentSync: geoTiffComparer,
     props: {},
   });
 

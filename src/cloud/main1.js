@@ -13,7 +13,7 @@ const init = async () => {
 
   Parse.Cloud.define("getConnectivity", async (request) => {
     const { time, properties } = request.params;
-    const defaultTime = "2017-01-01";
+    const defaultTime = "2022-01-01";
     const defaultProperties = "Forest";
     const timeValue = time || defaultTime;
     const propertiesValue = properties || defaultProperties;
@@ -61,7 +61,7 @@ const init = async () => {
 
   Parse.Cloud.define("getMucsc", async (request) => {
     const { time } = request.params;
-    const defaultTime = "2017-01-01";
+    const defaultTime = "2022-01-01";
     const timeValue = time || defaultTime;
 
     // Create a unique cache key based on the parameters
@@ -917,6 +917,83 @@ const init = async () => {
 
       console.log(`[BioConn] Function failed: ${errorMessage}`);
       throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, errorMessage);
+    }
+  });
+
+  // CADASTRAL WMS PROXY FUNCTION - Ready for future use
+  // Currently using frontend WMS implementation, but this function is available
+  // for when you want to switch to backend proxy to avoid CORS issues
+  Parse.Cloud.define("getCadastralWMS", async (request) => {
+    const { bbox, width = 512, height = 512 } = request.params;
+
+    if (!bbox) {
+      throw new Parse.Error(
+        Parse.Error.INVALID_OPERATION,
+        "Missing required parameter: bbox"
+      );
+    }
+
+    // Create a unique cache key based on the bbox and dimensions
+    const cacheKey = `cadastral-${bbox}-${width}x${height}`;
+
+    // Check if the response is already in the cache
+    if (cache.has(cacheKey)) {
+      return { status: "success", data: cache.get(cacheKey) };
+    }
+
+    try {
+      // Construct the Spanish cadastral WMS URL
+      const wmsUrl = new URL(
+        "http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx"
+      );
+      wmsUrl.searchParams.append("SERVICE", "WMS");
+      wmsUrl.searchParams.append("VERSION", "1.1.1");
+      wmsUrl.searchParams.append("REQUEST", "GetMap");
+      wmsUrl.searchParams.append("LAYERS", "Catastro");
+      wmsUrl.searchParams.append("STYLES", "");
+      wmsUrl.searchParams.append("SRS", "EPSG:4326");
+      wmsUrl.searchParams.append("BBOX", bbox);
+      wmsUrl.searchParams.append("WIDTH", width.toString());
+      wmsUrl.searchParams.append("HEIGHT", height.toString());
+      wmsUrl.searchParams.append("FORMAT", "image/png");
+      wmsUrl.searchParams.append("TRANSPARENT", "true");
+
+      console.log("Requesting cadastral WMS:", wmsUrl.toString());
+
+      const response = await axios.get(wmsUrl.toString(), {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Accept: "image/png,image/*,*/*;q=0.8",
+          Referer: "https://www1.sedecatastro.gob.es/",
+        },
+        responseType: "arraybuffer",
+        timeout: 10000, // 10 second timeout
+      });
+
+      // Convert arraybuffer to base64 string for transmission
+      const base64Data = Buffer.from(response.data).toString("base64");
+
+      // Cache the response (with a shorter TTL for cadastral data)
+      cache.set(cacheKey, base64Data);
+
+      return {
+        status: "success",
+        data: base64Data,
+        contentType: "image/png",
+        bbox: bbox,
+      };
+    } catch (error) {
+      console.error("Error fetching cadastral WMS:", error.message);
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+      }
+
+      throw new Parse.Error(
+        Parse.Error.INTERNAL_SERVER_ERROR,
+        `Error fetching cadastral WMS: ${error.message}`
+      );
     }
   });
 };
