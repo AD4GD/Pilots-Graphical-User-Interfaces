@@ -2794,7 +2794,8 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
             {/* Scenario Comparison Heading */}
             <h2>Scenario Comparison</h2>
             <p style={{ color: "#666", marginBottom: "24px" }}>
-              Compare connectivity index and API response data
+              Compare connectivity index and newly calculated connectivity index
+              data
             </p>
 
             {/* Species Section - Matching BioConn exactly - MOVED TO TOP */}
@@ -2952,7 +2953,9 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
                       <br />
                       <Checkbox
                         checked={checkboxOptions.aquaticProtected}
-                        onChange={() => handleCheckboxChange("aquaticProtected")}
+                        onChange={() =>
+                          handleCheckboxChange("aquaticProtected")
+                        }
                       >
                         Aquatic Protected Areas
                       </Checkbox>
@@ -3040,7 +3043,9 @@ const CompareScenario: React.FC<CompareScenarioProps> = () => {
                       position: "relative",
                     }}
                   >
-                    <h3 style={{ marginBottom: "10px" }}>API Response</h3>
+                    <h3 style={{ marginBottom: "10px" }}>
+                      Calculated Connectivity Index
+                    </h3>
                     <div
                       ref={rightMapContainerRef}
                       style={{
