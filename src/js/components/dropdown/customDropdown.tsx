@@ -38,7 +38,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             .map((item) => item.label)
             .join(", ")
         : placeholder
-      : "No Prediction Available"; // Display a message if no items are provided
+      : "Keine Vorhersage verfügbar"; // Display a message if no items are provided
 
   // Handle text overflow for selected items
   const truncatedText =

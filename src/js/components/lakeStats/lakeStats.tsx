@@ -365,7 +365,7 @@ const LakeStats: React.FC = ({}) => {
   const handleAddFavorite = async (itemId: string) => {
     const user = Parse.User.current();
     if (!user) {
-      message.error("You must be logged in!");
+      message.error("Sie müssen angemeldet sein!");
       return false;
     }
 
@@ -384,7 +384,7 @@ const LakeStats: React.FC = ({}) => {
       const existingFavorite = await checkQuery.first();
 
       if (existingFavorite) {
-        message.error("This lake is already in your favorites!");
+        message.error("Dieser See ist bereits in Ihren Favoriten!");
         return false;
       }
 
@@ -402,18 +402,20 @@ const LakeStats: React.FC = ({}) => {
       favoriteLake.setACL(acl);
 
       await favoriteLake.save();
-      message.success("Lake added to favorites!");
+      message.success("Der See wurde zu Ihren Favoriten hinzugefügt!");
       return true;
     } catch (error) {
       console.error("Error saving favorite:", error);
-      message.error("Failed to add favorite. Please try again.");
+      message.error(
+        "Fehler beim Hinzufügen des Favoriten. Bitte versuchen Sie es erneut."
+      );
       return false;
     }
   };
 
   const handleAdd = async () => {
     if (!lakeId) {
-      message.error("Lake ID is not available.");
+      message.error("Lake ID ist nicht verfügbar.");
       return;
     }
     setIsAddingFavorite(true);
@@ -669,7 +671,7 @@ const LakeStats: React.FC = ({}) => {
                           />
                         </>
                       ) : (
-                        <p>Loading NDTrI data...</p>
+                        <p>Lade NDTrI Daten...</p>
                       )}
                     </div>
                   </div>
@@ -726,7 +728,7 @@ const LakeStats: React.FC = ({}) => {
                           />
                         </>
                       ) : (
-                        <p>Loading NDTrI data...</p>
+                        <p>Lade NDTrI Daten...</p>
                       )}
                     </div>
                   </div>

@@ -76,10 +76,10 @@ export default createWidgetComponent(({ ...context }) => {
   const properties = useProperties(displayItems);
   const timeFilter = useMemo(
     () => [
-      { key: "daily", label: "Daily" },
-      { key: "weekly", label: "Weekly" },
-      { key: "monthly", label: "Monthly" },
-      { key: "yearly", label: "Yearly" },
+      { key: "daily", label: "Täglich" },
+      { key: "weekly", label: "Wöchentlich" },
+      { key: "monthly", label: "Monatlich" },
+      { key: "yearly", label: "Jährlich" },
     ],
     []
   );
@@ -138,7 +138,7 @@ export default createWidgetComponent(({ ...context }) => {
     <>
       <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
         <Title level={4} style={{ fontWeight: "bold", margin: 0 }}>
-          Lake Statistics
+          Seestatistiken
         </Title>
         <div
           style={{
@@ -165,22 +165,22 @@ export default createWidgetComponent(({ ...context }) => {
           <CustomDropdown
             items={properties["Main"]}
             selectedValues={selectedProperties}
-            placeholder="Select Sensor"
+            placeholder="Sensor auswählen"
             handleClick={selectProperties}
           />
           <SingleSelectDropdown
             items={timeFilter}
-            placeholder="Select Frequency"
+            placeholder="Frequenz auswählen"
             selectedValue={selectedFilter}
             handleClick={selectFilter}
           />
           <DatePicker
             onDateChange={handleStartDateChange}
-            placeholder="Start Date"
+            placeholder="Startdatum"
           />
           <DatePicker
             onDateChange={handleEndDateChange}
-            placeholder="End Date"
+            placeholder="Enddatum"
           />
         </Row>
 
@@ -206,17 +206,17 @@ export default createWidgetComponent(({ ...context }) => {
             target="_blank"
             underline
           >
-            How was the data presented collected?
+            Wie wurden die präsentierten Daten erhoben?
           </Typography.Link>
           <Row style={{ flex: 0.45, justifyContent: "flex-end", gap: "10px" }}>
             <CustomButton
-              text="Download Graph"
+              text="Diagramm herunterladen"
               disabled={selectedProperties.length === 0}
               onClick={downloadGraph}
             />
             <CustomButton
               onClick={downloadData}
-              text="Download Rohdaten"
+              text="Rohdaten herunterladen"
               disabled={selectedProperties.length === 0}
             />
           </Row>

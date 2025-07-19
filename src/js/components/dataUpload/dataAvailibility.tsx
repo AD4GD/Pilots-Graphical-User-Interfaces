@@ -39,8 +39,7 @@ export const DataAvailibility: React.FC<DataAvailibilityProps> = ({
           <Form.Item
             label={
               <span style={{ fontWeight: "600", fontSize: "16px" }}>
-                Should the displayed data be available to all users, or only
-                visible to you?
+                Datenverfügbarkeit
               </span>
             }
             name="dataAvailability"
@@ -48,16 +47,17 @@ export const DataAvailibility: React.FC<DataAvailibilityProps> = ({
             <Radio.Group
               onChange={handleAvailabilityChange}
               value={availability}
+              defaultValue="public"
               style={{ display: "flex", flexDirection: "column" }}
             >
               <Radio
                 value="public"
                 style={{ marginBottom: "8px", fontSize: "14px" }}
               >
-                publicly visible
+                öffentlich sichtbar
               </Radio>
               <Radio value="private" style={{ fontSize: "14px" }}>
-                only I can see the data
+                nur ich kann die Daten sehen
               </Radio>
             </Radio.Group>
           </Form.Item>

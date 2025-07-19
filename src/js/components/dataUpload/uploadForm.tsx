@@ -53,11 +53,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         sensorId = `sensor_${formattedLakeName}_${formattedValueType}`;
       }
 
-      // Debug output
-      console.log("Lake Name:", lakeName);
-      console.log("Value Type:", valueType);
-      console.log("Generated Sensor ID:", sensorId);
-
       form.setFieldValue("sensorName", sensorName);
       form.setFieldValue("sensorId", sensorId);
 
@@ -101,22 +96,22 @@ export const UploadForm: React.FC<UploadFormProps> = ({
       <Row gutter={16}>
         <Col span={24}>
           <Form.Item
-            label={<span style={{ fontWeight: "600" }}>Lake Name</span>}
+            label={<span style={{ fontWeight: "600" }}>See Name</span>}
             name="lakeName"
             rules={[
               {
                 required: true,
-                message: "Please select a lake!",
+                message: "Bitte wählen Sie einen See aus!",
               },
             ]}
           >
             {loading ? (
               <Spin size="small" />
             ) : error ? (
-              <Input placeholder="Error loading lakes, enter name manually" />
+              <Input placeholder="Fehler beim Laden der Seen, Namen manuell eingeben" />
             ) : (
               <Select
-                placeholder="Select a lake"
+                placeholder="See auswählen"
                 showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
@@ -132,7 +127,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 }
                 onChange={(value) => {
                   // Update the form values directly when selection changes
-                  console.log("Lake selected:", value);
                   form.setFieldValue("lakeName", value);
 
                   // Only update sensor info if value type is also present
@@ -149,30 +143,30 @@ export const UploadForm: React.FC<UploadFormProps> = ({
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
-            label={<span style={{ fontWeight: "600" }}>Value Type</span>}
+            label={<span style={{ fontWeight: "600" }}>Werttyp</span>}
             name="valueType"
             rules={[
               {
                 required: true,
-                message: "Please input the value type!",
+                message: "Bitte geben Sie den Werttyp ein!",
               },
             ]}
           >
-            <Input placeholder="Enter value type (e.g., Temperature, Water Level)" />
+            <Input placeholder="Werttyp eingeben (z.B. Temperatur, Wasserstand)" />
           </Form.Item>
         </Col>
         <Col span={12}>
           <Form.Item
-            label={<span style={{ fontWeight: "600" }}>Unit Value</span>}
+            label={<span style={{ fontWeight: "600" }}>Einheit Wert</span>}
             name="unitValue"
             rules={[
               {
                 required: true,
-                message: "Please input the unit value!",
+                message: "Bitte geben Sie die Einheit des Wertes ein!",
               },
             ]}
           >
-            <Input placeholder="Enter unit value (e.g., °C, mm)" />
+            <Input placeholder="Einheit des Wertes eingeben (z.B. °C, mm)" />
           </Form.Item>
         </Col>
       </Row>
@@ -184,12 +178,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             rules={[
               {
                 required: true,
-                message: "Please select the data type!",
+                message: "Bitte wählen Sie den Datentyp aus!",
               },
             ]}
             initialValue="timeseries"
           >
-            <Select placeholder="Select data type">
+            <Select placeholder="Datentyp auswählen">
               <Select.Option value="timeseries">Timeseries</Select.Option>
               <Select.Option value="periodic">Periodic</Select.Option>
             </Select>
@@ -198,10 +192,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <Col span={12}>
           <Form.Item
             label={
-              <span style={{ fontWeight: "600" }}>Generated Sensor Name</span>
+              <span style={{ fontWeight: "600" }}>Generierter Sensorname</span>
             }
             name="sensorName"
-            tooltip="This is automatically generated from lake name and value type"
+            tooltip="Dieser Name wird automatisch aus dem See-Namen und dem Werttyp generiert"
           >
             <Input
               disabled
@@ -214,10 +208,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <Col span={24}>
           <Form.Item
             label={
-              <span style={{ fontWeight: "600" }}>Generated Sensor ID</span>
+              <span style={{ fontWeight: "600" }}>Generierte Sensor ID</span>
             }
             name="sensorId"
-            tooltip="This ID is automatically generated from lake name and value type"
+            tooltip="Diese ID wird automatisch aus dem See-Namen und dem Werttyp generiert"
           >
             <Input
               disabled

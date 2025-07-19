@@ -9,7 +9,7 @@ import { FileUpload, FILE_UPLOADED_EVENT } from "./fileUpload";
 import { UploadForm, FormData } from "./uploadForm";
 import { CustomButton } from "../../components/button";
 
-const steps = ["Data", "Details", "Finalize"];
+const steps = ["Daten", "Details", "Abschließen"];
 
 const DataUpload: React.FC = () => {
   const { Title } = Typography;
@@ -48,7 +48,7 @@ const DataUpload: React.FC = () => {
     if (currentStep === 0) {
       // Check if file is uploaded before proceeding
       if (!uploadedFile || !fileContent) {
-        message.error("Please upload a file first!");
+        message.error("Bitte laden Sie eine Datei hoch, bevor Sie fortfahren.");
         return;
       }
       setCurrentStep(1);
@@ -59,7 +59,7 @@ const DataUpload: React.FC = () => {
         setSavedFormData(values); // Save form data
         setCurrentStep(2);
       } catch (error) {
-        message.error("Please fill in all required fields!");
+        message.error("Bitte füllen Sie alle erforderlichen Felder aus!");
       }
     } else if (currentStep === 2) {
       // Submit data to cloud
@@ -86,7 +86,7 @@ const DataUpload: React.FC = () => {
   };
   const handleSubmit = async () => {
     if (!uploadedFile || !fileContent) {
-      message.error("No file has been uploaded");
+      message.error("Es wurde keine Datei hochgeladen");
       return;
     }
 
@@ -95,14 +95,10 @@ const DataUpload: React.FC = () => {
 
       // Use the saved form values instead of revalidating, which prevents losing data
       const formValues = savedFormData || (await form.validateFields());
-      console.log("Form values for upload:", formValues);      // Check if we have the required values
       if (!formValues || !formValues.lakeName) {
-        console.error("Missing required form data:", formValues);
-        message.error(
-          "Required form data is missing! Please go back and complete the form."
-        );
+        message.error("Bitte füllen Sie alle erforderlichen Felder aus!");
         return;
-      } 
+      }
       // Determine the source based on data type and visibility
       let baseSource;
       if (formValues.dataType === "timeseries") {
@@ -119,38 +115,37 @@ const DataUpload: React.FC = () => {
         valueUnit: formValues.unitValue || "units",
         source: baseSource,
         isPublic: isPublic, // Add this to indicate whether data is public or private
-      };// Log the params being sent
+      }; // Log the params being sent
       console.log("Sending params to Cloud function:", params);
 
       // Call the Parse Cloud function to import the data
       try {
         const result = await Parse.Cloud.run("importLakeData", params);
-        console.log("Cloud function response:", result);
 
         if (result && result.success) {
           message.success(
-            `Successfully uploaded data: ${
-              result.message || "Data imported successfully!"
+            `Erfolgreich hochgeladene Daten: ${
+              result.message || "Daten erfolgreich importiert!"
             }`
           );
           // Reset form and go back to first step
           handleCancel();
         } else {
           message.error(
-            `Failed to upload data: ${result?.message || "Unknown error"}`
+            `Fehler beim Hochladen der Daten: ${
+              result?.message || "Unbekannter Fehler"
+            }`
           );
         }
       } catch (cloudError: any) {
-        console.error("Cloud function error:", cloudError);
         message.error(
-          `Cloud function error: ${
-            cloudError.message || "Unknown server error"
-          }`
+          `Fehler: ${cloudError.message || "Unbekannter Serverfehler"}`
         );
       }
     } catch (error: any) {
-      console.error("Error uploading data:", error);
-      message.error(`Upload failed: ${error.message || "Unknown error"}`);
+      message.error(
+        `Upload fehlgeschlagen: ${error.message || "Unbekannter Fehler"}`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +178,7 @@ const DataUpload: React.FC = () => {
               marginTop: "2rem",
             }}
           >
-            Add Your Own Data
+            Daten hochladen
           </Title>
         </Col>
         <Col span={22} style={{ marginBottom: "2rem" }}>
@@ -194,7 +189,7 @@ const DataUpload: React.FC = () => {
             <FileUpload />
             {uploadedFile && (
               <div style={{ marginTop: 16, color: "green" }}>
-                File selected: {uploadedFile.name}
+                Datei ausgewählt: {uploadedFile.name}
               </div>
             )}
           </Col>
@@ -216,18 +211,18 @@ const DataUpload: React.FC = () => {
                   border: "1px solid #b7eb8f",
                 }}
               >
-                <h3>Form Data Summary:</h3>
+                <h3>Formularübersicht:</h3>
                 <p>
-                  <strong>Lake Name:</strong> {savedFormData.lakeName}
+                  <strong>See Name:</strong> {savedFormData.lakeName}
                 </p>
                 <p>
-                  <strong>Value Type:</strong> {savedFormData.valueType}
+                  <strong>Werttyp:</strong> {savedFormData.valueType}
                 </p>
                 <p>
-                  <strong>Unit Value:</strong> {savedFormData.unitValue}
+                  <strong>Einheit Wert:</strong> {savedFormData.unitValue}
                 </p>
                 <p>
-                  <strong>Data Type:</strong> {savedFormData.dataType}
+                  <strong>Datentyp:</strong> {savedFormData.dataType}
                 </p>
                 <p>
                   <strong>Sensor ID:</strong> {savedFormData.sensorId}
@@ -246,18 +241,18 @@ const DataUpload: React.FC = () => {
           }}
         >
           <CustomButton
-            text="Back"
+            text="Zurück"
             onClick={handleBack}
             disabled={currentStep === 0}
           />
           <CustomButton
-            text={currentStep === steps.length - 1 ? "Submit" : "Next"}
+            text={currentStep === steps.length - 1 ? "Einreichen" : "Weiter"}
             onClick={handleNext}
             loading={isSubmitting}
             disabled={isSubmitting}
           />
           <CustomButton
-            text="Cancel"
+            text="Abbrechen"
             onClick={handleCancel}
             disabled={isSubmitting}
           />

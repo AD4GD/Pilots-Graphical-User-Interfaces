@@ -104,7 +104,8 @@ const ChartComponent = forwardRef<HTMLDivElement, ChartProps>(
       return (
         <div className="chart-placeholder-container">
           <p className="chart-placeholder-text">
-            Please select sensor to display the chart.
+            Bitte wählen Sie einen Filter und mindestens eine Eigenschaft aus,
+            um das Diagramm anzuzeigen.
           </p>
         </div>
       );

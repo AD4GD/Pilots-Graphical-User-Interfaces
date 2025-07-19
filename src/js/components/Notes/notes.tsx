@@ -68,7 +68,7 @@ const Notes: React.FC<NotesProps> = ({ lakeId, currentUser }) => {
         setNotes([]);
       }
     } catch (error) {
-      message.error("Failed to fetch notes");
+      message.error("Fehler beim Abrufen der Notizen.");
       console.error("Error fetching notes:", error);
     } finally {
       setLoading(false);
@@ -150,10 +150,9 @@ const Notes: React.FC<NotesProps> = ({ lakeId, currentUser }) => {
       setNotes(updatedNotes);
       setIsEditing(false);
       setEditingId(null);
-      message.success("Note saved successfully");
+      message.success("Notiz erfolgreich gespeichert");
     } catch (error) {
-      message.error("Failed to save note");
-      console.error("Error saving note:", error);
+      message.error("Fehler beim Speichern der Notiz");
     } finally {
       setLoading(false);
     }
@@ -183,10 +182,9 @@ const Notes: React.FC<NotesProps> = ({ lakeId, currentUser }) => {
       }
 
       setNotes(updatedNotes);
-      message.success("Note deleted successfully");
+      message.success("Notiz erfolgreich gelöscht");
     } catch (error) {
-      message.error("Failed to delete note");
-      console.error("Error deleting note:", error);
+      message.error("Fehler beim Löschen der Notiz");
     } finally {
       setLoading(false);
     }
@@ -272,7 +270,7 @@ const Notes: React.FC<NotesProps> = ({ lakeId, currentUser }) => {
               <TextArea
                 value={currentNote}
                 onChange={handleNoteChange}
-                placeholder="Type your note here..."
+                placeholder="Notiz eingeben..."
                 autoSize={{ minRows: 3, maxRows: 6 }}
                 style={{
                   marginBottom: "40px",

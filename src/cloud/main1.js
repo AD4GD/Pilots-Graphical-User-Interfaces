@@ -289,9 +289,6 @@ const init = async () => {
       const sensorId = `sensor_${cleanLakeName
         .replace(/\s+/g, "")
         .toLowerCase()}_${cleanValueType.replace(/\s+/g, "").toLowerCase()}`; // Log the generated values
-      console.log(`Generated sensorName: ${sensorName}`);
-      console.log(`Generated sensorId: ${sensorId}`);
-      console.log(`Using lakeId: ${lakeId}`);
 
       // Update MIAAS_Geographies with the new sensor
       try {

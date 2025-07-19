@@ -85,7 +85,7 @@ export default createWidgetComponent((context) => {
     <>
       <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
         <Title level={4} style={{ fontWeight: "bold", margin: 0 }}>
-          Lake Prediction
+          Seevorhersage
         </Title>
         <div
           style={{
@@ -112,26 +112,26 @@ export default createWidgetComponent((context) => {
           <SingleSelectDropdown
             items={properties["MainWithPrediction"]}
             selectedValue={selectedMainSensor}
-            placeholder="Select Sensor"
+            placeholder="Sensor auswählen"
             handleClick={handleMainSensorSelect}
           />
 
           <CustomDropdown
             items={predictionItems}
             selectedValues={selectedProperties}
-            placeholder="Select Prediction Sensor"
+            placeholder="Sensor auswählen"
             handleClick={handlePredictionSelect}
           />
 
           <SingleSelectDropdown
             items={[
-              { key: "1", label: "1 week" },
-              { key: "2", label: "2 weeks" },
-              { key: "3", label: "3 weeks" },
-              { key: "4", label: "4 weeks" },
+              { key: "1", label: "1 Woche" },
+              { key: "2", label: "2 Wochen" },
+              { key: "3", label: "3 Wochen" },
+              { key: "4", label: "4 Wochen" },
             ]}
             selectedValue={selectedFrequency}
-            placeholder="Select Frequency"
+            placeholder="Frequenz auswählen"
             handleClick={setSelectedFrequency}
           />
         </Row>
@@ -158,17 +158,17 @@ export default createWidgetComponent((context) => {
             target="_blank"
             underline
           >
-            How was the data presented collected?
+            Wie wurden die präsentierten Daten erhoben?
           </Typography.Link>
           <Row style={{ flex: 0.45, justifyContent: "flex-end", gap: "10px" }}>
             <CustomButton
-              text="Download Graph"
+              text="Diagramm herunterladen"
               disabled={selectedProperties.length === 0}
               onClick={downloadGraph}
             />
             <CustomButton
               onClick={downloadData}
-              text="Download Rohdaten"
+              text="Rohdaten herunterladen"
               disabled={selectedProperties.length === 0}
             />
           </Row>

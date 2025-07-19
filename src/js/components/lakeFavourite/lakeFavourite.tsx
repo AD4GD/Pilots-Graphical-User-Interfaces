@@ -114,8 +114,7 @@ const LakeFavourite: React.FC = ({}) => {
       setFavorites(favLakes);
       await fetchSensorsForFavorites(favLakes);
     } catch (error) {
-      console.error("Error fetching favorites:", error);
-      message.error("Failed to load favorites");
+      message.error("Fehler beim Laden der Favoriten");
     } finally {
       setLoading(false);
     }
@@ -124,7 +123,7 @@ const LakeFavourite: React.FC = ({}) => {
   const handleRemoveFavorite = async (favlakeId: string) => {
     const user = Parse.User.current();
     if (!user) {
-      message.error("You must be logged in to remove favorites!");
+      message.error("Sie müssen angemeldet sein, um Favoriten zu entfernen!");
       return;
     }
 
@@ -134,7 +133,9 @@ const LakeFavourite: React.FC = ({}) => {
       const lakeToRemove = await query.get(favlakeId);
 
       if (!lakeToRemove) {
-        message.error("Favorite not found or not owned by user");
+        message.error(
+          "Favorit nicht gefunden oder nicht im Besitz des Benutzers"
+        );
         return;
       }
 
@@ -144,10 +145,12 @@ const LakeFavourite: React.FC = ({}) => {
       await lakeToRemove.destroy();
       setFavorites((prev) => prev.filter((fav) => fav.id !== favlakeId));
 
-      message.success(`${lakeName} was removed from favorites!`);
+      message.success(`${lakeName} wurde aus Ihren Favoriten entfernt`);
     } catch (error) {
       console.error("Error removing favorite:", error);
-      message.error("Failed to remove favorite. Please try again.");
+      message.error(
+        "Fehler beim Entfernen des Favoriten. Bitte versuchen Sie es erneut."
+      );
     }
   };
 
@@ -307,7 +310,7 @@ const LakeFavourite: React.FC = ({}) => {
                 level={2}
                 style={{ marginBottom: "16px", fontSize: "24px" }}
               >
-                Favorites
+                Favoriten
               </Title>
             </div>
           </Col>
@@ -399,7 +402,7 @@ const LakeFavourite: React.FC = ({}) => {
                           size="large"
                           onClick={() => handleRemoveFavorite(favLake.id)}
                         >
-                          Remove
+                          Entfernen
                         </Button>
                       </div>
 

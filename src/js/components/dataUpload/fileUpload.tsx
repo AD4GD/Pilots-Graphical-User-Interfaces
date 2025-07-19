@@ -55,11 +55,10 @@ export const FileUpload: React.FC = () => {
           setIsUploading(false);
         }, 500);
       } catch (err: any) {
-        console.error("Error processing file:", err);
         onError?.(err, new XMLHttpRequest());
         setIsUploading(false);
         message.error(
-          `Failed to process ${(file as File).name}: ${err.message}`
+          `Fehler beim Verarbeiten von ${(file as File).name}: ${err.message}`
         );
       }
     },
@@ -71,7 +70,7 @@ export const FileUpload: React.FC = () => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       ];
       if (!allowedTypes.includes(file.type)) {
-        message.error("You can only upload CSV or Excel files!");
+        message.error("Sie können nur CSV- oder Excel-Dateien hochladen!");
         return Upload.LIST_IGNORE; // Prevents file from being added to the upload list
       }
 
@@ -82,9 +81,9 @@ export const FileUpload: React.FC = () => {
       const { status } = info.file;
 
       if (status === "done") {
-        message.success(`${info.file.name} file processed successfully.`);
+        message.success(`${info.file.name} wurde erfolgreich verarbeitet.`);
       } else if (status === "error") {
-        message.error(`${info.file.name} file processing failed.`);
+        message.error(`${info.file.name} konnte nicht verarbeitet werden.`);
       }
     },
     onDrop(e) {
@@ -97,10 +96,11 @@ export const FileUpload: React.FC = () => {
         <InboxOutlined style={{ color: "#96f5d0" }} />
       </p>
       <p className="ant-upload-text">
-        Click or drag a file to this area to upload
+        Klicken oder ziehen Sie eine Datei in diesen Bereich, um sie hochzuladen
       </p>{" "}
       <p className="ant-upload-hint">
-        Only CSV or Excel files are allowed. You can upload one file at a time.
+        Nur CSV- oder Excel-Dateien sind erlaubt. Sie können jeweils eine Datei
+        hochladen.
       </p>
     </Dragger>
   );
