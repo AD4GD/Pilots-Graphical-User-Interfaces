@@ -71,7 +71,14 @@ export default createWidgetComponent((context) => {
 
   const downloadGraph = () =>
     downloadGraphAsPng(chartRef, sensorData, selectedFilter);
-  const downloadData = () => downloadDataAsCsv(sensorData);
+  // Download CSV data
+  const downloadData = () => {
+    // Filter data to only selected properties
+    const filteredData = sensorData.filter((sensor) =>
+      selectedProperties.includes(sensor.propertyName)
+    );
+    downloadDataAsCsv(filteredData);
+  };
 
   const predictionItems = useMemo(() => {
     return selectedMainSensor && properties[selectedMainSensor]

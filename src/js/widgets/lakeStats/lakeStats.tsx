@@ -131,7 +131,11 @@ export default createWidgetComponent(({ ...context }) => {
 
   // Download CSV data
   const downloadData = () => {
-    downloadDataAsCsv(data);
+    // Filter data to only selected properties
+    const filteredData = data.filter((sensor) =>
+      selectedProperties.includes(sensor.propertyName)
+    );
+    downloadDataAsCsv(filteredData);
   };
 
   return (
