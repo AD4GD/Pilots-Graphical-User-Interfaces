@@ -30,8 +30,10 @@ import { NotFound } from "./components/NotFoundPage";
 import { bioConn } from "./components/bioConn";
 import { bioConnScenario } from "./components/bioConnScenario";
 import bioConnScenarioSaved from "./components/bioConnScenarioSaved";
+import { bioConninformation } from "./components/BioConnInformationPage";
 import { CompareScenario } from "./components/compareScenario";
 import { DataUpload } from "./components/dataUpload";
+import BioConn from "./components/bioConn/bioConn";
 
 init("opendash", async (factory) => {
   // Icons
@@ -100,6 +102,12 @@ init("opendash", async (factory) => {
   factory.registerRoute({
     path: "/bioconnect/compare",
     componentSync: CompareScenario,
+    props: {},
+  });
+
+  factory.registerRoute({
+    path: "/bioconnect/info",
+    componentSync: bioConninformation,
     props: {},
   });
 

@@ -1707,7 +1707,6 @@ const BioConn: React.FC = () => {
               >
                 Create Scenario
               </Button>
-              <Button style={{ width: "100%" }}>Export Data</Button>
             </div>
           </div>
 
@@ -1829,7 +1828,55 @@ const BioConn: React.FC = () => {
               textAlign: "left",
             }}
           >
-            tbd
+            <p>
+              The tool is based on the Terrestrial Connectivity Index (ICT)
+              algorithm [Marulli J. and Mallarach J., 2005] and [Serral I. et
+              al., 2024], which gives an aggregate index of the connectivity
+              from that pixel considering the surrounding ones and the friction
+              among land uses/covers. Values range from 0 (poor connectivity) to
+              2.5 (high connectivity) for that specific land use/cover. This
+              algorithm is highly machine and time consuming, so ML techniques
+              have been applied in this case to fasten the calculation. The ICT
+              result given in the BioConnect tool is, thus, an approximation and
+              should be considered like this. Output results are shown together
+              to ensure trustworthiness and enhance decision making.
+              <br />
+              <br />
+              <strong>References:</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+                <li>
+                  Marulli J. and Mallarach J., 2005.
+                  <br />
+                  <em>
+                    "A GIS methodology for assessing ecological connectivity:
+                    application to the Barcelona Metropolitan Area,"
+                  </em>
+                  <br />
+                  Landscape and Urban Planning, vol. 71, no. 2–4, pp. 243-262.
+                </li>
+                <li>
+                  Serral I. et al., 2024.
+                  <br />
+                  <em>
+                    "Terrestrial Connectivity Based on Landsat/Sentinel Land
+                    Cover Classes as a Biodiversity Indicator for the European
+                    Green Deal Data Space,"
+                  </em>
+                  <br />
+                  IGARSS 2024 - 2024 IEEE International Geoscience and Remote
+                  Sensing Symposium, Athens, Greece, 2024, pp. 2328-2331.
+                  <br />
+                  DOI:{" "}
+                  <a
+                    href="https://doi.org/10.1109/IGARSS53475.2024.10640524"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    10.1109/IGARSS53475.2024.10640524
+                  </a>
+                </li>
+              </ul>
+            </p>
           </div>
         </Modal>
       </ConfigProvider>

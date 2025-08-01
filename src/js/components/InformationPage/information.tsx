@@ -61,7 +61,7 @@ const Information: React.FC = ({ ...data }) => {
               type="link"
               style={{ color: "#42A456", padding: 0 }}
               onClick={() => {
-                navigate("/home");
+                navigate("/splashboard");
               }}
             >
               Zurück zur Übersicht
