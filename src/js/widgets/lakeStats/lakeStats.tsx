@@ -2,7 +2,7 @@ import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { useTranslation } from "@opendash/core";
 import { createWidgetComponent } from "@opendash/plugin-monitoring";
 import { useNavigate } from "@opendash/router";
-import { Row, Typography } from "antd";
+import { Row, Typography, Modal, Table } from "antd";
 import React, { useRef, useState, useMemo } from "react";
 import { CustomButton } from "../../components/button";
 import { CustomChart } from "../../components/chart";
@@ -72,14 +72,15 @@ export default createWidgetComponent(({ ...context }) => {
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isDataModalVisible, setIsDataModalVisible] = useState(false);
 
   const properties = useProperties(displayItems);
   const timeFilter = useMemo(
     () => [
-      { key: "daily", label: "Täglich" },
-      { key: "weekly", label: "Wöchentlich" },
-      { key: "monthly", label: "Monatlich" },
-      { key: "yearly", label: "Jährlich" },
+      { key: "daily" as FilterType, label: "Täglich" },
+      { key: "weekly" as FilterType, label: "Wöchentlich" },
+      { key: "monthly" as FilterType, label: "Monatlich" },
+      { key: "yearly" as FilterType, label: "Jährlich" },
     ],
     []
   );
@@ -94,10 +95,109 @@ export default createWidgetComponent(({ ...context }) => {
   // Transform data for chart based on selectedProperties (defensive copy)
   const chartData = useChartDataTransform(data, selectedPropsMemo);
 
+  // Dataset information for the modal
+  const datasetInfo = [
+    {
+      key: "1",
+      dataset: "Water level",
+      description:
+        "Wasserstand in cm über Pegelnullpunkt aus dem Wasserportal Berlin",
+      source: "https://wasserportal.berlin.de/start.php",
+    },
+    {
+      key: "2",
+      dataset: "Water temperature",
+      description: "Wassertemperatur in °C aus dem Wasserportal Berlin",
+      source: "https://wasserportal.berlin.de/start.php",
+    },
+    {
+      key: "3",
+      dataset: "Water morphology",
+      description:
+        "Daten aus dem Gewässeratlas von Berlin : von der Gewässervermessung zum Gewässeratlas von Berlin mit hydrographischem Informationssystem / Hrsg.: Senatsverwaltung für Stadtentwicklung, Bereich Kommunikation.",
+      source: "https://digital.zlb.de/viewer/metadata/15468374/",
+    },
+    {
+      key: "4",
+      dataset: "Precipitation",
+      description:
+        "Summe der Niederschläge in mm (einschließlich Regen, Schauer und Schneefall)",
+      source: "https://open-meteo.com/en/docs/historical-weather-api",
+    },
+    {
+      key: "5",
+      dataset: "Air Temperature",
+      description:
+        "Mittlere Tagestemperatur in °C in 2 m Über Geländeoberkante",
+      source: "https://open-meteo.com/en/docs/historical-weather-api",
+    },
+    {
+      key: "6",
+      dataset: "Reference-Evapotranspiration",
+      description:
+        "Referenz-Evapotranspiration eines gut bewässerten Grasfeldes. Basierend auf den FAO-56-Penman-Monteith-Gleichungen wird ET₀ aus Temperatur, Windgeschwindigkeit, Luftfeuchtigkeit und Sonneneinstrahlung berechnet. Es wird von unbegrenzter Bodenfeuchtigkeit ausgegangen.",
+      source: "https://open-meteo.com/en/docs/historical-weather-api",
+    },
+    {
+      key: "7",
+      dataset: "Biotopwerte",
+      description:
+        "Im Projekt Biotoptypenkarte Berlin wurden zwischen 2003 und 2013 Biotope im Gelände- oder durch Luftbildkartierungen erfasst (Primärdaten) erfasst. Für Siedlungsbereiche wurden Biotopdaten aus anderen Quellen (Sekundärdaten) abgeleitet. Die Prüfung ob ein Biotop gesetzlich geschützt ist oder ein Lebensraumtyp nach der FFH-Richtlinie vorliegt erfolgte nur bei den Geländekartierungen. Aus dem Gesamtdatenbestand sind Thematische Karten zu FFH-LRT und gesetzlich geschützten Biotopen abgeleitet.",
+      source:
+        "https://gdi.berlin.de/geonetwork/srv/ger/catalog.search#/metadata/4ecb025b-c04f-3d6e-b4b5-e333d4e939fc",
+    },
+    {
+      key: "8",
+      dataset: "Versorgung mit öffentlichen, wohnungsnahen Grünanlagen 2016",
+      description:
+        "Versorgungsgrad (qm pro Einwohner) von Wohnblöcken mit öffentlichen, wohnungsnahen Grünanlagen unter Berücksichtigung vorhandener privater und halböffentlicher Freiräume, Sachstand 2016",
+      source:
+        "https://gdi.berlin.de/geonetwork/srv/ger/catalog.search#/metadata/866fe342-409a-39dc-addc-88d95b20541d",
+    },
+    {
+      key: "9",
+      dataset:
+        "Schutzgebiete und Schutzobjekte nach Naturschutzrecht Berlin (inklusive Natura 2000)",
+      description:
+        "Naturschutz- und Landschaftsschutzgebiete, Naturdenkmale in flächiger Ausprägung und als Objekte, geschützte Landschaftsbestandteile, Naturpark Barnim (Berliner Teil), FFH - Gebiete und Vogelschutzgebiete (SPA - Flächen) des Netzes Natura 2000, einstweilig sichergestellte Flächen in einer aktuellen, grundstücksgenauen Karte im Maßstab 1:1.000). Die amtlichen Karten zur jeweiligen Schutzverordnung können bei der jeweils örtlich zuständigen unteren Behörde für Naturschutz und Landschaftspflege im Bezirksamt oder bei der obersten Behörde für Naturschutz und Landschaftspflege (Senatsverwaltung für Mobilität, Verkehr, Klimaschutz und UmweltAbt. III) eingesehen werden. Nur diese amtlichen analogen Karten sind rechtsverbindlich, sofern die Karten nicht im Gesetz- und Verordnungsblatt für Berlin mitveröffentlicht wurden.",
+      source:
+        "https://gdi.berlin.de/geonetwork/srv/ger/catalog.search#/metadata/da2d17c0-6f29-3fae-848d-7f4f1cffa8a3",
+    },
+  ];
+
+  const tableColumns = [
+    {
+      title: "Dataset",
+      dataIndex: "dataset",
+      key: "dataset",
+      width: "20%",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      width: "60%",
+    },
+    {
+      title: "Source",
+      dataIndex: "source",
+      key: "source",
+      width: "20%",
+      render: (text: string) => (
+        <Typography.Link href={text} target="_blank">
+          {text}
+        </Typography.Link>
+      ),
+    },
+  ];
+
   // Toggle minimize state
   const toggleMinimize = () => {
     setIsMinimized((prev) => !prev);
   };
+
+  const showDataModal = () => setIsDataModalVisible(true);
+  const hideDataModal = () => setIsDataModalVisible(false);
 
   // Handle property selection (always create new array)
   const selectProperties = (e: any) => {
@@ -167,7 +267,7 @@ export default createWidgetComponent(({ ...context }) => {
           style={{ marginTop: "2%", justifyContent: "space-evenly" }}
         >
           <CustomDropdown
-            items={properties["Main"]}
+            items={(properties as any)["Main"]}
             selectedValues={selectedProperties}
             placeholder="Sensor auswählen"
             handleClick={selectProperties}
@@ -205,9 +305,9 @@ export default createWidgetComponent(({ ...context }) => {
               flex: 0.55,
               alignItems: "center",
               justifyContent: "space-between",
+              cursor: "pointer",
             }}
-            href="https://ant.design"
-            target="_blank"
+            onClick={showDataModal}
             underline
           >
             Wie wurden die präsentierten Daten erhoben?
@@ -226,6 +326,22 @@ export default createWidgetComponent(({ ...context }) => {
           </Row>
         </Row>
       </CollapseWrapper>
+
+      <Modal
+        title="Datenerhebung - Wie wurden die präsentierten Daten erhoben?"
+        open={isDataModalVisible}
+        onCancel={hideDataModal}
+        footer={null}
+        width={1200}
+      >
+        <Table
+          columns={tableColumns}
+          dataSource={datasetInfo}
+          pagination={false}
+          scroll={{ y: 400 }}
+          size="small"
+        />
+      </Modal>
     </>
   );
 });
